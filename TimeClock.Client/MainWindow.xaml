@@ -8,15 +8,8 @@
         AllowsTransparency="True"
         WindowStyle="None">
 
-    <Grid>
+    <Grid SnapsToDevicePixels="True" Background="#FF0F172A">
         <!-- Sfondo gradient "dashboard" -->
-        <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#FF0F172A" Offset="0.0" />
-                <GradientStop Color="#FF111827" Offset="0.4" />
-                <GradientStop Color="AliceBlue" Offset="1.0" />
-            </LinearGradientBrush>
-        </Grid.Background>
 
         <!-- Ombra dietro il pannello principale -->
         <Border Margin="30"

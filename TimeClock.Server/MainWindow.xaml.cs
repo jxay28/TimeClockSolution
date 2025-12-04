@@ -7,13 +7,66 @@ using Microsoft.Win32;
 using TimeClock.Core.Models;
 using TimeClock.Core.Services;
 
+
+
 namespace TimeClock.Server
 {
     public partial class MainWindow : Window
     {
+        private void Menu_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Button b &&
+                int.TryParse(b.Tag?.ToString(), out int index))
+            {
+                MainTabs.SelectedIndex = index;
+            }
+        }
+        private void Min_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Minimized;
+        }
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void AddUser_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Funzione: aggiungi utente (da implementare)");
+        }
+        private void AddHoliday_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Funzione: aggiungi festività (da implementare)");
+        }
+        private void GenerateReport_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Funzione: genera report (da implementare)");
+        }
+        private string _csvFolder = string.Empty;
+
+        private void SelectCsvFolder_Click(object sender, RoutedEventArgs e)
+        {
+            // Usa la classica dialog per scegliere una cartella
+            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                var result = dialog.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK)
+                {
+                    _csvFolder = dialog.SelectedPath;
+                    CsvPathBox.Text = _csvFolder;
+
+                    // Se hai un metodo che ricarica gli utenti dal CSV, lo richiami qui
+                    ;
+                }
+            }
+        }
+
+        private System.Windows.Controls.TextBox SharedFolderTextBox;
+
         public MainWindow()
         {
             InitializeComponent();
+            SharedFolderTextBox = new System.Windows.Controls.TextBox();
         }
 
         private void SelectFolder_Click(object sender, RoutedEventArgs e)
