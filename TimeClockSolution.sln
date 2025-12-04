@@ -1,0 +1,33 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeClock.Core", "TimeClock.Core\TimeClock.Core.csproj", "{8BC751B0-9570-4D6B-A138-EEB8C1E833F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeClock.Server", "TimeClock.Server\TimeClock.Server.csproj", "{7C2F281D-4977-4D73-984E-7EC592E8E75C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeClock.Client", "TimeClock.Client\TimeClock.Client.csproj", "{B4CA9A3A-672A-4E3B-B597-AFC02682D12D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8BC751B0-9570-4D6B-A138-EEB8C1E833F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BC751B0-9570-4D6B-A138-EEB8C1E833F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BC751B0-9570-4D6B-A138-EEB8C1E833F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BC751B0-9570-4D6B-A138-EEB8C1E833F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C2F281D-4977-4D73-984E-7EC592E8E75C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C2F281D-4977-4D73-984E-7EC592E8E75C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C2F281D-4977-4D73-984E-7EC592E8E75C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C2F281D-4977-4D73-984E-7EC592E8E75C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4CA9A3A-672A-4E3B-B597-AFC02682D12D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4CA9A3A-672A-4E3B-B597-AFC02682D12D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4CA9A3A-672A-4E3B-B597-AFC02682D12D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4CA9A3A-672A-4E3B-B597-AFC02682D12D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

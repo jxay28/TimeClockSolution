@@ -1,0 +1,17 @@
+<Window x:Class="TimeClock.Server.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Server Gestione Timbrature" Height="350" Width="525">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+            <Label Content="Cartella condivisa:"/>
+            <TextBox x:Name="SharedFolderTextBox" Width="300"/>
+            <Button Content="Scegli..." Margin="5,0,0,0" Click="SelectFolder_Click"/>
+        </StackPanel>
+        <Button Grid.Row="1" Content="Elabora Mese" Margin="0,10,0,0" Width="120" Height="30" HorizontalAlignment="Left" Click="ProcessMonth_Click"/>
+    </Grid>
+</Window>
