@@ -179,31 +179,51 @@ namespace TimeClock.Server
             }
             try
             {
-                var dlg = new AddUserWindow
+                string nome = Interaction.InputBox("Nome:", "Aggiungi utente", "");
+                if (string.IsNullOrWhiteSpace(nome)) return;
+                string cognome = Interaction.InputBox("Cognome:", "Aggiungi utente", "");
+                if (string.IsNullOrWhiteSpace(cognome)) return;
+                string ruolo = Interaction.InputBox("Ruolo:", "Aggiungi utente", "");
+                string dataAss = Interaction.InputBox("Data assunzione (YYYY-MM-DD):", "Aggiungi utente", DateTime.Now.ToString("yyyy-MM-dd"));
+                if (!DateTime.TryParse(dataAss, out var dtAss))
                 {
-                    Owner = this
-                };
-                bool? result = dlg.ShowDialog();
-                if (result == true && dlg.User != null)
-                {
-                    var u = dlg.User;
-                    // compone la riga da salvare
-                    string line = string.Join(",", new []
-                    {
-                        u.Id,
-                        u.Nome,
-                        u.Cognome,
-                        u.Ruolo,
-                        u.DataAssunzione.ToString("yyyy-MM-dd"),
-                        u.OreContrattoSettimanali.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                        u.CompensoOrarioBase.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                        u.CompensoOrarioExtra.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                    });
-                    string path = Path.Combine(_csvFolder, "utenti.csv");
-                    File.AppendAllText(path, line + Environment.NewLine);
-                    LoadUsers();
-                    MessageBox.Show("Utente aggiunto con successo");
+                    MessageBox.Show("Data assunzione non valida");
+                    return;
                 }
+                string oreStr = Interaction.InputBox("Ore settimanali (numero):", "Aggiungi utente", "40");
+                if (!double.TryParse(oreStr, out var oreSett))
+                {
+                    MessageBox.Show("Ore settimanali non valide");
+                    return;
+                }
+                string compBaseStr = Interaction.InputBox("Compenso orario base:", "Aggiungi utente", "10");
+                if (!decimal.TryParse(compBaseStr, out var compBase))
+                {
+                    MessageBox.Show("Compenso orario base non valido");
+                    return;
+                }
+                string compExtraStr = Interaction.InputBox("Compenso orario extra:", "Aggiungi utente", "15");
+                if (!decimal.TryParse(compExtraStr, out var compExtra))
+                {
+                    MessageBox.Show("Compenso orario extra non valido");
+                    return;
+                }
+                // genera ID utente unico
+                string id = Guid.NewGuid().ToString();
+                string line = string.Join(",", new [] {
+                    id,
+                    nome,
+                    cognome,
+                    ruolo,
+                    dtAss.ToString("yyyy-MM-dd"),
+                    oreSett.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    compBase.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    compExtra.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                });
+                string path = Path.Combine(_csvFolder, "utenti.csv");
+                File.AppendAllText(path, line + Environment.NewLine);
+                LoadUsers();
+                MessageBox.Show("Utente aggiunto con successo");
             }
             catch (Exception ex)
             {

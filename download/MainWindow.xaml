@@ -97,7 +97,7 @@
                                 Style="{StaticResource GlassButton}"
                                 Tag="0"
                                 Click="Menu_Click"/>
-                        <Button Content="Festivit&#224;"
+                        <Button Content="Festività"
                                 Style="{StaticResource GlassButton}"
                                 Tag="1"
                                 Click="Menu_Click"/>
@@ -144,7 +144,7 @@
                                               Grid.Row="1"
                                               AutoGenerateColumns="False"
                                               Background="#15FFFFFF"
-                                              Foreground="Black"
+                                              Foreground="White"
                                               HeadersVisibility="Column"
                                               CanUserAddRows="False"
                                               CanUserDeleteRows="False"
@@ -164,8 +164,8 @@
                                 </Grid>
                             </TabItem>
 
-
-                            <TabItem Header="Festivit&#224;">
+                           
+                            <TabItem Header="Festività">
                                 <Grid Margin="20">
                                     <Button Content="Aggiungi giorno festivo"
                                             Style="{StaticResource AddButton}"
