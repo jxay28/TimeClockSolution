@@ -86,7 +86,7 @@
                                 <Button Content="Sfoglia"
                                         Margin="8,0,0,0"
                                         Padding="8,4"
-                                        Click="SelectFolder_Click"
+                                        Click="SelectCsvFolder_Click"
                                         Background="#2010B981"
                                         Foreground="White"
                                         BorderThickness="0"

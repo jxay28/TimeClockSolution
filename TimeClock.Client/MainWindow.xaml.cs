@@ -14,32 +14,61 @@ namespace TimeClock.Client
     {
         private List<UserProfile> _users = new();
         private readonly CsvRepository _repo = new();
-        private string _sharedFolder = string.Empty;
+
+        private string _csvFolder = string.Empty;   // ? variabile definitiva per la cartella
 
         public MainWindow()
         {
             InitializeComponent();
-        }
 
-        private void SelectFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var dlg = new System.Windows.Forms.FolderBrowserDialog();
-            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            // ?? Carica la cartella salvata nelle impostazioni
+            _csvFolder = Properties.Settings.Default.CsvFolderPath;
+
+            if (!string.IsNullOrWhiteSpace(_csvFolder) && Directory.Exists(_csvFolder))
             {
-                _sharedFolder = dlg.SelectedPath;
-                SharedFolderTextBox.Text = _sharedFolder;
+                SharedFolderTextBox.Text = _csvFolder;
                 LoadUsers();
+            }
+            else
+            {
+                SharedFolderTextBox.Text = "Nessuna cartella selezionata";
+                _csvFolder = string.Empty;
             }
         }
 
+        private void SelectCsvFolder_Click(object sender, RoutedEventArgs e)
+        {
+            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                var result = dialog.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK)
+                {
+                    _csvFolder = dialog.SelectedPath;
+                    SharedFolderTextBox.Text = _csvFolder;
+
+                    // ?? Salvataggio preferenza
+                    Properties.Settings.Default.CsvFolderPath = _csvFolder;
+                    Properties.Settings.Default.Save();
+
+                    LoadUsers();
+                }
+            }
+        }
+
+
+        // ?? Caricamento utenti dal CSV
         private void LoadUsers()
         {
             UserComboBox.ItemsSource = null;
             _users.Clear();
-            if (string.IsNullOrWhiteSpace(_sharedFolder))
+
+            if (string.IsNullOrWhiteSpace(_csvFolder))
                 return;
 
-            var path = Path.Combine(_sharedFolder, "utenti.csv");
+            var path = Path.Combine(_csvFolder, "utenti.csv");
+            if (!File.Exists(path))
+                return;
+
             _users = _repo.Load(path)
                 .Select(f => new UserProfile
                 {
@@ -53,9 +82,11 @@ namespace TimeClock.Client
                     CompensoOrarioExtra = decimal.Parse(f[7])
                 })
                 .ToList();
+
             UserComboBox.ItemsSource = _users;
             UserComboBox.DisplayMemberPath = "Nome";
         }
+
 
         private void UserComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -66,33 +97,38 @@ namespace TimeClock.Client
         {
             EntrataButton.IsEnabled = false;
             UscitaButton.IsEnabled = false;
-            if (UserComboBox.SelectedItem is UserProfile user && !string.IsNullOrWhiteSpace(_sharedFolder))
+
+            if (UserComboBox.SelectedItem is UserProfile user && !string.IsNullOrWhiteSpace(_csvFolder))
             {
-                string userFile = Path.Combine(_sharedFolder, user.Id + ".csv");
+                string userFile = Path.Combine(_csvFolder, user.Id + ".csv");
                 string lastType = string.Empty;
-                var lines = _repo.Load(userFile).ToList();
-                if (lines.Any())
+
+                if (File.Exists(userFile))
                 {
-                    var last = lines.Last();
-                    if (last.Length > 1)
-                        lastType = last[1];
+                    var lines = _repo.Load(userFile).ToList();
+                    if (lines.Any())
+                    {
+                        var last = lines.Last();
+                        if (last.Length > 1)
+                            lastType = last[1];
+                    }
                 }
+
                 if (string.Equals(lastType, "Entrata", StringComparison.OrdinalIgnoreCase))
-                {
                     UscitaButton.IsEnabled = true;
-                }
                 else
-                {
                     EntrataButton.IsEnabled = true;
-                }
             }
         }
+
 
         private void EntrataButton_Click(object sender, RoutedEventArgs e)
         {
             if (UserComboBox.SelectedItem is not UserProfile user) return;
-            string path = Path.Combine(_sharedFolder, user.Id + ".csv");
+
+            string path = Path.Combine(_csvFolder, user.Id + ".csv");
             string line = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ",Entrata";
+
             try
             {
                 _repo.AppendLine(path, line);
@@ -107,8 +143,10 @@ namespace TimeClock.Client
         private void UscitaButton_Click(object sender, RoutedEventArgs e)
         {
             if (UserComboBox.SelectedItem is not UserProfile user) return;
-            string path = Path.Combine(_sharedFolder, user.Id + ".csv");
+
+            string path = Path.Combine(_csvFolder, user.Id + ".csv");
             string line = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ",Uscita";
+
             try
             {
                 _repo.AppendLine(path, line);
@@ -120,10 +158,11 @@ namespace TimeClock.Client
             }
         }
 
+
+        // Permette di trascinare la finestra
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
             base.OnMouseLeftButtonDown(e);
-            // Permette di trascinare la finestra cliccando sullo sfondo
             this.DragMove();
         }
 
@@ -138,4 +177,3 @@ namespace TimeClock.Client
         }
     }
 }
-

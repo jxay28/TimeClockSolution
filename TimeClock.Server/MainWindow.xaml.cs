@@ -24,9 +24,27 @@ namespace TimeClock.Server
         public MainWindow()
         {
             InitializeComponent();
-            // inizializza il percorso cartella CSV a stringa vuota
-            _csvFolder = string.Empty;
+
+            // Legge l'ultima cartella salvata nelle impostazioni
+            _csvFolder = Properties.Settings.Default.CsvFolderPath;
+
+            // Se esiste ed è valida, la usa
+            if (!string.IsNullOrWhiteSpace(_csvFolder) && Directory.Exists(_csvFolder))
+            {
+                CsvPathBox.Text = _csvFolder;
+
+                // Carica subito i dati
+                LoadUsers();
+                LoadHolidays();
+                LoadSettings();
+            }
+            else
+            {
+                CsvPathBox.Text = "Nessuna cartella selezionata";
+                _csvFolder = string.Empty;
+            }
         }
+
 
         /// <summary>
         /// Carica l'elenco degli utenti dal file utenti.csv e aggiorna la griglia e la combo.
@@ -275,22 +293,26 @@ namespace TimeClock.Server
         /// </summary>
         private void SelectCsvFolder_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new System.Windows.Forms.FolderBrowserDialog();
-            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
             {
-                _csvFolder = dlg.SelectedPath;
-                // aggiorna la casella di testo nella UI se esiste
-                var pathBox = this.FindName("CsvPathBox") as System.Windows.Controls.TextBox;
-                if (pathBox != null)
+                var result = dialog.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK)
                 {
-                    pathBox.Text = _csvFolder;
+                    _csvFolder = dialog.SelectedPath;
+                    CsvPathBox.Text = _csvFolder;
+
+                    // 🔹 SALVA nelle impostazioni dell'utente
+                    Properties.Settings.Default.CsvFolderPath = _csvFolder;
+                    Properties.Settings.Default.Save();
+
+                    // 🔹 Ricarica i dati da quella cartella
+                    LoadUsers();
+                    LoadHolidays();
+                    LoadSettings();
                 }
-                // carica tutti i dati dalla cartella
-                LoadUsers();
-                LoadHolidays();
-                LoadSettings();
             }
         }
+
 
         /// <summary>
         /// Genera i report mensili per gli utenti selezionati (o tutti).
