@@ -3,6 +3,46 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        
+
+        <!-- Effetto ombra tipo vetro -->
+        <DropShadowEffect x:Key="DropShadowEffect" 
+                      BlurRadius="25"
+                      ShadowDepth="0"
+                      Opacity="0.5"
+                      Color="#000000"/>
+
+        <!-- TextBox stile vetro -->
+        <Style x:Key="GlassTextBox" TargetType="TextBox">
+            <Setter Property="Margin" Value="0,6"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Background" Value="#30FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#60FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- DatePicker stile vetro -->
+        <Style x:Key="GlassDatePicker" TargetType="DatePicker">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Background" Value="#30FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#60FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Bottone stile vetro -->
+        <Style x:Key="GlassButton" TargetType="Button">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Padding" Value="8 4"/>
+            <Setter Property="Background" Value="#35FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#80FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
     </Application.Resources>
+
 </Application>

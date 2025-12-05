@@ -30,15 +30,9 @@
         </Style>
     </Window.Resources>
 
-    <Grid>
+    <Grid Background="#FF0F172A">
 
         <!-- SFONDO -->
-        <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#25233D" Offset="0.0"/>
-                <GradientStop Color="#1F1C2C" Offset="1.0"/>
-            </LinearGradientBrush>
-        </Grid.Background>
 
         <!-- PANNELLO GLASS -->
         <Border Margin="30"

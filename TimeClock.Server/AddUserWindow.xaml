@@ -1,59 +1,147 @@
 <Window x:Class="TimeClock.Server.AddUserWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Aggiungi Utente" Height="460" Width="450" WindowStartupLocation="CenterOwner">
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        Title="Aggiungi Utente"
+        Height="594"
+        Width="520"
+        WindowStartupLocation="CenterOwner"
+        AllowsTransparency="True"
+        WindowStyle="None" Background="#FF0F172A">
+
     <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="130"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <!-- ID -->
-        <Label Content="ID:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-        <TextBox x:Name="IdBox" Grid.Row="0" Grid.Column="1" Margin="0,2"/>
+        <!-- CARD CENTRALE "VETRO" -->
+        <Border Background="#40FFFFFF"
+                CornerRadius="18"
+                Padding="20"
+                Effect="{DynamicResource DropShadowEffect}">
 
-        <!-- Nome -->
-        <Label Content="Nome:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-        <TextBox x:Name="NomeBox" Grid.Row="1" Grid.Column="1" Margin="0,2"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-        <!-- Cognome -->
-        <Label Content="Cognome:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
-        <TextBox x:Name="CognomeBox" Grid.Row="2" Grid.Column="1" Margin="0,2"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="160"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-        <!-- Ruolo -->
-        <Label Content="Ruolo:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
-        <TextBox x:Name="RuoloBox" Grid.Row="3" Grid.Column="1" Margin="0,2"/>
+                <!-- TITOLO -->
+                <TextBlock Text="Nuovo Utente"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Grid.Row="0"
+                           Grid.ColumnSpan="2"
+                           Margin="0 0 0 15"/>
 
-        <!-- Data Assunzione -->
-        <Label Content="Data assunzione:" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
-        <DatePicker x:Name="AssunzionePicker" Grid.Row="4" Grid.Column="1" Margin="0,2" SelectedDate="{x:Static sys:DateTime.Now}" xmlns:sys="clr-namespace:System;assembly=mscorlib"/>
+                <!-- Numero sequenziale -->
+                <TextBlock Text="Numero sequenziale"
+                           Grid.Row="1" Grid.Column="0"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <TextBox x:Name="SeqNumberBox"
+                         Grid.Row="1" Grid.Column="1"
+                         IsReadOnly="True"
+                         Style="{StaticResource GlassTextBox}"/>
 
-        <!-- Ore Contratto -->
-        <Label Content="Ore settimanali:" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
-        <TextBox x:Name="OreBox" Grid.Row="5" Grid.Column="1" Margin="0,2"/>
+                <!-- ID -->
+                <TextBlock Text="ID"
+                           Grid.Row="2" Grid.Column="0"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <TextBox x:Name="IdBox"
+                         Grid.Row="2" Grid.Column="1"
+                         Style="{StaticResource GlassTextBox}"/>
 
-        <!-- Salario Base -->
-        <Label Content="Salario base €/h:" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
-        <TextBox x:Name="SalarioBaseBox" Grid.Row="6" Grid.Column="1" Margin="0,2"/>
+                <!-- Nome -->
+                <TextBlock Text="Nome"
+                           Grid.Row="3" Grid.Column="0"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <TextBox x:Name="NomeBox"
+                         Grid.Row="3" Grid.Column="1"
+                         Style="{StaticResource GlassTextBox}"/>
 
-        <!-- Salario Extra -->
-        <Label Content="Salario extra €/h:" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center"/>
-        <TextBox x:Name="SalarioExtraBox" Grid.Row="7" Grid.Column="1" Margin="0,2"/>
+                <!-- Cognome -->
+                <TextBlock Text="Cognome"
+                           Grid.Row="4" Grid.Column="0"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <TextBox x:Name="CognomeBox"
+                         Grid.Row="4" Grid.Column="1"
+                         Style="{StaticResource GlassTextBox}"/>
 
-        <!-- Pulsanti -->
-        <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button Content="Salva" Width="80" Margin="5" Click="Save_Click"/>
-            <Button Content="Annulla" Width="80" Margin="5" Click="Cancel_Click"/>
-        </StackPanel>
+                <!-- Ruolo -->
+                <TextBlock Text="Ruolo"
+                           Grid.Row="5" Grid.Column="0"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <TextBox x:Name="RuoloBox"
+                         Grid.Row="5" Grid.Column="1"
+                         Style="{StaticResource GlassTextBox}"/>
+
+                <!-- Data Assunzione -->
+                <TextBlock Text="Data assunzione"
+                           Grid.Row="6" Grid.Column="0"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <DatePicker x:Name="AssunzionePicker"
+                            Grid.Row="6" Grid.Column="1"
+                            SelectedDate="{x:Static sys:DateTime.Now}"
+                            Style="{StaticResource GlassDatePicker}"/>
+
+                <!-- Ore Contratto -->
+                <TextBlock Text="Ore settimanali"
+                           Grid.Row="7" Grid.Column="0"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <TextBox x:Name="OreBox"
+                         Grid.Row="7" Grid.Column="1"
+                         Style="{StaticResource GlassTextBox}"/>
+
+                <!-- Salario Base -->
+                <TextBlock Text="Salario base €/h"
+                           Grid.Row="8" Grid.Column="0"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <TextBox x:Name="SalarioBaseBox"
+                         Grid.Row="8" Grid.Column="1"
+                         Style="{StaticResource GlassTextBox}"/>
+
+                <!-- Salario Extra -->
+                <TextBlock Text="Salario extra €/h"
+                           Grid.Row="9" Grid.Column="0"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <TextBox x:Name="SalarioExtraBox"
+                         Grid.Row="9" Grid.Column="1"
+                         Style="{StaticResource GlassTextBox}"/>
+
+                <!-- Pulsanti -->
+                <StackPanel Grid.Row="10"
+                            Grid.ColumnSpan="2"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,25,0,0">
+
+                    <Button Content="Salva"
+                            Width="100"
+                            Margin="5"
+                            Style="{StaticResource GlassButton}"
+                            Click="Save_Click"/>
+
+                    <Button Content="Annulla"
+                            Width="100"
+                            Margin="5"
+                            Style="{StaticResource GlassButton}"
+                            Click="Cancel_Click"/>
+                </StackPanel>
+
+            </Grid>
+
+        </Border>
+
     </Grid>
 </Window>
