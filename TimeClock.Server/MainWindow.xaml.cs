@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using Microsoft.Win32;
-using Microsoft.VisualBasic; // for InputBox dialogs
+using Microsoft.VisualBasic; // per InputBox festività
 using TimeClock.Core.Models;
 using TimeClock.Core.Services;
 
@@ -14,12 +14,19 @@ namespace TimeClock.Server
     {
         // percorso della cartella condivisa con i CSV
         private string _csvFolder;
+
         // elenco utenti caricati
         private List<UserProfile> _users = new List<UserProfile>();
+
         // elenco festività caricate
         private List<Holiday> _holidays = new List<Holiday>();
+
         // impostazioni straordinari correnti
-        private OvertimeSettings _overtimeSettings;
+        private OvertimeSettings _overtimeSettings = new OvertimeSettings
+        {
+            SogliaMinuti = 0,
+            UnitaArrotondamentoMinuti = 15
+        };
 
         public MainWindow()
         {
@@ -28,7 +35,6 @@ namespace TimeClock.Server
             // Legge l'ultima cartella salvata nelle impostazioni
             _csvFolder = Properties.Settings.Default.CsvFolderPath;
 
-            // Se esiste ed è valida, la usa
             if (!string.IsNullOrWhiteSpace(_csvFolder) && Directory.Exists(_csvFolder))
             {
                 CsvPathBox.Text = _csvFolder;
@@ -45,17 +51,23 @@ namespace TimeClock.Server
             }
         }
 
-
         /// <summary>
-        /// Carica l'elenco degli utenti dal file utenti.csv e aggiorna la griglia e la combo.
+        /// Carica l'elenco degli utenti dal file utenti.csv e aggiorna griglia e combo.
+        /// CSV: Id,SequenceNumber,Nome,Cognome,Ruolo,DataAssunzione,Ore,Base,Extra
         /// </summary>
         private void LoadUsers()
         {
             _users = new List<UserProfile>();
-            if (string.IsNullOrWhiteSpace(_csvFolder)) return;
+
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+                return;
+
             string path = Path.Combine(_csvFolder, "utenti.csv");
-            if (!File.Exists(path)) return;
+            if (!File.Exists(path))
+                return;
+
             var repo = new CsvRepository();
+
             foreach (var fields in repo.Load(path))
             {
                 try
@@ -63,18 +75,26 @@ namespace TimeClock.Server
                     var user = new UserProfile
                     {
                         Id = fields.ElementAtOrDefault(0),
-                        Nome = fields.ElementAtOrDefault(1),
-                        Cognome = fields.ElementAtOrDefault(2),
-                        Ruolo = fields.ElementAtOrDefault(3),
-                        DataAssunzione = DateTime.TryParse(fields.ElementAtOrDefault(4), out var d) ? d : DateTime.MinValue,
-                        OreContrattoSettimanali = double.TryParse(fields.ElementAtOrDefault(5), out var ore) ? ore : 0,
-                        CompensoOrarioBase = decimal.TryParse(fields.ElementAtOrDefault(6), out var cb) ? cb : 0,
-                        CompensoOrarioExtra = decimal.TryParse(fields.ElementAtOrDefault(7), out var ce) ? ce : 0
+                        SequenceNumber = int.TryParse(fields.ElementAtOrDefault(1), out var seq) ? seq : 0,
+                        Nome = fields.ElementAtOrDefault(2),
+                        Cognome = fields.ElementAtOrDefault(3),
+                        Ruolo = fields.ElementAtOrDefault(4),
+                        DataAssunzione = DateTime.TryParse(fields.ElementAtOrDefault(5), out var d) ? d : DateTime.MinValue,
+                        OreContrattoSettimanali = double.TryParse(fields.ElementAtOrDefault(6), NumberStyles.Any, CultureInfo.InvariantCulture, out var ore) ? ore : 0,
+                        CompensoOrarioBase = decimal.TryParse(fields.ElementAtOrDefault(7), NumberStyles.Any, CultureInfo.InvariantCulture, out var cb) ? cb : 0,
+                        CompensoOrarioExtra = decimal.TryParse(fields.ElementAtOrDefault(8), NumberStyles.Any, CultureInfo.InvariantCulture, out var ce) ? ce : 0
                     };
-                    _users.Add(user);
+
+                    // ignora eventuali righe senza Id o Nome
+                    if (!string.IsNullOrWhiteSpace(user.Id))
+                        _users.Add(user);
                 }
-                catch { /* ignora righe malformate */ }
+                catch
+                {
+                    // ignora righe malformate
+                }
             }
+
             // aggiorna la griglia degli utenti
             var grid = this.FindName("UsersGrid") as System.Windows.Controls.DataGrid;
             if (grid != null)
@@ -82,6 +102,7 @@ namespace TimeClock.Server
                 grid.ItemsSource = null;
                 grid.ItemsSource = _users;
             }
+
             // aggiorna la combo per il report
             var combo = this.FindName("UserSelectorReport") as System.Windows.Controls.ComboBox;
             if (combo != null)
@@ -97,10 +118,16 @@ namespace TimeClock.Server
         private void LoadHolidays()
         {
             _holidays = new List<Holiday>();
-            if (string.IsNullOrWhiteSpace(_csvFolder)) return;
+
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+                return;
+
             string path = Path.Combine(_csvFolder, "festivita.csv");
-            if (!File.Exists(path)) return;
+            if (!File.Exists(path))
+                return;
+
             var repo = new CsvRepository();
+
             foreach (var fields in repo.Load(path))
             {
                 try
@@ -112,8 +139,12 @@ namespace TimeClock.Server
                     };
                     _holidays.Add(h);
                 }
-                catch { }
+                catch
+                {
+                    // ignora riga malformata
+                }
             }
+
             var grid = this.FindName("HolidayGrid") as System.Windows.Controls.DataGrid;
             if (grid != null)
             {
@@ -127,28 +158,30 @@ namespace TimeClock.Server
         /// </summary>
         private void LoadSettings()
         {
-            _overtimeSettings = new OvertimeSettings { SogliaMinuti = 0, UnitaArrotondamentoMinuti = 15 };
-            if (string.IsNullOrWhiteSpace(_csvFolder)) return;
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+                return;
+
             string path = Path.Combine(_csvFolder, "parametri_straordinari.csv");
-            if (!File.Exists(path)) return;
+            if (!File.Exists(path))
+                return;
+
             var repo = new CsvRepository();
             var fields = repo.Load(path).FirstOrDefault();
+
             if (fields != null)
             {
                 _overtimeSettings.SogliaMinuti = int.TryParse(fields.ElementAtOrDefault(0), out var s) ? s : 0;
                 _overtimeSettings.UnitaArrotondamentoMinuti = int.TryParse(fields.ElementAtOrDefault(1), out var u) ? u : 15;
             }
-            // aggiorna slider e testo
+
             var slider = this.FindName("OvertimeSlider") as System.Windows.Controls.Slider;
             var valueLabel = this.FindName("OvertimeValue") as System.Windows.Controls.TextBlock;
+
             if (slider != null)
-            {
                 slider.Value = _overtimeSettings.SogliaMinuti;
-            }
+
             if (valueLabel != null)
-            {
                 valueLabel.Text = $"{_overtimeSettings.SogliaMinuti} minuti";
-            }
         }
 
         /// <summary>
@@ -186,7 +219,7 @@ namespace TimeClock.Server
         }
 
         /// <summary>
-        /// Aggiunge un nuovo utente chiedendo i dati tramite InputBox e salva su utenti.csv.
+        /// Aggiunge un nuovo utente tramite AddUserWindow e salva su utenti.csv.
         /// </summary>
         private void AddUser_Click(object sender, RoutedEventArgs e)
         {
@@ -195,30 +228,36 @@ namespace TimeClock.Server
                 MessageBox.Show("Seleziona prima la cartella CSV");
                 return;
             }
+
             try
             {
-                var dlg = new AddUserWindow
+                var dlg = new AddUserWindow(_csvFolder)
                 {
                     Owner = this
                 };
+
                 bool? result = dlg.ShowDialog();
+
                 if (result == true && dlg.User != null)
                 {
                     var u = dlg.User;
-                    // compone la riga da salvare
-                    string line = string.Join(",", new []
+
+                    string line = string.Join(",", new[]
                     {
-                        u.Id,
-                        u.Nome,
-                        u.Cognome,
-                        u.Ruolo,
-                        u.DataAssunzione.ToString("yyyy-MM-dd"),
-                        u.OreContrattoSettimanali.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                        u.CompensoOrarioBase.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                        u.CompensoOrarioExtra.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                    });
+                u.Id,
+                u.SequenceNumber.ToString(),
+                u.Nome,
+                u.Cognome,
+                u.Ruolo,
+                u.DataAssunzione.ToString("yyyy-MM-dd"),
+                u.OreContrattoSettimanali.ToString(CultureInfo.InvariantCulture),
+                u.CompensoOrarioBase.ToString(CultureInfo.InvariantCulture),
+                u.CompensoOrarioExtra.ToString(CultureInfo.InvariantCulture)
+            });
+
                     string path = Path.Combine(_csvFolder, "utenti.csv");
                     File.AppendAllText(path, line + Environment.NewLine);
+
                     LoadUsers();
                     MessageBox.Show("Utente aggiunto con successo");
                 }
@@ -228,6 +267,7 @@ namespace TimeClock.Server
                 MessageBox.Show($"Errore durante l'aggiunta dell'utente: {ex.Message}");
             }
         }
+
 
         /// <summary>
         /// Aggiunge una festività chiedendo data e descrizione e salva su festivita.csv.
@@ -239,6 +279,7 @@ namespace TimeClock.Server
                 MessageBox.Show("Seleziona prima la cartella CSV");
                 return;
             }
+
             try
             {
                 string dataStr = Interaction.InputBox("Data (YYYY-MM-DD):", "Nuova festività", DateTime.Now.ToString("yyyy-MM-dd"));
@@ -247,10 +288,14 @@ namespace TimeClock.Server
                     MessageBox.Show("Data non valida");
                     return;
                 }
+
                 string descrizione = Interaction.InputBox("Descrizione:", "Nuova festività", "");
-                string line = string.Join(",", new [] { dt.ToString("yyyy-MM-dd"), descrizione });
+
+                string line = string.Join(",", new[] { dt.ToString("yyyy-MM-dd"), descrizione });
+
                 string path = Path.Combine(_csvFolder, "festivita.csv");
                 File.AppendAllText(path, line + Environment.NewLine);
+
                 LoadHolidays();
                 MessageBox.Show("Festività aggiunta con successo");
             }
@@ -261,35 +306,33 @@ namespace TimeClock.Server
         }
 
         /// <summary>
-        /// Aggiorna la soglia dei minuti straordinari quando lo slider cambia.
+        /// Aggiorna la soglia dei minuti straordinari quando lo slider cambia e salva il file.
         /// </summary>
         private void OvertimeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             int value = (int)e.NewValue;
+
             var label = this.FindName("OvertimeValue") as System.Windows.Controls.TextBlock;
             if (label != null)
             {
                 label.Text = $"{value} minuti";
             }
-            // aggiorna le impostazioni e salva sul file
-            if (_overtimeSettings != null)
+
+            _overtimeSettings.SogliaMinuti = value;
+
+            if (!string.IsNullOrWhiteSpace(_csvFolder))
             {
-                _overtimeSettings.SogliaMinuti = value;
-                // salva
-                if (!string.IsNullOrWhiteSpace(_csvFolder))
+                string path = Path.Combine(_csvFolder, "parametri_straordinari.csv");
+                File.WriteAllText(path, string.Join(",", new[]
                 {
-                    string path = Path.Combine(_csvFolder, "parametri_straordinari.csv");
-                    File.WriteAllText(path, string.Join(",", new [] {
-                        _overtimeSettings.SogliaMinuti.ToString(),
-                        _overtimeSettings.UnitaArrotondamentoMinuti.ToString()
-                    }));
-                }
+                    _overtimeSettings.SogliaMinuti.ToString(),
+                    _overtimeSettings.UnitaArrotondamentoMinuti.ToString()
+                }));
             }
         }
 
         /// <summary>
-        /// Gestione click del bottone di scelta cartella. Consente di selezionare
-        /// la cartella condivisa che contiene i file CSV e ricarica i dati.
+        /// Gestione click del bottone di scelta cartella CSV.
         /// </summary>
         private void SelectCsvFolder_Click(object sender, RoutedEventArgs e)
         {
@@ -301,11 +344,11 @@ namespace TimeClock.Server
                     _csvFolder = dialog.SelectedPath;
                     CsvPathBox.Text = _csvFolder;
 
-                    // 🔹 SALVA nelle impostazioni dell'utente
+                    // salva nelle impostazioni utente
                     Properties.Settings.Default.CsvFolderPath = _csvFolder;
                     Properties.Settings.Default.Save();
 
-                    // 🔹 Ricarica i dati da quella cartella
+                    // ricarica i dati
                     LoadUsers();
                     LoadHolidays();
                     LoadSettings();
@@ -313,10 +356,8 @@ namespace TimeClock.Server
             }
         }
 
-
         /// <summary>
         /// Genera i report mensili per gli utenti selezionati (o tutti).
-        /// Legge ore e calcola straordinari utilizzando il repository e le impostazioni correnti.
         /// </summary>
         private void GenerateReport_Click(object sender, RoutedEventArgs e)
         {
@@ -325,17 +366,19 @@ namespace TimeClock.Server
                 MessageBox.Show("Seleziona una cartella valida.");
                 return;
             }
+
             try
             {
                 var repo = new CsvRepository();
-                // usa la lista utenti caricata. Se vuota, ricarica
+
                 if (_users == null || !_users.Any())
                 {
                     LoadUsers();
                 }
-                // determina se generare per un singolo utente
+
                 var userSelector = this.FindName("UserSelectorReport") as System.Windows.Controls.ComboBox;
                 List<UserProfile> targetUsers;
+
                 if (userSelector != null && userSelector.SelectedItem is UserProfile selectedUser)
                 {
                     targetUsers = new List<UserProfile> { selectedUser };
@@ -344,22 +387,24 @@ namespace TimeClock.Server
                 {
                     targetUsers = _users ?? new List<UserProfile>();
                 }
-                // assicura che le festività e impostazioni siano caricate
+
                 if (_holidays == null || !_holidays.Any())
                 {
                     LoadHolidays();
                 }
-                if (_overtimeSettings == null)
-                {
-                    LoadSettings();
-                }
+
                 int year = DateTime.Now.Year;
                 int month = DateTime.Now.Month;
+
                 var calculator = new PayPeriodCalculator(_overtimeSettings ?? new OvertimeSettings(), _holidays);
                 var summaries = new List<PaySummary>();
+
                 foreach (var user in targetUsers)
                 {
                     string userFile = Path.Combine(_csvFolder, $"{user.Id}.csv");
+                    if (!File.Exists(userFile))
+                        continue;
+
                     var entries = repo.Load(userFile)
                         .Select(f => new TimeCardEntry
                         {
@@ -368,11 +413,14 @@ namespace TimeClock.Server
                             Tipo = Enum.TryParse<PunchType>(f[1], true, out var tipo) ? tipo : PunchType.Entrata
                         })
                         .ToList();
+
                     var summary = calculator.Calculate(user, entries, year, month);
                     summaries.Add(summary);
                 }
+
                 var reportService = new ReportService();
                 reportService.GenerateReports(targetUsers, summaries, year, month, _csvFolder);
+
                 MessageBox.Show("Report generati con successo!");
             }
             catch (Exception ex)

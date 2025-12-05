@@ -70,17 +70,46 @@ namespace TimeClock.Client
                 return;
 
             _users = _repo.Load(path)
-                .Select(f => new UserProfile
-                {
-                    Id = f[0],
-                    Nome = f[1],
-                    Cognome = f[2],
-                    Ruolo = f[3],
-                    DataAssunzione = DateTime.Parse(f[4]),
-                    OreContrattoSettimanali = double.Parse(f[5]),
-                    CompensoOrarioBase = decimal.Parse(f[6]),
-                    CompensoOrarioExtra = decimal.Parse(f[7])
-                })
+    .Select(f => new UserProfile
+    {
+        Id = f.ElementAtOrDefault(0) ?? "",
+        Nome = f.ElementAtOrDefault(1) ?? "",
+        Cognome = f.ElementAtOrDefault(2) ?? "",
+        Ruolo = f.ElementAtOrDefault(3) ?? "",
+
+        // DATA ASSUNZIONE: se vuota o errata ? oggi
+        DataAssunzione = DateTime.TryParse(f.ElementAtOrDefault(4), out var dt)
+            ? dt
+            : DateTime.Today,
+
+        // ORE SETTIMANALI (vuoto ? 0)
+        OreContrattoSettimanali = double.TryParse(
+            f.ElementAtOrDefault(5)?.Replace(",", "."),
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var ore)
+            ? ore
+            : 0,
+
+        // SALARIO BASE (vuoto ? 0)
+        CompensoOrarioBase = decimal.TryParse(
+            f.ElementAtOrDefault(6)?.Replace(",", "."),
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var baseSal)
+            ? baseSal
+            : 0,
+
+        // SALARIO EXTRA
+        CompensoOrarioExtra = decimal.TryParse(
+            f.ElementAtOrDefault(7)?.Replace(",", "."),
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var extraSal)
+            ? extraSal
+            : 0
+    })
+
                 .ToList();
 
             UserComboBox.ItemsSource = _users;

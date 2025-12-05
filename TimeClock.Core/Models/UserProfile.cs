@@ -15,5 +15,9 @@ namespace TimeClock.Core.Models
         public double OreContrattoSettimanali { get; set; }
         public decimal CompensoOrarioBase { get; set; }
         public decimal CompensoOrarioExtra { get; set; }
+
+        public int SequenceNumber { get; set; }
+
+
     }
 }

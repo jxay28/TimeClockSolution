@@ -147,13 +147,36 @@
                                               RowHeight="32">
 
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Nome" Binding="{Binding Nome}"/>
-                                            <DataGridTextColumn Header="Cognome" Binding="{Binding Cognome}"/>
-                                            <DataGridTextColumn Header="Ruolo" Binding="{Binding Ruolo}"/>
-                                            <DataGridTextColumn Header="Ore Sett." Binding="{Binding OreSettimanali}"/>
-                                            <DataGridTextColumn Header="Compenso Base" Binding="{Binding CompensoBase}"/>
-                                            <DataGridTextColumn Header="Compenso Extra" Binding="{Binding CompensoStraordinario}"/>
+
+                                            <DataGridTextColumn Header="N"
+                                                                Binding="{Binding SequenceNumber}" />
+
+                                            <DataGridTextColumn Header="ID"
+                                                                Binding="{Binding Id}" />
+
+                                            <DataGridTextColumn Header="Nome"
+                                                                Binding="{Binding Nome}" />
+
+                                            <DataGridTextColumn Header="Cognome"
+                                                                Binding="{Binding Cognome}" />
+
+                                            <DataGridTextColumn Header="Ruolo"
+                                                                Binding="{Binding Ruolo}" />
+
+                                            <DataGridTextColumn Header="Data Assunzione"
+                                                                Binding="{Binding DataAssunzione, StringFormat=\{0:dd/MM/yyyy\}}" />
+
+                                            <DataGridTextColumn Header="Ore Sett."
+                                                                Binding="{Binding OreContrattoSettimanali}" />
+
+                                            <DataGridTextColumn Header="Compenso Base"
+                                                                Binding="{Binding CompensoOrarioBase}" />
+
+                                            <DataGridTextColumn Header="Compenso Extra"
+                                                                Binding="{Binding CompensoOrarioExtra}" />
+
                                         </DataGrid.Columns>
+
                                     </DataGrid>
                                 </Grid>
                             </TabItem>

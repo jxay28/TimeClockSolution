@@ -3,144 +3,183 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Aggiungi Utente"
-        Height="594"
+        Height="600"
         Width="520"
         WindowStartupLocation="CenterOwner"
         AllowsTransparency="True"
-        WindowStyle="None" Background="#FF0F172A">
+        WindowStyle="None"
+        Background="#FF0F172A">
 
     <Grid Margin="20">
 
         <!-- CARD CENTRALE "VETRO" -->
         <Border Background="#40FFFFFF"
                 CornerRadius="18"
-                Padding="20"
-                Effect="{DynamicResource DropShadowEffect}">
+                Padding="25"
+                Effect="{DynamicResource DropShadowEffect}"
+                VerticalAlignment="Center">
 
-            <Grid>
+            <Grid SnapsToDevicePixels="True">
+                <!-- Definizione righe e colonne -->
                 <Grid.RowDefinitions>
+                    <!-- Titolo -->
                     <RowDefinition Height="Auto"/>
+
+                    <!-- Campi -->
+                    <RowDefinition Height="Auto"/>                    <!-- Numero sequenziale -->
+                    <RowDefinition Height="Auto"/>                    <!-- ID -->
+                    <RowDefinition Height="Auto"/>                    <!-- Nome -->
+                    <RowDefinition Height="Auto"/>                    <!-- Cognome -->
+                    <RowDefinition Height="Auto"/>                    <!-- Ruolo -->
+                    <RowDefinition Height="Auto"/>                    <!-- Data assunzione -->
+                    <RowDefinition Height="Auto"/>                    <!-- Ore settimanali -->
+                    <RowDefinition Height="Auto"/>                    <!-- Salario base -->
+                    <RowDefinition Height="Auto"/>                    <!-- Salario extra -->
+                    
+                    <!-- Pulsanti -->
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                     </Grid.RowDefinitions>
 
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="160"/>
+                    <ColumnDefinition Width="170"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- TITOLO -->
                 <TextBlock Text="Nuovo Utente"
-                           FontSize="22"
+                           Grid.Row="0" Grid.ColumnSpan="2"
+                           FontSize="24"
                            FontWeight="Bold"
                            Foreground="White"
-                           Grid.Row="0"
-                           Grid.ColumnSpan="2"
-                           Margin="0 0 0 15"/>
+                           Margin="0 0 0 0"
+                           HorizontalAlignment="Center"/>
 
                 <!-- Numero sequenziale -->
                 <TextBlock Text="Numero sequenziale"
                            Grid.Row="1" Grid.Column="0"
-                           Foreground="White" VerticalAlignment="Center"/>
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
                 <TextBox x:Name="SeqNumberBox"
                          Grid.Row="1" Grid.Column="1"
                          IsReadOnly="True"
-                         Style="{StaticResource GlassTextBox}"/>
+                         Style="{StaticResource GlassTextBox}"
+                         Margin="0 4"/>
 
                 <!-- ID -->
                 <TextBlock Text="ID"
                            Grid.Row="2" Grid.Column="0"
-                           Foreground="White" VerticalAlignment="Center"/>
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
                 <TextBox x:Name="IdBox"
                          Grid.Row="2" Grid.Column="1"
-                         Style="{StaticResource GlassTextBox}"/>
+                         Style="{StaticResource GlassTextBox}"
+                         Margin="0 4"/>
 
                 <!-- Nome -->
                 <TextBlock Text="Nome"
                            Grid.Row="3" Grid.Column="0"
-                           Foreground="White" VerticalAlignment="Center"/>
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
                 <TextBox x:Name="NomeBox"
                          Grid.Row="3" Grid.Column="1"
-                         Style="{StaticResource GlassTextBox}"/>
+                         Style="{StaticResource GlassTextBox}"
+                         Margin="0 4"/>
 
                 <!-- Cognome -->
                 <TextBlock Text="Cognome"
                            Grid.Row="4" Grid.Column="0"
-                           Foreground="White" VerticalAlignment="Center"/>
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
                 <TextBox x:Name="CognomeBox"
                          Grid.Row="4" Grid.Column="1"
-                         Style="{StaticResource GlassTextBox}"/>
+                         Style="{StaticResource GlassTextBox}"
+                         Margin="0 4"/>
 
                 <!-- Ruolo -->
                 <TextBlock Text="Ruolo"
                            Grid.Row="5" Grid.Column="0"
-                           Foreground="White" VerticalAlignment="Center"/>
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
                 <TextBox x:Name="RuoloBox"
                          Grid.Row="5" Grid.Column="1"
-                         Style="{StaticResource GlassTextBox}"/>
+                         Style="{StaticResource GlassTextBox}"
+                         Margin="0 4"/>
 
                 <!-- Data Assunzione -->
                 <TextBlock Text="Data assunzione"
                            Grid.Row="6" Grid.Column="0"
-                           Foreground="White" VerticalAlignment="Center"/>
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
                 <DatePicker x:Name="AssunzionePicker"
                             Grid.Row="6" Grid.Column="1"
                             SelectedDate="{x:Static sys:DateTime.Now}"
-                            Style="{StaticResource GlassDatePicker}"/>
+                            Style="{StaticResource GlassDatePicker}"
+                            Margin="0 4"
+                            Foreground="Black"/>
 
-                <!-- Ore Contratto -->
+                <!-- Ore settimanali -->
                 <TextBlock Text="Ore settimanali"
                            Grid.Row="7" Grid.Column="0"
-                           Foreground="White" VerticalAlignment="Center"/>
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
                 <TextBox x:Name="OreBox"
                          Grid.Row="7" Grid.Column="1"
-                         Style="{StaticResource GlassTextBox}"/>
+                         Style="{StaticResource GlassTextBox}"
+                         Margin="0 4"/>
 
-                <!-- Salario Base -->
+                <!-- Salario base -->
                 <TextBlock Text="Salario base €/h"
                            Grid.Row="8" Grid.Column="0"
-                           Foreground="White" VerticalAlignment="Center"/>
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
                 <TextBox x:Name="SalarioBaseBox"
                          Grid.Row="8" Grid.Column="1"
-                         Style="{StaticResource GlassTextBox}"/>
+                         Style="{StaticResource GlassTextBox}"
+                         Margin="0 4"/>
 
-                <!-- Salario Extra -->
+                
+
+                <!-- Salario extra -->
                 <TextBlock Text="Salario extra €/h"
-                           Grid.Row="9" Grid.Column="0"
-                           Foreground="White" VerticalAlignment="Center"/>
+               Grid.Row="9" Grid.Column="0"
+               Foreground="White"
+               VerticalAlignment="Center"
+               Margin="0 4"/>
                 <TextBox x:Name="SalarioExtraBox"
-                         Grid.Row="9" Grid.Column="1"
-                         Style="{StaticResource GlassTextBox}"/>
+             Grid.Row="9" Grid.Column="1"
+             Style="{StaticResource GlassTextBox}"
+             Margin="0 4"/>
 
-                <!-- Pulsanti -->
+                <!-- Pulsanti SOTTO SalarioExtraBox -->
                 <StackPanel Grid.Row="10"
-                            Grid.ColumnSpan="2"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Right"
-                            Margin="0,25,0,0">
+                Grid.ColumnSpan="2"               
+                Orientation="Horizontal"
+                            
+                HorizontalAlignment="Right"
+                Margin="0 0 0 0">
 
                     <Button Content="Salva"
-                            Width="100"
-                            Margin="5"
-                            Style="{StaticResource GlassButton}"
-                            Click="Save_Click"/>
+                Width="100"      
+                Margin="0,5,5,0"
+                Style="{StaticResource GlassButton}"
+                Click="Save_Click" HorizontalAlignment="Right"/>
 
                     <Button Content="Annulla"
-                            Width="100"
-                            Margin="5"
-                            Style="{StaticResource GlassButton}"
-                            Click="Cancel_Click"/>
+                Width="100"
+                Margin="0,5,0,0"
+                Style="{StaticResource GlassButton}"
+                Click="Cancel_Click"/>
                 </StackPanel>
 
             </Grid>
-
         </Border>
 
     </Grid>
