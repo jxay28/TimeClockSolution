@@ -473,72 +473,25 @@ namespace TimeClock.Server
         /// </summary>
         private void GenerateReport_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(_csvFolder) || !Directory.Exists(_csvFolder))
+            if (string.IsNullOrWhiteSpace(_csvFolder))
             {
-                MessageBox.Show("Seleziona una cartella valida.");
+                MessageBox.Show("Seleziona prima la cartella dei dati.");
                 return;
             }
 
-            try
+            if (_users == null || _users.Count == 0)
             {
-                var repo = new CsvRepository();
-
-                if (_users == null || !_users.Any())
-                {
-                    LoadUsers();
-                }
-
-                var userSelector = this.FindName("UserSelectorReport") as System.Windows.Controls.ComboBox;
-                List<UserProfile> targetUsers;
-
-                if (userSelector != null && userSelector.SelectedItem is UserProfile selectedUser)
-                {
-                    targetUsers = new List<UserProfile> { selectedUser };
-                }
-                else
-                {
-                    targetUsers = _users ?? new List<UserProfile>();
-                }
-
-                if (_holidays == null || !_holidays.Any())
-                {
-                    LoadHolidays();
-                }
-
-                int year = DateTime.Now.Year;
-                int month = DateTime.Now.Month;
-
-                var calculator = new PayPeriodCalculator(_overtimeSettings ?? new OvertimeSettings(), _holidays);
-                var summaries = new List<PaySummary>();
-
-                foreach (var user in targetUsers)
-                {
-                    string userFile = Path.Combine(_csvFolder, $"{user.Id}.csv");
-                    if (!File.Exists(userFile))
-                        continue;
-
-                    var entries = repo.Load(userFile)
-                        .Select(f => new TimeCardEntry
-                        {
-                            UserId = user.Id,
-                            DataOra = DateTime.Parse(f[0]),
-                            Tipo = Enum.TryParse<PunchType>(f[1], true, out var tipo) ? tipo : PunchType.Entrata
-                        })
-                        .ToList();
-
-                    var summary = calculator.Calculate(user, entries, year, month);
-                    summaries.Add(summary);
-                }
-
-                var reportService = new ReportService();
-                reportService.GenerateReports(targetUsers, summaries, year, month, _csvFolder);
-
-                MessageBox.Show("Report generati con successo!");
+                MessageBox.Show("Non ci sono utenti caricati.");
+                return;
             }
-            catch (Exception ex)
+
+            var wnd = new ReportWindow(_csvFolder, _users)
             {
-                MessageBox.Show($"Errore durante l'elaborazione: {ex.Message}");
-            }
+                Owner = this
+            };
+
+            wnd.ShowDialog();
+        
         }
 
         /// <summary>

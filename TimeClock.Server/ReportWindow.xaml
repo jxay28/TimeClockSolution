@@ -52,9 +52,10 @@
                     <StackPanel Orientation="Vertical" Margin="0 0 20 0">
                         <TextBlock Text="Seleziona utente"
                                    FontSize="16"
-                                   Foreground="White"/>
+                                   Foreground="Beige"/>
                         <ComboBox x:Name="UserCombo"
                                   Width="280"
+                                  Text="."
                                   DisplayMemberPath="FullName"
                                   Margin="0 5"/>
                     </StackPanel>
@@ -135,9 +136,9 @@
                                             IsReadOnly="True"/>
 
                         <DataGridCheckBoxColumn Header="Festivo"
-                                                Binding="{Binding Festivo}"
-                                                Width="70"
-                                                IsReadOnly="True"/>
+                                            Binding="{Binding IsFestivo}"
+                                            Width="70"
+                                            IsReadOnly="True"/>
 
                         <DataGridTextColumn Header="Note"
                                             Binding="{Binding Note}"
