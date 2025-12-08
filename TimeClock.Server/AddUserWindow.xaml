@@ -3,42 +3,54 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Aggiungi Utente"
-        Height="600"
-        Width="520"
+        Height="730"
+        Width="500"
         WindowStartupLocation="CenterOwner"
         AllowsTransparency="True"
         WindowStyle="None"
         Background="#FF0F172A">
 
     <Grid Margin="20">
-
         <!-- CARD CENTRALE "VETRO" -->
         <Border Background="#40FFFFFF"
                 CornerRadius="18"
-                Padding="25"
-                Effect="{DynamicResource DropShadowEffect}"
-                VerticalAlignment="Center">
+                Padding="20"
+                Effect="{DynamicResource DropShadowEffect}" Margin="0,0,0,0
+                ">
 
-            <Grid SnapsToDevicePixels="True">
-                <!-- Definizione righe e colonne -->
+            <Grid>
                 <Grid.RowDefinitions>
-                    <!-- Titolo -->
                     <RowDefinition Height="Auto"/>
-
-                    <!-- Campi -->
-                    <RowDefinition Height="Auto"/>                    <!-- Numero sequenziale -->
-                    <RowDefinition Height="Auto"/>                    <!-- ID -->
-                    <RowDefinition Height="Auto"/>                    <!-- Nome -->
-                    <RowDefinition Height="Auto"/>                    <!-- Cognome -->
-                    <RowDefinition Height="Auto"/>                    <!-- Ruolo -->
-                    <RowDefinition Height="Auto"/>                    <!-- Data assunzione -->
-                    <RowDefinition Height="Auto"/>                    <!-- Ore settimanali -->
-                    <RowDefinition Height="Auto"/>                    <!-- Salario base -->
-                    <RowDefinition Height="Auto"/>                    <!-- Salario extra -->
-                    
-                    <!-- Pulsanti -->
+                    <!-- titolo -->
                     <RowDefinition Height="Auto"/>
-                     </Grid.RowDefinitions>
+                    <!-- seq -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- id -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- nome -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- cognome -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- ruolo -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- data assunzione -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- ore settimanali -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- salario base -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- salario extra -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- ingresso1 -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- uscita1 -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- ingresso2 -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- uscita2 -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- pulsanti -->
+                </Grid.RowDefinitions>
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="170"/>
@@ -51,7 +63,7 @@
                            FontSize="24"
                            FontWeight="Bold"
                            Foreground="White"
-                           Margin="0 0 0 0"
+                           Margin="0 0 0 10"
                            HorizontalAlignment="Center"/>
 
                 <!-- Numero sequenziale -->
@@ -145,42 +157,115 @@
                          Style="{StaticResource GlassTextBox}"
                          Margin="0 4"/>
 
-                
-
                 <!-- Salario extra -->
                 <TextBlock Text="Salario extra €/h"
-               Grid.Row="9" Grid.Column="0"
-               Foreground="White"
-               VerticalAlignment="Center"
-               Margin="0 4"/>
+                           Grid.Row="9" Grid.Column="0"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
                 <TextBox x:Name="SalarioExtraBox"
-             Grid.Row="9" Grid.Column="1"
-             Style="{StaticResource GlassTextBox}"
-             Margin="0 4"/>
+                         Grid.Row="9" Grid.Column="1"
+                         Style="{StaticResource GlassTextBox}"
+                         Margin="0 4"/>
 
-                <!-- Pulsanti SOTTO SalarioExtraBox -->
-                <StackPanel Grid.Row="10"
-                Grid.ColumnSpan="2"               
-                Orientation="Horizontal"
-                            
-                HorizontalAlignment="Right"
-                Margin="0 0 0 0">
+                <!-- Orario ingresso previsto 1 -->
+                <TextBlock Text="Orario ingresso previsto 1"
+                           Grid.Row="10" Grid.Column="0"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
+                <ComboBox x:Name="Ingresso1Combo"
+                          Grid.Row="10" Grid.Column="1"
+                          Margin="0 4">
+                    <ComboBoxItem Content="06:00"/>
+                    <ComboBoxItem Content="06:30"/>
+                    <ComboBoxItem Content="07:00"/>
+                    <ComboBoxItem Content="07:30"/>
+                    <ComboBoxItem Content="08:00"/>
+                    <ComboBoxItem Content="08:30"/>
+                    <ComboBoxItem Content="09:00"/>
+                    <ComboBoxItem Content="09:30"/>
+                    <ComboBoxItem Content="10:00"/>
+                </ComboBox>
 
+                <!-- Orario uscita prevista 1 -->
+                <TextBlock Text="Orario uscita prevista 1"
+                           Grid.Row="11" Grid.Column="0"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
+                <ComboBox x:Name="Uscita1Combo"
+                          Grid.Row="11" Grid.Column="1"
+                          Margin="0 4">
+                    <ComboBoxItem Content="12:00"/>
+                    <ComboBoxItem Content="12:30"/>
+                    <ComboBoxItem Content="13:00"/>
+                    <ComboBoxItem Content="13:30"/>
+                    <ComboBoxItem Content="14:00"/>
+                    <ComboBoxItem Content="14:30"/>
+                    <ComboBoxItem Content="15:00"/>
+                    <ComboBoxItem Content="15:30"/>
+                    <ComboBoxItem Content="16:00"/>
+                </ComboBox>
+
+                <!-- Orario ingresso previsto 2 -->
+                <TextBlock Text="Orario ingresso previsto 2"
+                           Grid.Row="12" Grid.Column="0"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
+                <ComboBox x:Name="Ingresso2Combo"
+                          Grid.Row="12" Grid.Column="1"
+                          Margin="0 4">
+                    <ComboBoxItem Content="12:00"/>
+                    <ComboBoxItem Content="12:30"/>
+                    <ComboBoxItem Content="13:00"/>
+                    <ComboBoxItem Content="13:30"/>
+                    <ComboBoxItem Content="14:00"/>
+                    <ComboBoxItem Content="14:30"/>
+                    <ComboBoxItem Content="15:00"/>
+                    <ComboBoxItem Content="15:30"/>
+                    <ComboBoxItem Content="16:00"/>
+                </ComboBox>
+
+                <!-- Orario uscita prevista 2 -->
+                <TextBlock Text="Orario uscita prevista 2"
+                           Grid.Row="13" Grid.Column="0"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0 4"/>
+                <ComboBox x:Name="Uscita2Combo"
+                          Grid.Row="13" Grid.Column="1"
+                          Margin="0 4">
+                    <ComboBoxItem Content="16:00"/>
+                    <ComboBoxItem Content="16:30"/>
+                    <ComboBoxItem Content="17:00"/>
+                    <ComboBoxItem Content="17:30"/>
+                    <ComboBoxItem Content="18:00"/>
+                    <ComboBoxItem Content="18:30"/>
+                    <ComboBoxItem Content="19:00"/>
+                    <ComboBoxItem Content="19:30"/>
+                    <ComboBoxItem Content="20:00"/>
+                </ComboBox>
+
+                <!-- Pulsanti -->
+                <StackPanel Grid.Row="14" Grid.ColumnSpan="2"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,20,0,0">
                     <Button Content="Salva"
-                Width="100"      
-                Margin="0,5,5,0"
-                Style="{StaticResource GlassButton}"
-                Click="Save_Click" HorizontalAlignment="Right"/>
-
+                            Width="100"
+                            Margin="5"
+                            Style="{StaticResource GlassButton}"
+                            Click="Save_Click"/>
                     <Button Content="Annulla"
-                Width="100"
-                Margin="0,5,0,0"
-                Style="{StaticResource GlassButton}"
-                Click="Cancel_Click"/>
+                            Width="100"
+                            Margin="5"
+                            Style="{StaticResource GlassButton}"
+                            Click="Cancel_Click"/>
                 </StackPanel>
 
             </Grid>
         </Border>
-
     </Grid>
 </Window>

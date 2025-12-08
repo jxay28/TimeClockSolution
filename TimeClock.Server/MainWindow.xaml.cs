@@ -7,6 +7,9 @@ using System.Windows;
 using Microsoft.VisualBasic; // per InputBox festività
 using TimeClock.Core.Models;
 using TimeClock.Core.Services;
+using System.Text.Json;
+using System.Windows.Controls;
+
 
 namespace TimeClock.Server
 {
@@ -55,6 +58,11 @@ namespace TimeClock.Server
         /// Carica l'elenco degli utenti dal file utenti.csv e aggiorna griglia e combo.
         /// CSV: Id,SequenceNumber,Nome,Cognome,Ruolo,DataAssunzione,Ore,Base,Extra
         /// </summary>
+        /// <summary>
+        /// Carica l'elenco degli utenti dal file utenti.json (master).
+        /// Se utenti.json non esiste, prova a migrare da utenti.csv.
+        /// Aggiorna griglia e combo.
+        /// </summary>
         private void LoadUsers()
         {
             _users = new List<UserProfile>();
@@ -62,41 +70,87 @@ namespace TimeClock.Server
             if (string.IsNullOrWhiteSpace(_csvFolder))
                 return;
 
-            string path = Path.Combine(_csvFolder, "utenti.csv");
-            if (!File.Exists(path))
-                return;
+            string jsonPath = Path.Combine(_csvFolder, "utenti.json");
+            string csvPath = Path.Combine(_csvFolder, "utenti.csv");
 
-            var repo = new CsvRepository();
-
-            foreach (var fields in repo.Load(path))
+            // 1) JSON master
+            if (File.Exists(jsonPath))
             {
                 try
                 {
-                    var user = new UserProfile
-                    {
-                        Id = fields.ElementAtOrDefault(0),
-                        SequenceNumber = int.TryParse(fields.ElementAtOrDefault(1), out var seq) ? seq : 0,
-                        Nome = fields.ElementAtOrDefault(2),
-                        Cognome = fields.ElementAtOrDefault(3),
-                        Ruolo = fields.ElementAtOrDefault(4),
-                        DataAssunzione = DateTime.TryParse(fields.ElementAtOrDefault(5), out var d) ? d : DateTime.MinValue,
-                        OreContrattoSettimanali = double.TryParse(fields.ElementAtOrDefault(6), NumberStyles.Any, CultureInfo.InvariantCulture, out var ore) ? ore : 0,
-                        CompensoOrarioBase = decimal.TryParse(fields.ElementAtOrDefault(7), NumberStyles.Any, CultureInfo.InvariantCulture, out var cb) ? cb : 0,
-                        CompensoOrarioExtra = decimal.TryParse(fields.ElementAtOrDefault(8), NumberStyles.Any, CultureInfo.InvariantCulture, out var ce) ? ce : 0
-                    };
-
-                    // ignora eventuali righe senza Id o Nome
-                    if (!string.IsNullOrWhiteSpace(user.Id))
-                        _users.Add(user);
+                    string json = File.ReadAllText(jsonPath);
+                    var list = JsonSerializer.Deserialize<List<UserProfile>>(json);
+                    if (list != null)
+                        _users = list;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ignora righe malformate
+                    MessageBox.Show($"Errore durante il caricamento di utenti.json: {ex.Message}");
+                }
+            }
+            // 2) Prima esecuzione: migra da CSV se presente
+            else if (File.Exists(csvPath))
+            {
+                try
+                {
+                    var repo = new CsvRepository();
+
+                    foreach (var fields in repo.Load(csvPath))
+                    {
+                        try
+                        {
+                            var user = new UserProfile
+                            {
+                                Id = fields.ElementAtOrDefault(0) ?? string.Empty,
+                                SequenceNumber = int.TryParse(fields.ElementAtOrDefault(1), out var seq) ? seq : 0,
+                                Nome = fields.ElementAtOrDefault(2) ?? string.Empty,
+                                Cognome = fields.ElementAtOrDefault(3) ?? string.Empty,
+                                Ruolo = fields.ElementAtOrDefault(4) ?? string.Empty,
+                                DataAssunzione = DateTime.TryParse(fields.ElementAtOrDefault(5), out var d) ? d : DateTime.MinValue,
+                                OreContrattoSettimanali = double.TryParse(fields.ElementAtOrDefault(6),
+                                    System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture,
+                                    out var ore)
+                                    ? ore
+                                    : 0,
+                                CompensoOrarioBase = decimal.TryParse(fields.ElementAtOrDefault(7),
+                                    System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture,
+                                    out var cb)
+                                    ? cb
+                                    : 0,
+                                CompensoOrarioExtra = decimal.TryParse(fields.ElementAtOrDefault(8),
+                                    System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture,
+                                    out var ce)
+                                    ? ce
+                                    : 0,
+                                // Campi extra orari (se non ci sono nel CSV restano vuoti)
+                                OrarioIngresso1 = fields.ElementAtOrDefault(9),
+                                OrarioUscita1 = fields.ElementAtOrDefault(10),
+                                OrarioIngresso2 = fields.ElementAtOrDefault(11),
+                                OrarioUscita2 = fields.ElementAtOrDefault(12)
+                            };
+
+                            _users.Add(user);
+                        }
+                        catch
+                        {
+                            // ignora la riga malformata
+                        }
+                    }
+
+                    // una volta caricati dal CSV, salviamo subito in JSON+CSV pulito
+                    SaveUsers();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Errore durante il caricamento di utenti.csv: {ex.Message}");
                 }
             }
 
             // aggiorna la griglia degli utenti
-            var grid = this.FindName("UsersGrid") as System.Windows.Controls.DataGrid;
+            var grid = this.FindName("UsersGrid") as DataGrid;
             if (grid != null)
             {
                 grid.ItemsSource = null;
@@ -104,13 +158,67 @@ namespace TimeClock.Server
             }
 
             // aggiorna la combo per il report
-            var combo = this.FindName("UserSelectorReport") as System.Windows.Controls.ComboBox;
+            var combo = this.FindName("UserSelectorReport") as ComboBox;
             if (combo != null)
             {
                 combo.ItemsSource = null;
                 combo.ItemsSource = _users;
             }
         }
+        /// <summary>
+        /// Salva gli utenti su utenti.json (master) e genera anche utenti.csv per compatibilità.
+        /// </summary>
+        private void SaveUsers()
+        {
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+                return;
+
+            string jsonPath = Path.Combine(_csvFolder, "utenti.json");
+            string csvPath = Path.Combine(_csvFolder, "utenti.csv");
+
+            // Salvataggio JSON
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+                string json = JsonSerializer.Serialize(_users, options);
+                File.WriteAllText(jsonPath, json);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore durante il salvataggio di utenti.json: {ex.Message}");
+            }
+
+            // Esportazione CSV (solo per compatibilità / eventuali strumenti esterni)
+            try
+            {
+                var lines = _users.Select(u => string.Join(",", new[]
+                {
+            u.Id,
+            u.SequenceNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            u.Nome,
+            u.Cognome,
+            u.Ruolo,
+            u.DataAssunzione.ToString("yyyy-MM-dd"),
+            u.OreContrattoSettimanali.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            u.CompensoOrarioBase.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            u.CompensoOrarioExtra.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            u.OrarioIngresso1 ?? string.Empty,
+            u.OrarioUscita1 ?? string.Empty,
+            u.OrarioIngresso2 ?? string.Empty,
+            u.OrarioUscita2 ?? string.Empty
+        }));
+
+                File.WriteAllLines(csvPath, lines);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore durante l'aggiornamento di utenti.csv: {ex.Message}");
+            }
+        }
+
 
         /// <summary>
         /// Carica le festività da festivita.csv e aggiorna la griglia dedicata.
@@ -219,13 +327,14 @@ namespace TimeClock.Server
         }
 
         /// <summary>
-        /// Aggiunge un nuovo utente tramite AddUserWindow e salva su utenti.csv.
+        /// Aggiunge un nuovo utente tramite AddUserWindow, aggiorna la lista _users
+        /// e salva subito su utenti.json + utenti.csv.
         /// </summary>
         private void AddUser_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(_csvFolder))
             {
-                MessageBox.Show("Seleziona prima la cartella CSV");
+                MessageBox.Show("Seleziona prima la cartella dati (CSV/JSON).");
                 return;
             }
 
@@ -240,25 +349,27 @@ namespace TimeClock.Server
 
                 if (result == true && dlg.User != null)
                 {
-                    var u = dlg.User;
+                    _users.Add(dlg.User);
 
-                    string line = string.Join(",", new[]
+                    // Salvataggio su JSON + CSV
+                    SaveUsers();
+
+                    // Aggiorna griglia
+                    var grid = this.FindName("UsersGrid") as DataGrid;
+                    if (grid != null)
                     {
-                u.Id,
-                u.SequenceNumber.ToString(),
-                u.Nome,
-                u.Cognome,
-                u.Ruolo,
-                u.DataAssunzione.ToString("yyyy-MM-dd"),
-                u.OreContrattoSettimanali.ToString(CultureInfo.InvariantCulture),
-                u.CompensoOrarioBase.ToString(CultureInfo.InvariantCulture),
-                u.CompensoOrarioExtra.ToString(CultureInfo.InvariantCulture)
-            });
+                        grid.ItemsSource = null;
+                        grid.ItemsSource = _users;
+                    }
 
-                    string path = Path.Combine(_csvFolder, "utenti.csv");
-                    File.AppendAllText(path, line + Environment.NewLine);
+                    // Aggiorna combo report
+                    var combo = this.FindName("UserSelectorReport") as ComboBox;
+                    if (combo != null)
+                    {
+                        combo.ItemsSource = null;
+                        combo.ItemsSource = _users;
+                    }
 
-                    LoadUsers();
                     MessageBox.Show("Utente aggiunto con successo");
                 }
             }
@@ -267,6 +378,7 @@ namespace TimeClock.Server
                 MessageBox.Show($"Errore durante l'aggiunta dell'utente: {ex.Message}");
             }
         }
+
 
 
         /// <summary>
