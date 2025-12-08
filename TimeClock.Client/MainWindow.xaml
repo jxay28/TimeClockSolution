@@ -29,7 +29,7 @@
                                    FontSize="22"
                                    FontWeight="Bold"
                                    Foreground="White"/>
-                        <TextBlock Text="Client di timbratura"
+                        <TextBlock Text="Client di timbratura."
                                    FontSize="12"
                                    Foreground="#CCFFFFFF"/>
                     </StackPanel>
