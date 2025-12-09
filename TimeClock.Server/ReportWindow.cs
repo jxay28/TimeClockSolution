@@ -151,6 +151,9 @@ namespace TimeClock.Server
             }
 
             ReportGrid.ItemsSource = righe;
+           // ReportGrid.ItemsSource = lista;
+            AggiornaTotali();
+
         }
 
         // ===========================
@@ -188,6 +191,8 @@ namespace TimeClock.Server
 
             ReportGrid.ItemsSource = null;
             ReportGrid.ItemsSource = righe;
+            AggiornaTotali();
+
         }
 
         // ===========================
@@ -565,6 +570,28 @@ namespace TimeClock.Server
             // Refresh DataGrid
             ReportGrid.ItemsSource = null;
             ReportGrid.ItemsSource = righe;
+            AggiornaTotali();
+
+        }
+        private void AggiornaTotali()
+        {
+            var righe = ReportGrid.ItemsSource as IEnumerable<ReportRow>;
+            if (righe == null) return;
+
+            double totOrd = 0;
+            double totExtra = 0;
+
+            foreach (var r in righe)
+            {
+                totOrd += r.OreOrdinarie;
+                totExtra += r.OreStraordinarie;
+
+            }
+
+            TotOrdinarieText.Text = $"{totOrd:0.##} h";
+            TotStraordinarieText.Text = $"{totExtra:0.##} h";
+           // AggiornaTotali();
+
         }
 
 
