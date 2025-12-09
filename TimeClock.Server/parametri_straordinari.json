@@ -1,0 +1,23 @@
+{
+  "SogliaMinutiStraordinario": 15,
+  "GiorniSempreFestivi": [ "Saturday", "Sunday" ],
+  "FestivitaRicorrenti": [
+    {
+      "Mese": 1,
+      "Giorno": 1
+    },
+    {
+      "Mese": 4,
+      "Giorno": 25
+    },
+    {
+      "Mese": 12,
+      "Giorno": 25
+    },
+    {
+      "Mese": 12,
+      "Giorno": 26
+    }
+  ],
+  "FestivitaAggiuntive": []
+}

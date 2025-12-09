@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,5 +30,28 @@ namespace TimeClock.Server
             File.WriteAllLines(Path.Combine(outputFolder, $"report_commercialista_{year}{monthStr}.csv"), reportCommLines);
             File.WriteAllLines(Path.Combine(outputFolder, $"report_paghe_{year}{monthStr}.csv"), reportPagheLines);
         }
+
+        private bool ÈFestivo(DateTime data)
+        {
+            var p = App.ParametriGlobali;
+
+            // Sabato/domenica o giorni scelti
+            if (p.GiorniSempreFestivi.Contains(data.DayOfWeek))
+                return true;
+
+            // Festività ricorrenti
+            foreach (var (mese, giorno) in p.FestivitaRicorrenti)
+            {
+                if (data.Month == mese && data.Day == giorno)
+                    return true;
+            }
+
+            // Festività extra specifiche
+            if (p.FestivitaAggiuntive.Contains(data.Date))
+                return true;
+
+            return false;
+        }
+
     }
 }
