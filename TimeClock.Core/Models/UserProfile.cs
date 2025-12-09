@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace TimeClock.Core.Models
 {
@@ -18,13 +18,14 @@ namespace TimeClock.Core.Models
         public decimal CompensoOrarioBase { get; set; }
         public decimal CompensoOrarioExtra { get; set; }
 
-        // Nuovi campi per orari previsti
+        // 👇 PROPRIETÀ RICHIESTE DAL REPORT
         public string? OrarioIngresso1 { get; set; }
         public string? OrarioUscita1 { get; set; }
         public string? OrarioIngresso2 { get; set; }
         public string? OrarioUscita2 { get; set; }
+
+        // 👇 usato nella combobox utenti
         public string FullName => $"{SequenceNumber:D3} - {Nome} {Cognome}";
         public override string ToString() => FullName;
-
     }
 }

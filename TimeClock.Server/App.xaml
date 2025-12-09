@@ -157,6 +157,21 @@
             <Setter Property="BorderBrush" Value="#40FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
+        <!-- Evidenziare righe festivi nella DataGrid -->
+        <Style TargetType="DataGridRow" x:Key="FestiviRowStyle">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#10000000"/>
+            <Style.Triggers>
+
+                <!-- Se  festivo: riga rossa vetro -->
+                <DataTrigger Binding="{Binding IsFestivo}" Value="True">
+                    <Setter Property="Background" Value="#40FF5050"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </DataTrigger>
+
+            </Style.Triggers>
+        </Style>
+
 
     </Application.Resources>
 

@@ -415,5 +415,160 @@ namespace TimeClock.Server
         {
             return t > previsto ? (t - previsto).TotalHours : 0;
         }
+
+        private void SalvaModifiche_Click(object sender, RoutedEventArgs e)
+        {
+            var user = UserCombo.SelectedItem as UserProfile;
+            if (user == null)
+            {
+                MessageBox.Show("Seleziona un utente.");
+                return;
+            }
+
+            if (MonthCombo.SelectedIndex < 0)
+            {
+                MessageBox.Show("Seleziona un mese.");
+                return;
+            }
+
+            var righeReport = (ReportGrid.ItemsSource as IEnumerable<ReportRow>)?.ToList();
+            if (righeReport == null || !righeReport.Any())
+            {
+                MessageBox.Show("Non ci sono dati da salvare.");
+                return;
+            }
+
+            int year = DateTime.Now.Year;
+            int month = MonthCombo.SelectedIndex + 1;
+
+            string filePath = Path.Combine(_csvFolder, $"{user.Id}.csv");
+
+            // 1. Carichiamo tutte le timbrature esistenti
+            var allLines = new List<string>();
+            if (File.Exists(filePath))
+            {
+                allLines = File.ReadAllLines(filePath).ToList();
+            }
+
+            // 2. Rimuoviamo solo le righe del mese attuale
+            allLines = allLines
+                .Where(line =>
+                {
+                    if (string.IsNullOrWhiteSpace(line)) return false;
+
+                    var parts = line.Split(',');
+                    if (parts.Length < 2) return false;
+
+                    if (!DateTime.TryParse(parts[0], out var dt)) return false;
+
+                    return !(dt.Year == year && dt.Month == month);
+                })
+                .ToList();
+
+            // 3. Ricostruiamo SOLO il mese in editing
+            var newLines = new List<string>();
+
+            foreach (var row in righeReport)
+            {
+                DateTime giorno = new DateTime(year, month, row.Giorno);
+
+                // Coppia 1
+                if (TimeSpan.TryParse(row.Entrata1, out var e1) &&
+                    TimeSpan.TryParse(row.Uscita1, out var u1) &&
+                    u1 > e1)
+                {
+                    newLines.Add($"{giorno:yyyy-MM-dd} {e1:hh\\:mm},Entrata");
+                    newLines.Add($"{giorno:yyyy-MM-dd} {u1:hh\\:mm},Uscita");
+                }
+
+                // Coppia 2
+                if (TimeSpan.TryParse(row.Entrata2, out var e2) &&
+                    TimeSpan.TryParse(row.Uscita2, out var u2) &&
+                    u2 > e2)
+                {
+                    newLines.Add($"{giorno:yyyy-MM-dd} {e2:hh\\:mm},Entrata");
+                    newLines.Add($"{giorno:yyyy-MM-dd} {u2:hh\\:mm},Uscita");
+                }
+            }
+
+            // 4. Aggiungiamo al CSV completo le nuove righe
+            allLines.AddRange(newLines);
+
+            // 5. Ordiniamo TUTTE le timbrature per data e ora
+            allLines = allLines
+                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .Select(l =>
+                {
+                    var parts = l.Split(',');
+                    DateTime dt = DateTime.Parse(parts[0]);
+                    return new { dt, line = l };
+                })
+                .OrderBy(x => x.dt)
+                .Select(x => x.line)
+                .ToList();
+
+            // 6. Scriviamo il file completo
+            File.WriteAllLines(filePath, allLines);
+
+            MessageBox.Show("Modifiche salvate correttamente!");
+        }
+        private void AggiungiTimbratura_Click(object sender, RoutedEventArgs e)
+        {
+            var user = UserCombo.SelectedItem as UserProfile;
+            if (user == null)
+            {
+                MessageBox.Show("Seleziona un utente.");
+                return;
+            }
+
+            if (MonthCombo.SelectedIndex < 0)
+            {
+                MessageBox.Show("Seleziona un mese.");
+                return;
+            }
+
+            var righe = (ReportGrid.ItemsSource as List<ReportRow>);
+            if (righe == null)
+                return;
+
+            // Prendi la riga selezionata
+            var row = ReportGrid.SelectedItem as ReportRow;
+            if (row == null)
+            {
+                MessageBox.Show("Seleziona una riga (giorno) dalla tabella.");
+                return;
+            }
+
+            // Se la riga non ha coppie → crea la prima
+            if (string.IsNullOrWhiteSpace(row.Entrata1))
+            {
+                row.Entrata1 = "08:00";
+                row.Uscita1 = "12:00";
+            }
+            else if (string.IsNullOrWhiteSpace(row.Entrata2))
+            {
+                row.Entrata2 = "13:00";
+                row.Uscita2 = "17:00";
+            }
+            else
+            {
+                MessageBox.Show("Questo giorno ha già due coppie di timbrature.");
+                return;
+            }
+
+            // Ricalcola la riga
+            int month = MonthCombo.SelectedIndex + 1;
+            int year = DateTime.Now.Year;
+            DateTime data = new DateTime(year, month, row.Giorno);
+            RicalcolaRiga(row, data, user);
+
+            // Refresh DataGrid
+            ReportGrid.ItemsSource = null;
+            ReportGrid.ItemsSource = righe;
+        }
+
+
     }
+
 }
+

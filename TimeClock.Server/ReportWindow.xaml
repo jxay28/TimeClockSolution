@@ -49,7 +49,7 @@
                     </StackPanel>
 
                     <!-- UTENTE -->
-                    <StackPanel Orientation="Vertical" Margin="0 0 20 0">
+                    <StackPanel Orientation="Vertical" Margin="0 0 5 0" Width="200">
                         <TextBlock Text="Seleziona utente"
                                    FontSize="16"
                                    Foreground="Beige"/>
@@ -65,28 +65,40 @@
                                 VerticalAlignment="Bottom">
 
                         <Button Content="Carica Report"
-                                Width="140"
-                                Margin="10 0"
+                                Width="100"
+                                Margin="1 0"
                                 Style="{StaticResource GlassButton}"
                                 Click="CaricaReport_Click"/>
 
                         <Button Content="Ricalcola"
-                                Width="120"
-                                Margin="10 0"
+                                Width="100"
+                                Margin="1 0"
                                 Style="{StaticResource GlassButton}"
                                 Click="RicalcolaReport_Click"/>
 
                         <Button Content="Esporta PDF"
-                                Width="120"
-                                Margin="10 0"
+                                Width="100"
+                                Margin="1 0"
                                 Style="{StaticResource GlassButton}"
                                 Click="EsportaPDF_Click"/>
 
                         <Button Content="Esporta TXT"
-                                Width="120"
-                                Margin="10 0"
+                                Width="100"
+                                Margin="1 0"
                                 Style="{StaticResource GlassButton}"
                                 Click="EsportaTXT_Click"/>
+                        <Button Content="Salva Modifiche"
+                                Width="100"
+                                Margin="1 0"
+                                Style="{StaticResource GlassButton}"
+                                Click="SalvaModifiche_Click"/>
+                        <Button Content="Aggiungi Timbratura"
+                                Width="120"
+                                Margin="1 0"
+                                Style="{StaticResource GlassButton}"
+                                Click="AggiungiTimbratura_Click"/>
+
+
 
                     </StackPanel>
                 </StackPanel>
@@ -100,6 +112,7 @@
                           HeadersVisibility="Column"
                           GridLinesVisibility="Horizontal"
                           Background="#10FFFFFF"
+                          RowStyle="{StaticResource FestiviRowStyle}"
                           Margin="0">
 
                     <DataGrid.Columns>
