@@ -123,8 +123,8 @@
                         <DataGridTextColumn Header="Uscita 1" Binding="{Binding Uscita1}" Width="100"/>
                         <DataGridTextColumn Header="Entrata 2" Binding="{Binding Entrata2}" Width="100"/>
                         <DataGridTextColumn Header="Uscita 2" Binding="{Binding Uscita2}" Width="100"/>
-                        <DataGridTextColumn Header="Ordinarie" Binding="{Binding OreOrdinarie}" Width="90" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Straord." Binding="{Binding OreStraordinarie}" Width="90" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Ordinarie" Binding="{Binding OreOrdinarieVisual}" Width="90" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Straord." Binding="{Binding OreStraordinarieVisual}" Width="90"                     IsReadOnly="True"/>
                         <DataGridCheckBoxColumn Header="Festivo" Binding="{Binding IsFestivo}" Width="70" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Note" Binding="{Binding Note}" Width="*"/>
                     </DataGrid.Columns>

@@ -18,11 +18,26 @@ namespace TimeClock.Server
         public string? Entrata2 { get; set; }
         public string? Uscita2 { get; set; }
 
+        // Queste rimangono double per i calcoli matematici
         public double OreOrdinarie { get; set; }
         public double OreStraordinarie { get; set; }
 
         public bool IsFestivo { get; set; }
         public string? Note { get; set; }
+
+        // --- NUOVE PROPRIETÀ PER LA GRAFICA (HH:mm) ---
+
+        public string OreOrdinarieVisual => ConvertiDecimaliInOre(OreOrdinarie);
+
+        public string OreStraordinarieVisual => ConvertiDecimaliInOre(OreStraordinarie);
+
+        // Funzione interna per formattare (es. 8.5 -> "08:30")
+        private string ConvertiDecimaliInOre(double oreDecimali)
+        {
+            var ts = TimeSpan.FromHours(oreDecimali);
+            // Usiamo (int)ts.TotalHours per gestire anche totali > 24 ore correttamente
+            return $"{(int)ts.TotalHours:00}:{ts.Minutes:00}";
+        }
     }
     public partial class ReportWindow : Window
     {
@@ -825,13 +840,18 @@ namespace TimeClock.Server
             {
                 totOrd += r.OreOrdinarie;
                 totExtra += r.OreStraordinarie;
-
             }
 
-            TotOrdinarieText.Text = $"{totOrd:0.##} h";
-            TotStraordinarieText.Text = $"{totExtra:0.##} h";
-           // AggiornaTotali();
+            // Funzione locale per convertire in stringa HH:mm
+            string FormatHours(double h)
+            {
+                var ts = TimeSpan.FromHours(h);
+                return $"{(int)ts.TotalHours:00}:{ts.Minutes:00}";
+            }
 
+            // Aggiorniamo le etichette usando la formattazione oraria
+            TotOrdinarieText.Text = $"{FormatHours(totOrd)} h";
+            TotStraordinarieText.Text = $"{FormatHours(totExtra)} h";
         }
 
 
