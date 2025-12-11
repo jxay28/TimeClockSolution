@@ -11,8 +11,6 @@ using System.Text.Json;
 using System.Windows.Controls;
 
 
-
-
 namespace TimeClock.Server
 {
     public partial class MainWindow : Window
