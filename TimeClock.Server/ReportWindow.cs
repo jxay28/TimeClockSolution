@@ -853,6 +853,10 @@ namespace TimeClock.Server
             TotOrdinarieText.Text = $"{FormatHours(totOrd)} h";
             TotStraordinarieText.Text = $"{FormatHours(totExtra)} h";
         }
+        private void Chiudi_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
 
 
     }

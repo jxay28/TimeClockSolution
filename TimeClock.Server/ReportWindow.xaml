@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Report Mensile"
         Height="700"
-        Width="1100"
+        Width="1200"
         WindowStartupLocation="CenterOwner"
         Background="#FF0F172A"
         WindowStyle="None"
@@ -55,6 +55,9 @@
                                    Foreground="Beige"/>
                         <ComboBox x:Name="UserCombo"
                                   Width="280"
+                                  
+                                  
+                                  
                                   Text="."
                                   DisplayMemberPath="FullName"
                                   Margin="0 5"/>
@@ -66,9 +69,17 @@
 
                         <Button Content="Carica Report"
                                 Width="100"
+                                
                                 Margin="1 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="CaricaReport_Click"/>
+                                Click="CaricaReport_Click" RenderTransformOrigin="0.5,0.5" FontSize="12">
+                            <Button.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform/>
+                                   
+                                </TransformGroup>
+                            </Button.RenderTransform>
+                        </Button>
 
                         <Button Content="Ricalcola"
                                 Width="100"
@@ -91,12 +102,19 @@
                                 Width="100"
                                 Margin="1 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="SalvaModifiche_Click"/>
+                                Click="SalvaModifiche_Click" FontSize="12"/>
                         <Button Content="Aggiungi Timbratura"
                                 Width="120"
                                 Margin="1 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="AggiungiTimbratura_Click"/>
+                                Click="AggiungiTimbratura_Click" FontSize="12"/>
+                        <Button Content="Chiudi"
+                                Width="90"
+                                Margin="20 0 0 0" 
+                                Style="{StaticResource GlassButton}"
+                                Background="#40FF4B4B"
+                                Click="Chiudi_Click"/>
+                        
 
 
 
