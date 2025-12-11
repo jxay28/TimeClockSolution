@@ -52,6 +52,7 @@ namespace TimeClock.Server
         private void CaricaReport_Click(object sender, RoutedEventArgs e)
         {
             var user = UserCombo.SelectedItem as UserProfile;
+            // Controllo input
             if (user == null)
             {
                 MessageBox.Show("Seleziona un utente.");
@@ -67,93 +68,122 @@ namespace TimeClock.Server
             int month = MonthCombo.SelectedIndex + 1;
             int year = DateTime.Now.Year;
 
+            // Controllo cartella
             if (string.IsNullOrWhiteSpace(_csvFolder))
             {
                 MessageBox.Show("Cartella CSV non impostata.");
                 return;
             }
 
-            string userFile = Path.Combine(_csvFolder, $"{user.Id}.csv");
-            if (!File.Exists(userFile))
+            string userFile = System.IO.Path.Combine(_csvFolder, $"{user.Id}.csv");
+            if (!System.IO.File.Exists(userFile))
             {
                 MessageBox.Show($"Nessun file di timbrature trovato per l'utente {user.Nome} {user.Cognome}.");
                 ReportGrid.ItemsSource = new List<ReportRow>();
                 return;
             }
 
-            // Carica timbrature dal CSV
+            // 1. CARICAMENTO DATI (Mese corrente + buffer inizio mese prossimo per turni notturni)
             var repo = new CsvRepository();
-            var entries = new List<TimeCardEntry>();
+            var allEntries = new List<TimeCardEntry>();
 
             foreach (var row in repo.Load(userFile))
             {
-                if (row.Length < 2)
-                    continue;
+                if (row.Length < 2 || !DateTime.TryParse(row[0], out var dt)) continue;
 
-                if (!DateTime.TryParse(row[0], out var dt))
-                    continue;
+                // Carichiamo il mese target E i primi 2 giorni del mese successivo 
+                // per catturare eventuali uscite di turni notturni (es. 31/01 22:00 -> 01/02 06:00)
+                bool isTargetMonth = (dt.Year == year && dt.Month == month);
+                bool isBufferNextMonth = (dt.Date <= new DateTime(year, month, 1).AddMonths(1).AddDays(2));
 
-                PunchType tipo;
-                if (!Enum.TryParse(row[1], true, out tipo))
-                    tipo = PunchType.Entrata;
-
-                entries.Add(new TimeCardEntry
+                if (isTargetMonth || isBufferNextMonth)
                 {
-                    UserId = user.Id,
-                    DataOra = dt,
-                    Tipo = tipo
-                });
+                    PunchType tipo;
+                    if (!Enum.TryParse(row[1], true, out tipo)) tipo = PunchType.Entrata;
+
+                    allEntries.Add(new TimeCardEntry { UserId = user.Id, DataOra = dt, Tipo = tipo });
+                }
             }
 
-            // Filtra il mese richiesto
-            var monthEntries = entries
-                .Where(e2 => e2.DataOra.Year == year && e2.DataOra.Month == month)
-                .OrderBy(e2 => e2.DataOra)
+            // Ordiniamo cronologicamente
+            allEntries = allEntries.OrderBy(x => x.DataOra).ToList();
+
+            // 2. ACCOPPIAMENTO (PAIRING) INTELLIGENTE
+            var tutteLeCoppie = CostruisciCoppieGlobali(allEntries);
+
+            // Filtriamo solo le coppie INIZIATE nel mese selezionato
+            var coppieDelMese = tutteLeCoppie
+                .Where(c => c.Ingresso.Month == month && c.Ingresso.Year == year)
                 .ToList();
 
+            // 3. GENERAZIONE RIGHE 
+            var righeReport = new List<ReportRow>();
             int daysInMonth = DateTime.DaysInMonth(year, month);
-            var righe = new List<ReportRow>();
 
+            // Raggruppiamo per giorno
+            var gruppiPerGiorno = coppieDelMese
+                .GroupBy(c => c.Ingresso.Day)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // CICLO SUI GIORNI DEL MESE
             for (int day = 1; day <= daysInMonth; day++)
             {
-                DateTime data = new DateTime(year, month, day);
-                var dayEntries = monthEntries
-                    .Where(e2 => e2.DataOra.Date == data.Date)
-                    .OrderBy(e2 => e2.DataOra)
-                    .ToList();
+                DateTime dataCorrente = new DateTime(year, month, day);
 
-                var reportRow = new ReportRow
+                if (!gruppiPerGiorno.ContainsKey(day))
                 {
-                    Giorno = day
-                };
-
-                // Costruisci massimo 2 intervalli (Entrata1/Uscita1, Entrata2/Uscita2)
-                var coppie = CostruisciCoppie(dayEntries);
-
-                if (coppie.Count > 0)
-                {
-                    var c1 = coppie[0];
-                    reportRow.Entrata1 = c1.Ingresso.ToString("HH:mm");
-                    reportRow.Uscita1 = c1.Uscita.ToString("HH:mm");
+                    // Nessuna timbrata: riga vuota
+                    var emptyRow = new ReportRow { Giorno = day };
+                    // Passiamo null come coppie
+                    CalcolaTotaliRiga(emptyRow, dataCorrente, user, null, null);
+                    righeReport.Add(emptyRow);
                 }
-
-                if (coppie.Count > 1)
+                else
                 {
-                    var c2 = coppie[1];
-                    reportRow.Entrata2 = c2.Ingresso.ToString("HH:mm");
-                    reportRow.Uscita2 = c2.Uscita.ToString("HH:mm");
+                    var coppieGiorno = gruppiPerGiorno[day];
+                    coppieGiorno = coppieGiorno.OrderBy(c => c.Ingresso).ToList();
+
+                    int index = 0;
+                    // CICLO WHILE per gestire più righe nello stesso giorno (> 4 timbrate)
+                    while (index < coppieGiorno.Count)
+                    {
+                        var row = new ReportRow { Giorno = day };
+
+                        // Coppia 1 (obbligatoria se siamo qui)
+                        var c1 = coppieGiorno[index];
+                        row.Entrata1 = c1.Ingresso.ToString("HH:mm");
+                        row.Uscita1 = c1.Uscita.ToString("HH:mm");
+                        index++;
+
+                        // Coppia 2 (opzionale)
+                        // Usiamo la sintassi corretta per il Nullable Tuple
+                        (DateTime, DateTime)? c2 = null;
+
+                        if (index < coppieGiorno.Count)
+                        {
+                            var pair2 = coppieGiorno[index];
+                            c2 = pair2;
+
+                            row.Entrata2 = pair2.Ingresso.ToString("HH:mm");
+                            row.Uscita2 = pair2.Uscita.ToString("HH:mm");
+                            index++;
+                        }
+
+                        // Calcolo ore
+                        CalcolaTotaliRiga(row, dataCorrente, user, c1, c2);
+
+                        // Aggiungiamo alla lista TEMPORANEA (non alla Grid!)
+                        righeReport.Add(row);
+                    }
                 }
+            } // FINE CICLO FOR
 
-                // Calcola ore ordinarie/extra in base agli orari previsti utente
-                RicalcolaRiga(reportRow, data, user);
+            // 4. ASSEGNAZIONE ALLA GRIGLIA (SOLO ALLA FINE)
+            // Resettiamo prima per sicurezza
+            ReportGrid.ItemsSource = null;
+            ReportGrid.ItemsSource = righeReport;
 
-                righe.Add(reportRow);
-            }
-
-            ReportGrid.ItemsSource = righe;
-           // ReportGrid.ItemsSource = lista;
             AggiornaTotali();
-
         }
 
         // ===========================
@@ -162,15 +192,9 @@ namespace TimeClock.Server
         private void RicalcolaReport_Click(object sender, RoutedEventArgs e)
         {
             var user = UserCombo.SelectedItem as UserProfile;
-            if (user == null)
+            if (user == null || MonthCombo.SelectedIndex < 0)
             {
-                MessageBox.Show("Seleziona un utente.");
-                return;
-            }
-
-            if (MonthCombo.SelectedIndex < 0)
-            {
-                MessageBox.Show("Seleziona un mese.");
+                MessageBox.Show("Seleziona utente e mese.");
                 return;
             }
 
@@ -178,21 +202,60 @@ namespace TimeClock.Server
             int year = DateTime.Now.Year;
 
             var righeEnumerable = ReportGrid.ItemsSource as IEnumerable<ReportRow>;
-            if (righeEnumerable == null)
-                return;
+            if (righeEnumerable == null) return;
 
             var righe = righeEnumerable.ToList();
 
             foreach (var r in righe)
             {
-                var data = new DateTime(year, month, r.Giorno);
-                RicalcolaRiga(r, data, user);
+                // Ricostruiamo la data base della riga
+                DateTime dataBase = new DateTime(year, month, r.Giorno);
+
+                // --- RICOSTRUZIONE COPPIA 1 ---
+                (DateTime, DateTime)? c1 = null;
+                if (!string.IsNullOrWhiteSpace(r.Entrata1) && !string.IsNullOrWhiteSpace(r.Uscita1))
+                {
+                    if (TimeSpan.TryParse(r.Entrata1, out var tIn1) && TimeSpan.TryParse(r.Uscita1, out var tOut1))
+                    {
+                        DateTime dtIn = dataBase.Add(tIn1);
+                        DateTime dtOut = dataBase.Add(tOut1);
+
+                        // FIX NOTTURNO: Se l'uscita è "minore" dell'entrata (es. 05:00 < 23:30), aggiungi 1 giorno
+                        if (tOut1 < tIn1)
+                        {
+                            dtOut = dtOut.AddDays(1);
+                        }
+                        c1 = (dtIn, dtOut);
+                    }
+                }
+
+                // --- RICOSTRUZIONE COPPIA 2 ---
+                (DateTime, DateTime)? c2 = null;
+                if (!string.IsNullOrWhiteSpace(r.Entrata2) && !string.IsNullOrWhiteSpace(r.Uscita2))
+                {
+                    if (TimeSpan.TryParse(r.Entrata2, out var tIn2) && TimeSpan.TryParse(r.Uscita2, out var tOut2))
+                    {
+                        DateTime dtIn = dataBase.Add(tIn2);
+                        DateTime dtOut = dataBase.Add(tOut2);
+
+                        // FIX NOTTURNO ANCHE QUI
+                        if (tOut2 < tIn2)
+                        {
+                            dtOut = dtOut.AddDays(1);
+                        }
+                        c2 = (dtIn, dtOut);
+                    }
+                }
+
+                // --- CALCOLO COMUNE ---
+                // Ora chiamiamo la STESSA funzione usata dal caricamento, così le regole (8 ore, festivi, ecc) sono identiche
+                CalcolaTotaliRiga(r, dataBase, user, c1, c2);
             }
 
+            // Refresh della griglia
             ReportGrid.ItemsSource = null;
             ReportGrid.ItemsSource = righe;
             AggiornaTotali();
-
         }
 
         // ===========================
@@ -257,28 +320,205 @@ namespace TimeClock.Server
         /// Dato l'elenco di timbrature (Entrata/Uscita) per un giorno,
         /// costruisce coppie Ingresso–Uscita in ordine cronologico.
         /// </summary>
-        private List<(DateTime Ingresso, DateTime Uscita)> CostruisciCoppie(List<TimeCardEntry> dayEntries)
+        private List<(DateTime Ingresso, DateTime Uscita)> CostruisciCoppieGlobali(List<TimeCardEntry> entries)
         {
             var result = new List<(DateTime Ingresso, DateTime Uscita)>();
-            DateTime? lastIn = null;
 
-            foreach (var e in dayEntries)
+            // Stack o variabile temporanea per l'ultima entrata aperta
+            DateTime? lastIngresso = null;
+
+            foreach (var e in entries)
             {
                 if (e.Tipo == PunchType.Entrata)
                 {
-                    lastIn = e.DataOra;
+                    // Se avevamo già un ingresso aperto senza uscita (es. dimenticanza timbratura), 
+                    // cosa facciamo? Per ora sovrascriviamo (nuovo inizio turno) o ignoriamo il precedente.
+                    // Politica standard: l'ultimo IN vince.
+                    lastIngresso = e.DataOra;
                 }
-                else if (e.Tipo == PunchType.Uscita && lastIn != null)
+                else if (e.Tipo == PunchType.Uscita)
                 {
-                    if (e.DataOra > lastIn.Value)
+                    if (lastIngresso.HasValue)
                     {
-                        result.Add((lastIn.Value, e.DataOra));
+                        // Abbiamo una coppia valida!
+                        // Verifica di sanità: l'uscita deve essere dopo l'entrata
+                        if (e.DataOra > lastIngresso.Value)
+                        {
+                            result.Add((lastIngresso.Value, e.DataOra));
+                        }
+
+                        // Chiudiamo il turno
+                        lastIngresso = null;
                     }
-                    lastIn = null;
+                    // Se lastIngresso è null, è un'uscita orfana (timbrata per sbaglio o inizio perso). La ignoriamo.
                 }
             }
 
             return result;
+        }
+        private void CalcolaTotaliRiga(ReportRow row, DateTime dataRiferimento, UserProfile user,
+                               (DateTime In, DateTime Out)? c1,
+                               (DateTime In, DateTime Out)? c2)
+        {
+            // Recupera parametri globali (default 15 minuti se null)
+            int sogliaMinuti = App.ParametriGlobali != null ? App.ParametriGlobali.SogliaMinutiStraordinario : 15;
+
+            // Determina se festivo
+            bool isFestivo = IsGiornoFestivo(dataRiferimento);
+            row.IsFestivo = isFestivo;
+
+            // Se non ci sono timbrature (riga vuota), esci
+            if (c1 == null)
+            {
+                row.OreOrdinarie = 0;
+                row.OreStraordinarie = 0;
+                return;
+            }
+
+            double oreLavorateTotali = 0;
+
+            // Durata C1
+            oreLavorateTotali += (c1.Value.Out - c1.Value.In).TotalHours;
+
+            // Durata C2
+            if (c2.HasValue)
+            {
+                oreLavorateTotali += (c2.Value.Out - c2.Value.In).TotalHours;
+            }
+
+            // SE FESTIVO -> TUTTO STRAORDINARIO
+            if (isFestivo)
+            {
+                row.OreOrdinarie = 0;
+                row.OreStraordinarie = Math.Round(oreLavorateTotali, 2);
+                return;
+            }
+
+            // SE FERIALE -> Divisione Ordinario/Extra
+            // Qui applichiamo la logica semplice: ore totali vs ore previste o turni.
+            // Per ora usiamo la logica base: le ore lavorate sono ordinarie, 
+            // a meno che non superino un monte ore giornaliero (es. 8h) o siano fuori orario.
+            // Usiamo una logica semplificata "a soglia" per evitare complessità eccessiva immediata:
+
+            // Esempio: 8 ore ordinarie max, il resto straordinario
+            double limiteGiornaliero = 8.0;
+
+            if (user.OreContrattoSettimanali > 0)
+            {
+                // Se vuoi essere preciso, dividi ore settimanali / 5 o 6 giorni
+                // limiteGiornaliero = user.OreContrattoSettimanali / 5.0; 
+            }
+
+            double ord = 0;
+            double extra = 0;
+
+            if (oreLavorateTotali > limiteGiornaliero)
+            {
+                ord = limiteGiornaliero;
+                extra = oreLavorateTotali - limiteGiornaliero;
+            }
+            else
+            {
+                ord = oreLavorateTotali;
+                extra = 0;
+            }
+
+            // Controllo Soglia Minima Straordinari
+            if (extra * 60 < sogliaMinuti)
+            {
+                ord += extra; // Assorbi in ordinario
+                extra = 0;
+            }
+
+            row.OreOrdinarie = Math.Round(ord, 2);
+            row.OreStraordinarie = Math.Round(extra, 2);
+        }
+
+        // Funzione helper per confrontare orari reali con previsti
+        private void CalcolaSpacchettamentoOre(DateTime inReale, DateTime outReale, UserProfile user, ref double accOrd, ref double accExtra)
+        {
+            // Nota: Gestire orari previsti che scavalcano la mezzanotte è complesso. 
+            // Per ora assumiamo che gli orari previsti (Anagrafica) siano standard diurni (es. 08-12, 13-17).
+            // Se l'orario reale è notturno e non combacia con i previsti, finirà tutto in Extra o Ordinario a seconda della logica.
+
+            // Semplificazione: Tutto ciò che è lavorato è base, l'extra viene calcolato solo se supera il monte ore o è fuori fascia.
+            // Utilizziamo la tua logica esistente "OreDentro / OreFuori".
+
+            TimeSpan start = inReale.TimeOfDay;
+            TimeSpan end = outReale.TimeOfDay;
+
+            // SE il turno scavalla la mezzanotte (end < start), dobbiamo spezzare il calcolo in due tronconi?
+            // O più semplicemente: Calcoliamo la durata totale. 
+            // Se l'utente non ha orari previsti definiti, è tutto ordinario.
+
+            TimeSpan ing1 = ParseOrario(user.OrarioIngresso1);
+            TimeSpan usc1 = ParseOrario(user.OrarioUscita1);
+            TimeSpan ing2 = ParseOrario(user.OrarioIngresso2);
+            TimeSpan usc2 = ParseOrario(user.OrarioUscita2);
+
+            if (ing1 == TimeSpan.Zero && usc1 == TimeSpan.Zero && ing2 == TimeSpan.Zero)
+            {
+                // Nessun orario previsto: tutto ordinario
+                accOrd += (outReale - inReale).TotalHours;
+                return;
+            }
+
+            // Qui la logica diventa complessa col turno notturno. 
+            // Per ora, applichiamo: Se fuori dalla fascia prevista -> Extra.
+            // Attenzione: Questo approccio è rigido. Spesso si usa solo "Ore totali > 8h = Straordinario".
+            // Procediamo con la logica a fasce come nel tuo codice originale.
+
+            // ... (Inserire qui la logica OreDentro/OrePrima/OreDopo adattata per DateTime invece di TimeSpan per gestire le date diverse) ...
+            // Per brevità e robustezza immediata, calcoliamo i minuti totali lavorati
+            double totalHours = (outReale - inReale).TotalHours;
+
+            // Se l'orario è "strano" (es. notturno) e l'utente ha orari diurni, consideriamo tutto Extra? 
+            // O tutto ordinario fino a 8 ore?
+            // Assumiamo: Tutto ciò che è fuori dalle finestre previste è Extra.
+
+            // (Logica semplificata per non complicare troppo la risposta immediata, 
+            // ma funzionante per lo scavalco se usiamo DateTime complete)
+
+            // Esempio grezzo funzionale:
+            // 1. Costruiamo gli intervalli previsti per il giorno dell'entrata
+            DateTime previstoIn1 = inReale.Date.Add(ing1);
+            DateTime previstoOut1 = inReale.Date.Add(usc1);
+
+            // Intersezione tra [inReale, outReale] e [previstoIn1, previstoOut1]
+            double oreInFascia = GetOverlap(inReale, outReale, previstoIn1, previstoOut1);
+
+            // Ripeti per turno 2
+            DateTime previstoIn2 = inReale.Date.Add(ing2);
+            DateTime previstoOut2 = inReale.Date.Add(usc2);
+            oreInFascia += GetOverlap(inReale, outReale, previstoIn2, previstoOut2);
+
+            accOrd += oreInFascia;
+            accExtra += (totalHours - oreInFascia);
+        }
+
+        private double GetOverlap(DateTime realStart, DateTime realEnd, DateTime targetStart, DateTime targetEnd)
+        {
+            long start = Math.Max(realStart.Ticks, targetStart.Ticks);
+            long end = Math.Min(realEnd.Ticks, targetEnd.Ticks);
+            if (end > start) return new TimeSpan(end - start).TotalHours;
+            return 0;
+        }
+
+        // Helper per i festivi globali
+        private bool IsGiornoFestivo(DateTime data)
+        {
+            if (App.ParametriGlobali == null) return data.DayOfWeek == DayOfWeek.Saturday || data.DayOfWeek == DayOfWeek.Sunday;
+
+            // Check Weekend
+            if (App.ParametriGlobali.GiorniSempreFestivi.Contains(data.DayOfWeek)) return true;
+
+            // Check Date fisse (Natale, ecc)
+            if (App.ParametriGlobali.FestivitaRicorrenti.Any(f => f.Mese == data.Month && f.Giorno == data.Day)) return true;
+
+            // Check Date custom (se implementate)
+            if (App.ParametriGlobali.FestivitaAggiuntive.Contains(data.Date)) return true;
+
+            return false;
         }
 
         /// <summary>
