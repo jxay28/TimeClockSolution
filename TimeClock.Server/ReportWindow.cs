@@ -820,12 +820,13 @@ namespace TimeClock.Server
             int month = MonthCombo.SelectedIndex + 1;
             int year = DateTime.Now.Year;
             DateTime data = new DateTime(year, month, row.Giorno);
-            RicalcolaRiga(row, data, user);
+            //RicalcolaRiga(row, data, user);
 
             // Refresh DataGrid
             ReportGrid.ItemsSource = null;
             ReportGrid.ItemsSource = righe;
-            AggiornaTotali();
+            //AggiornaTotali();
+            
 
         }
         private void AggiornaTotali()
