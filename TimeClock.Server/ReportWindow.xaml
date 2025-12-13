@@ -9,6 +9,8 @@
         WindowStyle="None"
         AllowsTransparency="True">
 
+    
+   
     <Grid Margin="20">
 
         <!-- CARD CENTRALE -->
@@ -66,6 +68,9 @@
                     <!-- PULSANTI -->
                     <StackPanel Orientation="Horizontal"
                                 VerticalAlignment="Bottom">
+                        
+                        
+
 
                         <Button Content="Carica Report"
                                 Width="100"
@@ -81,11 +86,7 @@
                             </Button.RenderTransform>
                         </Button>
 
-                        <Button Content="Ricalcola"
-                                Width="100"
-                                Margin="1 0"
-                                Style="{StaticResource GlassButton}"
-                                Click="RicalcolaReport_Click"/>
+                        
 
                         <Button Content="Esporta PDF"
                                 Width="100"
@@ -123,17 +124,19 @@
 
                 <!-- TABELLA -->
                 <DataGrid x:Name="ReportGrid"
-          AutoGenerateColumns="False"
-          IsReadOnly="False"
-          CanUserAddRows="False"
-          CanUserDeleteRows="False"
-          HeadersVisibility="Column"
-          GridLinesVisibility="Horizontal"
-          Background="#10FFFFFF"
-          RowStyle="{StaticResource FestiviRowStyle}"
-          Margin="0"
-          DockPanel.Dock="Top"
-          Height="450">
+                      AutoGenerateColumns="False"
+                      IsReadOnly="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      Background="#10FFFFFF"
+                      RowStyle="{StaticResource FestiviRowStyle}"
+                      Margin="0"
+                      DockPanel.Dock="Top"
+                      Height="450"
+                      CellEditEnding="ReportGrid_CellEditEnding">
+                    
 
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Giorno" Binding="{Binding Giorno}" Width="60" IsReadOnly="True"/>
@@ -151,9 +154,9 @@
 
                 <!-- TOTALI -->
                 <StackPanel DockPanel.Dock="Bottom"
-            Orientation="Horizontal"
-            HorizontalAlignment="Right"
-            Margin="0 15 0 0">
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0 15 0 0">
 
                     <Border Background="#30FFFFFF" Padding="1" CornerRadius="10" Margin="10">
                         <StackPanel>

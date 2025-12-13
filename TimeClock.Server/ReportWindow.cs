@@ -204,73 +204,69 @@ namespace TimeClock.Server
         // ===========================
         //   RICALCOLA REPORT
         // ===========================
-        private void RicalcolaReport_Click(object sender, RoutedEventArgs e)
+        // 1. EVENTO: Scatta quando l'utente finisce di modificare una cella e preme invio o cambia selezione
+        private void ReportGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            // Usiamo il Dispatcher per attendere che il valore digitato venga 
+            // effettivamente salvato nella proprietà dell'oggetto ReportRow
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var row = e.Row.Item as ReportRow;
+                if (row != null)
+                {
+                    // Ricalcoliamo solo questa riga
+                    RicalcolaLogicaRiga(row);
+
+                    // Aggiorniamo la grafica della riga (necessario per forzare il refresh delle colonne Ordinarie/Extra)
+                    ReportGrid.Items.Refresh();
+
+                    // Aggiorniamo i totali generali
+                    AggiornaTotali();
+                }
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        // 2. LOGICA: Questa funzione prende una riga, legge le stringhe (es "23:00") 
+        // e rifà i calcoli matematici applicando le regole (notturno, 8 ore, ecc)
+        private void RicalcolaLogicaRiga(ReportRow r)
         {
             var user = UserCombo.SelectedItem as UserProfile;
-            if (user == null || MonthCombo.SelectedIndex < 0)
-            {
-                MessageBox.Show("Seleziona utente e mese.");
-                return;
-            }
+            if (user == null || MonthCombo.SelectedIndex < 0) return;
 
             int month = MonthCombo.SelectedIndex + 1;
             int year = DateTime.Now.Year;
+            DateTime dataBase = new DateTime(year, month, r.Giorno);
 
-            var righeEnumerable = ReportGrid.ItemsSource as IEnumerable<ReportRow>;
-            if (righeEnumerable == null) return;
-
-            var righe = righeEnumerable.ToList();
-
-            foreach (var r in righe)
+            // --- RICOSTRUZIONE COPPIA 1 ---
+            (DateTime, DateTime)? c1 = null;
+            if (!string.IsNullOrWhiteSpace(r.Entrata1) && !string.IsNullOrWhiteSpace(r.Uscita1))
             {
-                // Ricostruiamo la data base della riga
-                DateTime dataBase = new DateTime(year, month, r.Giorno);
-
-                // --- RICOSTRUZIONE COPPIA 1 ---
-                (DateTime, DateTime)? c1 = null;
-                if (!string.IsNullOrWhiteSpace(r.Entrata1) && !string.IsNullOrWhiteSpace(r.Uscita1))
+                if (TimeSpan.TryParse(r.Entrata1, out var tIn1) && TimeSpan.TryParse(r.Uscita1, out var tOut1))
                 {
-                    if (TimeSpan.TryParse(r.Entrata1, out var tIn1) && TimeSpan.TryParse(r.Uscita1, out var tOut1))
-                    {
-                        DateTime dtIn = dataBase.Add(tIn1);
-                        DateTime dtOut = dataBase.Add(tOut1);
-
-                        // FIX NOTTURNO: Se l'uscita è "minore" dell'entrata (es. 05:00 < 23:30), aggiungi 1 giorno
-                        if (tOut1 < tIn1)
-                        {
-                            dtOut = dtOut.AddDays(1);
-                        }
-                        c1 = (dtIn, dtOut);
-                    }
+                    DateTime dtIn = dataBase.Add(tIn1);
+                    DateTime dtOut = dataBase.Add(tOut1);
+                    // Fix Notturno
+                    if (tOut1 < tIn1) dtOut = dtOut.AddDays(1);
+                    c1 = (dtIn, dtOut);
                 }
-
-                // --- RICOSTRUZIONE COPPIA 2 ---
-                (DateTime, DateTime)? c2 = null;
-                if (!string.IsNullOrWhiteSpace(r.Entrata2) && !string.IsNullOrWhiteSpace(r.Uscita2))
-                {
-                    if (TimeSpan.TryParse(r.Entrata2, out var tIn2) && TimeSpan.TryParse(r.Uscita2, out var tOut2))
-                    {
-                        DateTime dtIn = dataBase.Add(tIn2);
-                        DateTime dtOut = dataBase.Add(tOut2);
-
-                        // FIX NOTTURNO ANCHE QUI
-                        if (tOut2 < tIn2)
-                        {
-                            dtOut = dtOut.AddDays(1);
-                        }
-                        c2 = (dtIn, dtOut);
-                    }
-                }
-
-                // --- CALCOLO COMUNE ---
-                // Ora chiamiamo la STESSA funzione usata dal caricamento, così le regole (8 ore, festivi, ecc) sono identiche
-                CalcolaTotaliRiga(r, dataBase, user, c1, c2);
             }
 
-            // Refresh della griglia
-            ReportGrid.ItemsSource = null;
-            ReportGrid.ItemsSource = righe;
-            AggiornaTotali();
+            // --- RICOSTRUZIONE COPPIA 2 ---
+            (DateTime, DateTime)? c2 = null;
+            if (!string.IsNullOrWhiteSpace(r.Entrata2) && !string.IsNullOrWhiteSpace(r.Uscita2))
+            {
+                if (TimeSpan.TryParse(r.Entrata2, out var tIn2) && TimeSpan.TryParse(r.Uscita2, out var tOut2))
+                {
+                    DateTime dtIn = dataBase.Add(tIn2);
+                    DateTime dtOut = dataBase.Add(tOut2);
+                    // Fix Notturno
+                    if (tOut2 < tIn2) dtOut = dtOut.AddDays(1);
+                    c2 = (dtIn, dtOut);
+                }
+            }
+
+            // Chiamata al calcolatore centrale (quello con la regola delle 8 ore)
+            CalcolaTotaliRiga(r, dataBase, user, c1, c2);
         }
 
         // ===========================
@@ -826,7 +822,13 @@ namespace TimeClock.Server
             ReportGrid.ItemsSource = null;
             ReportGrid.ItemsSource = righe;
             //AggiornaTotali();
-            
+
+            // USIAMO LA NUOVA LOGICA CENTRALIZZATA
+            RicalcolaLogicaRiga(row);
+
+            // Refresh grafico
+            ReportGrid.Items.Refresh();
+            AggiornaTotali();
 
         }
         private void AggiornaTotali()
