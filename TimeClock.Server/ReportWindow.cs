@@ -770,66 +770,76 @@ namespace TimeClock.Server
         }
         private void AggiungiTimbratura_Click(object sender, RoutedEventArgs e)
         {
-            var user = UserCombo.SelectedItem as UserProfile;
-            if (user == null)
+            // 1. Recuperiamo la riga selezionata
+            var currentRow = ReportGrid.SelectedItem as ReportRow;
+            if (currentRow == null)
             {
-                MessageBox.Show("Seleziona un utente.");
+                MessageBox.Show("Seleziona una riga (giorno) dalla tabella per aggiungere timbrature.");
                 return;
             }
 
-            if (MonthCombo.SelectedIndex < 0)
-            {
-                MessageBox.Show("Seleziona un mese.");
-                return;
-            }
+            // 2. Recuperiamo la LISTA completa dei dati (ci serve per aggiungere righe nuove)
+            // Nota: ItemsSource è stato assegnato come List<ReportRow> nel metodo CaricaReport
+            var listaRighe = ReportGrid.ItemsSource as List<ReportRow>;
+            if (listaRighe == null) return; // Sicurezza
 
-            var righe = (ReportGrid.ItemsSource as List<ReportRow>);
-            if (righe == null)
-                return;
+            // 3. Logica intelligente di inserimento
+            bool nuovaRigaCreata = false;
 
-            // Prendi la riga selezionata
-            var row = ReportGrid.SelectedItem as ReportRow;
-            if (row == null)
+            if (string.IsNullOrWhiteSpace(currentRow.Entrata1))
             {
-                MessageBox.Show("Seleziona una riga (giorno) dalla tabella.");
-                return;
-            }
+                // Caso A: La prima coppia è libera -> Riempiamo quella
+                currentRow.Entrata1 = "08:00";
+                currentRow.Uscita1 = "12:00";
 
-            // Se la riga non ha coppie → crea la prima
-            if (string.IsNullOrWhiteSpace(row.Entrata1))
-            {
-                row.Entrata1 = "08:00";
-                row.Uscita1 = "12:00";
+                // Ricalcoliamo la riga corrente
+                RicalcolaLogicaRiga(currentRow);
             }
-            else if (string.IsNullOrWhiteSpace(row.Entrata2))
+            else if (string.IsNullOrWhiteSpace(currentRow.Entrata2))
             {
-                row.Entrata2 = "13:00";
-                row.Uscita2 = "17:00";
+                // Caso B: La seconda coppia è libera -> Riempiamo quella
+                currentRow.Entrata2 = "13:00";
+                currentRow.Uscita2 = "17:00";
+
+                // Ricalcoliamo la riga corrente
+                RicalcolaLogicaRiga(currentRow);
             }
             else
             {
-                MessageBox.Show("Questo giorno ha già due coppie di timbrature.");
-                return;
+                // Caso C: LA RIGA È PIENA! -> Creiamo una NUOVA RIGA per lo stesso giorno
+                var newRow = new ReportRow
+                {
+                    Giorno = currentRow.Giorno, // Stesso numero del giorno
+                    Entrata1 = "18:00",         // Orario default serale (modificabile)
+                    Uscita1 = "20:00"
+                };
+
+                // Troviamo l'indice della riga selezionata e inseriamo quella nuova subito sotto
+                int index = listaRighe.IndexOf(currentRow);
+                if (index >= 0)
+                {
+                    listaRighe.Insert(index + 1, newRow);
+                    nuovaRigaCreata = true;
+
+                    // Ricalcoliamo la nuova riga
+                    RicalcolaLogicaRiga(newRow);
+                }
             }
 
-            // Ricalcola la riga
-            int month = MonthCombo.SelectedIndex + 1;
-            int year = DateTime.Now.Year;
-            DateTime data = new DateTime(year, month, row.Giorno);
-            //RicalcolaRiga(row, data, user);
+            // 4. Aggiornamento Grafica
+            // Se abbiamo aggiunto una riga, dobbiamo resettare l'ItemsSource per farla apparire
+            if (nuovaRigaCreata)
+            {
+                ReportGrid.ItemsSource = null;
+                ReportGrid.ItemsSource = listaRighe;
+            }
+            else
+            {
+                // Se abbiamo solo modificato una riga esistente, basta il refresh
+                ReportGrid.Items.Refresh();
+            }
 
-            // Refresh DataGrid
-            ReportGrid.ItemsSource = null;
-            ReportGrid.ItemsSource = righe;
-            //AggiornaTotali();
-
-            // USIAMO LA NUOVA LOGICA CENTRALIZZATA
-            RicalcolaLogicaRiga(row);
-
-            // Refresh grafico
-            ReportGrid.Items.Refresh();
             AggiornaTotali();
-
         }
         private void AggiornaTotali()
         {
