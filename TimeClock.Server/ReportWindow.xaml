@@ -136,19 +136,60 @@
                       DockPanel.Dock="Top"
                       Height="450"
                       CellEditEnding="ReportGrid_CellEditEnding">
-                    
+
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Giorno" Binding="{Binding Giorno}" Width="60" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Entrata 1" Binding="{Binding Entrata1}" Width="100"/>
-                        <DataGridTextColumn Header="Uscita 1" Binding="{Binding Uscita1}" Width="100"/>
-                        <DataGridTextColumn Header="Entrata 2" Binding="{Binding Entrata2}" Width="100"/>
-                        <DataGridTextColumn Header="Uscita 2" Binding="{Binding Uscita2}" Width="100"/>
-                        <DataGridTextColumn Header="Ordinarie" Binding="{Binding OreOrdinarieVisual}" Width="90" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Straord." Binding="{Binding OreStraordinarieVisual}" Width="90"                     IsReadOnly="True"/>
-                        <DataGridCheckBoxColumn Header="Festivo" Binding="{Binding IsFestivo}" Width="70" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Note" Binding="{Binding Note}" Width="*"/>
+                        <DataGridTextColumn Header="Giorno"
+                        Binding="{Binding Giorno}"
+                        Width="60"
+                        IsReadOnly="True"/>
+
+                        <DataGridTextColumn Header="Entrata 1"
+                        Binding="{Binding Entrata1}"
+                        Width="100"/>
+
+                        <DataGridTextColumn Header="Uscita 1"
+                        Binding="{Binding Uscita1}"
+                        Width="100"/>
+
+                        <DataGridTextColumn Header="Durata 1"
+                        Binding="{Binding Durata1Visual}"
+                        Width="90"
+                        IsReadOnly="True"/>
+
+                        <DataGridTextColumn Header="Entrata 2"
+                        Binding="{Binding Entrata2}"
+                        Width="100"/>
+
+                        <DataGridTextColumn Header="Uscita 2"
+                        Binding="{Binding Uscita2}"
+                        Width="100"/>
+
+                        <DataGridTextColumn Header="Durata 2"
+                        Binding="{Binding Durata2Visual}"
+                        Width="90"
+                        IsReadOnly="True"/>
+
+                        <DataGridCheckBoxColumn Header="Festivo"
+                            Binding="{Binding IsFestivo}"
+                            Width="70"
+                            IsReadOnly="True"/>
+
+                        <DataGridTextColumn Header="Ordinarie"
+                        Binding="{Binding OreOrdinarieVisual}"
+                        Width="90"
+                        IsReadOnly="True"/>
+
+                        <DataGridTextColumn Header="Straord."
+                        Binding="{Binding OreStraordinarieVisual}"
+                        Width="90"
+                        IsReadOnly="True"/>
+
+                        <DataGridTextColumn Header="Note"
+                        Binding="{Binding Note}"
+                        Width="*"/>
                     </DataGrid.Columns>
+
 
                 </DataGrid>
 

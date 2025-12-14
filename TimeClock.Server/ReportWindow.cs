@@ -13,32 +13,37 @@ namespace TimeClock.Server
     public class ReportRow
     {
         public int Giorno { get; set; }
+
+        // Timbrature
         public string? Entrata1 { get; set; }
         public string? Uscita1 { get; set; }
         public string? Entrata2 { get; set; }
         public string? Uscita2 { get; set; }
 
-        // Queste rimangono double per i calcoli matematici
+        // --- MODIFICA: Queste verranno popolate dal metodo di calcolo ---
+        public string? Durata1Visual { get; set; }
+        public string? Durata2Visual { get; set; }
+
+        // Totali matematici
         public double OreOrdinarie { get; set; }
         public double OreStraordinarie { get; set; }
 
         public bool IsFestivo { get; set; }
         public string? Note { get; set; }
 
-        // --- NUOVE PROPRIETÀ PER LA GRAFICA (HH:mm) ---
-
+        // Proprietà visuali per la griglia (Ore totali)
         public string OreOrdinarieVisual => ConvertiDecimaliInOre(OreOrdinarie);
-
         public string OreStraordinarieVisual => ConvertiDecimaliInOre(OreStraordinarie);
 
-        // Funzione interna per formattare (es. 8.5 -> "08:30")
         private string ConvertiDecimaliInOre(double oreDecimali)
         {
             var ts = TimeSpan.FromHours(oreDecimali);
-            // Usiamo (int)ts.TotalHours per gestire anche totali > 24 ore correttamente
             return $"{(int)ts.TotalHours:00}:{ts.Minutes:00}";
         }
     }
+
+
+
     public partial class ReportWindow : Window
     {
         private readonly string _csvFolder;
@@ -218,7 +223,13 @@ namespace TimeClock.Server
                     RicalcolaLogicaRiga(row);
 
                     // Aggiorniamo la grafica della riga (necessario per forzare il refresh delle colonne Ordinarie/Extra)
-                    ReportGrid.Items.Refresh();
+
+                    ReportGrid.CommitEdit(DataGridEditingUnit.Row, true);
+
+                    // Recuperiamo la lista aggiornata delle righe dal DataGrid
+                    var righe = ReportGrid.ItemsSource as IEnumerable<ReportRow>;
+                    ReportGrid.ItemsSource = null;
+                    ReportGrid.ItemsSource = righe?.ToList();
 
                     // Aggiorniamo i totali generali
                     AggiornaTotali();
@@ -368,8 +379,8 @@ namespace TimeClock.Server
             return result;
         }
         private void CalcolaTotaliRiga(ReportRow row, DateTime dataRiferimento, UserProfile user,
-                               (DateTime In, DateTime Out)? c1,
-                               (DateTime In, DateTime Out)? c2)
+                       (DateTime In, DateTime Out)? c1,
+                       (DateTime In, DateTime Out)? c2)
         {
             // Recupera parametri globali (default 15 minuti se null)
             int sogliaMinuti = App.ParametriGlobali != null ? App.ParametriGlobali.SogliaMinutiStraordinario : 15;
@@ -378,8 +389,39 @@ namespace TimeClock.Server
             bool isFestivo = IsGiornoFestivo(dataRiferimento);
             row.IsFestivo = isFestivo;
 
-            // Se non ci sono timbrature (riga vuota), esci
-            if (c1 == null)
+            // =========================================================
+            // 1. CALCOLO VISUALE DURATE (Nuova implementazione)
+            // =========================================================
+
+            // Gestione Durata 1
+            if (c1.HasValue)
+            {
+                TimeSpan durata1 = c1.Value.Out - c1.Value.In;
+                // Formattazione HH:mm (es. 04:00)
+                row.Durata1Visual = $"{(int)durata1.TotalHours:00}:{durata1.Minutes:00}";
+            }
+            else
+            {
+                row.Durata1Visual = ""; // Pulisce se non c'è coppia
+            }
+
+            // Gestione Durata 2
+            if (c2.HasValue)
+            {
+                TimeSpan durata2 = c2.Value.Out - c2.Value.In;
+                row.Durata2Visual = $"{(int)durata2.TotalHours:00}:{durata2.Minutes:00}";
+            }
+            else
+            {
+                row.Durata2Visual = ""; // Pulisce se non c'è coppia
+            }
+
+            // =========================================================
+            // 2. CALCOLO MATEMATICO ORE ORDINARIE / STRAORDINARIE
+            // =========================================================
+
+            // Se non ci sono timbrature, resetta e esci
+            if (c1 == null && c2 == null)
             {
                 row.OreOrdinarie = 0;
                 row.OreStraordinarie = 0;
@@ -389,13 +431,12 @@ namespace TimeClock.Server
             double oreLavorateTotali = 0;
 
             // Durata C1
-            oreLavorateTotali += (c1.Value.Out - c1.Value.In).TotalHours;
+            if (c1.HasValue)
+                oreLavorateTotali += (c1.Value.Out - c1.Value.In).TotalHours;
 
             // Durata C2
             if (c2.HasValue)
-            {
                 oreLavorateTotali += (c2.Value.Out - c2.Value.In).TotalHours;
-            }
 
             // SE FESTIVO -> TUTTO STRAORDINARIO
             if (isFestivo)
@@ -405,19 +446,13 @@ namespace TimeClock.Server
                 return;
             }
 
-            // SE FERIALE -> Divisione Ordinario/Extra
-            // Qui applichiamo la logica semplice: ore totali vs ore previste o turni.
-            // Per ora usiamo la logica base: le ore lavorate sono ordinarie, 
-            // a meno che non superino un monte ore giornaliero (es. 8h) o siano fuori orario.
-            // Usiamo una logica semplificata "a soglia" per evitare complessità eccessiva immediata:
-
-            // Esempio: 8 ore ordinarie max, il resto straordinario
+            // SE FERIALE -> Divisione Ordinario/Extra (Regola base 8 ore)
             double limiteGiornaliero = 8.0;
 
+            // Eventuale override da contratto utente
             if (user.OreContrattoSettimanali > 0)
             {
-                // Se vuoi essere preciso, dividi ore settimanali / 5 o 6 giorni
-                // limiteGiornaliero = user.OreContrattoSettimanali / 5.0; 
+                // Esempio: limiteGiornaliero = user.OreContrattoSettimanali / 5.0; 
             }
 
             double ord = 0;
@@ -434,10 +469,10 @@ namespace TimeClock.Server
                 extra = 0;
             }
 
-            // Controllo Soglia Minima Straordinari
+            // Controllo Soglia Minima Straordinari (es. se fai 8h e 5min, i 5min vengono assorbiti)
             if (extra * 60 < sogliaMinuti)
             {
-                ord += extra; // Assorbi in ordinario
+                ord += extra;
                 extra = 0;
             }
 
@@ -872,7 +907,7 @@ namespace TimeClock.Server
         }
 
 
-    }
 
+    }
 }
 
