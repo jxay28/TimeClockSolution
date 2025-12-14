@@ -218,7 +218,13 @@ namespace TimeClock.Server
                     RicalcolaLogicaRiga(row);
 
                     // Aggiorniamo la grafica della riga (necessario per forzare il refresh delle colonne Ordinarie/Extra)
-                    ReportGrid.Items.Refresh();
+                    ReportGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+                    ReportGrid.CommitEdit(DataGridEditingUnit.Row, true);
+
+                    // Recuperiamo la lista aggiornata delle righe dal DataGrid
+                    var righe = ReportGrid.ItemsSource as IEnumerable<ReportRow>;
+                    ReportGrid.ItemsSource = null;
+                    ReportGrid.ItemsSource = righe?.ToList();
 
                     // Aggiorniamo i totali generali
                     AggiornaTotali();
