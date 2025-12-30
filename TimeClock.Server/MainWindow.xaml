@@ -253,20 +253,32 @@
 
                                                 <StackPanel Orientation="Vertical">
 
-                                                    <CheckBox Content="1 gennaio - Capodanno" Foreground="White"/>
-                                                    <CheckBox Content="6 gennaio - Epifania" Foreground="White"/>
-                                                    <CheckBox Content="Pasqua" Foreground="White"/>
-                                                    <CheckBox Content="Luned dell'Angelo" Foreground="White"/>
-                                                    <CheckBox Content="25 aprile - Liberazione" Foreground="White"/>
-                                                    <CheckBox Content="1 maggio - Festa dei lavoratori" Foreground="White"/>
-                                                    <CheckBox Content="2 giugno - Festa della Repubblica" Foreground="White"/>
-                                                    <CheckBox Content="15 agosto - Ferragosto" Foreground="White"/>
-                                                    <CheckBox Content="1 novembre - Ognissanti" Foreground="White"/>
-                                                    <CheckBox Content="8 dicembre - Immacolata Concezione" Foreground="White"/>
-                                                    <CheckBox Content="25 dicembre - Natale" Foreground="White"/>
-                                                    <CheckBox Content="26 dicembre - Santo Stefano" Foreground="White"/>
+                                                    <CheckBox x:Name="CbCapodanno" Content="1 gennaio - Capodanno" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbEpifania" Content="6 gennaio - Epifania" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbPasqua" Content="Pasqua" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbPasquetta" Content="Lunedì dell'Angelo" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbLiberazione" Content="25 aprile - Liberazione" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbLavoro" Content="1 maggio - Festa dei lavoratori" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbRepubblica" Content="2 giugno - Festa della Repubblica" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbFerragosto" Content="15 agosto - Ferragosto" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbOgnissanti" Content="1 novembre - Ognissanti" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbImmacolata" Content="8 dicembre - Immacolata Concezione" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbNatale" Content="25 dicembre - Natale" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
+
+                                                    <CheckBox x:Name="CbSantoStefano" Content="26 dicembre - Santo Stefano" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
 
                                                 </StackPanel>
+
 
                                                 <Separator Margin="0 20"/>
 
