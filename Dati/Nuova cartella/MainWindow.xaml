@@ -1,0 +1,457 @@
+
+    <Window x:Class="TimeClock.Server.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStartupLocation="CenterScreen"
+        Background="Transparent"
+        AllowsTransparency="True"
+        WindowStyle="None"
+        Height="650" Width="1100"
+        Title="TimeClock Server">
+
+    <Window.Resources>
+        <DropShadowEffect x:Key="DropShadow"
+                          Color="Black"
+                          Opacity="0.45"
+                          BlurRadius="30"
+                          ShadowDepth="5"/>
+
+        <Style x:Key="GlassButton" TargetType="Button">
+            <Setter Property="Margin" Value="0,5"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Background" Value="#20FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <Style x:Key="AddButton" TargetType="Button" BasedOn="{StaticResource GlassButton}">
+            <Setter Property="Background" Value="#4010B981"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#FF0F172A" SnapsToDevicePixels="True">
+
+        <!-- SFONDO -->
+
+        <!-- PANNELLO GLASS -->
+        <Border Margin="30"
+                CornerRadius="25"
+                Background="#40FFFFFF"
+                Effect="{DynamicResource DropShadow}">
+
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- HEADER SUPERIORE -->
+                <DockPanel Grid.Row="0">
+                    <TextBlock Text="TimeClock Server"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               DockPanel.Dock="Left"/>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                        <Button Content="_"
+                                Width="28" Height="24"
+                                Margin="4"
+                                Click="Min_Click"
+                                Background="#20FFFFFF"
+                                Foreground="White"/>
+                        <Button Content="X"
+                                Width="28" Height="24"
+                                Margin="4"
+                                Click="Close_Click"
+                                Background="#40FF4B4B"
+                                Foreground="White"/>
+                    </StackPanel>
+                </DockPanel>
+
+                <!-- CONTENUTO PRINCIPALE -->
+                <Grid Grid.Row="1" Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="*"/>
+                          
+                        
+
+                    </Grid.ColumnDefinitions>
+
+                    <!-- MENU LATERALE -->
+                    <StackPanel Grid.Column="0"
+                                Background="#20FFFFFF"
+                                Margin="0,0,20,0"
+                                >
+                        <TextBlock Text="Menu"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   Margin="0,0,0,10"/>
+
+                        <Button Content="Anagrafica utenti"
+                                Style="{StaticResource GlassButton}"
+                                Tag="0"
+                                Click="Menu_Click"/>
+                        <Button Content="Festivit&#224;"
+                                Style="{StaticResource GlassButton}"
+                                Tag="1"
+                                Click="Menu_Click"/>
+                        <Button Content="Parametri straordinari"
+                                Style="{StaticResource GlassButton}"
+                                Tag="2"
+                                Click="Menu_Click"/>
+                        <Button Content="Report"
+                                Style="{StaticResource GlassButton}"
+                                Tag="3"
+                                Click="Menu_Click"/>
+                        <Button Content="Cartella CSV"
+                                Style="{StaticResource GlassButton}"
+                                Tag="4"
+                                Click="Menu_Click"/>
+
+                    </StackPanel>
+
+                    <!-- SEZIONE CONTENUTI -->
+                    <Border Grid.Column="1"
+                            Background="#30FFFFFF"
+                            CornerRadius="20">
+
+                        <TabControl x:Name="MainTabs"
+                                    SelectionChanged="MainTabs_SelectionChanged">
+                                    Background="Transparent"
+                                    BorderThickness="0" Cursor="">
+
+                            <!-- ANAGRAFICA -->
+                            <TabItem Header="Anagrafica utenti" IsSelected="True" VerticalAlignment="Bottom">
+                                <Grid Margin="20">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Button Content="Aggiungi utente"
+                                            Style="{StaticResource AddButton}"
+                                            Width="170"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,0,0,15"
+                                            Click="AddUser_Click"/>
+
+                                    <DataGrid x:Name="UsersGrid"
+                                              Grid.Row="1"
+                                              AutoGenerateColumns="False"
+                                              Background="#15FFFFFF"
+                                              Foreground="Black"
+                                              HeadersVisibility="Column"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              BorderBrush="#40FFFFFF"
+                                              BorderThickness="1"
+                                              RowHeight="32">
+
+                                        <DataGrid.Columns>
+
+                                            <DataGridTextColumn Header="N"
+                                                                Binding="{Binding SequenceNumber}" />
+
+                                            <DataGridTextColumn Header="ID"
+                                                                Binding="{Binding Id}" />
+
+                                            <DataGridTextColumn Header="Nome"
+                                                                Binding="{Binding Nome}" />
+
+                                            <DataGridTextColumn Header="Cognome"
+                                                                Binding="{Binding Cognome}" />
+
+                                            <DataGridTextColumn Header="Ruolo"
+                                                                Binding="{Binding Ruolo}" />
+
+                                            <DataGridTextColumn Header="Data Assunzione"
+                                                                Binding="{Binding DataAssunzione, StringFormat=\{0:dd/MM/yyyy\}}" />
+
+                                            <DataGridTextColumn Header="Ore Sett."
+                                                                Binding="{Binding OreContrattoSettimanali}" />
+
+                                            <DataGridTextColumn Header="Compenso Base"
+                                                                Binding="{Binding CompensoOrarioBase}" />
+
+                                            <DataGridTextColumn Header="Compenso Extra"
+                                                                Binding="{Binding CompensoOrarioExtra}" />
+
+                                        </DataGrid.Columns>
+
+                                    </DataGrid>
+                                </Grid>
+                            </TabItem>
+
+
+                            <TabItem Header="Festivit&#224;" Visibility="Visible">
+                                <Grid Margin="20">
+                                    <Button Content="Aggiungi giorno festivo"
+                                            Style="{StaticResource AddButton}"
+                                            Width="220"
+                                            Margin="0,0,0,15"
+                                            Click="AddHoliday_Click"/>
+
+                                    <DataGrid x:Name="HolidayGrid"
+                                              AutoGenerateColumns="True"
+                                              Background="#15FFFFFF"
+                                              Foreground="White"/>
+                                </Grid>
+                            </TabItem>
+
+                            <!-- STRAORDINARI -->
+                            <TabItem Header="Parametri Straordinari" 
+                                     x:Name="TabParametri" >
+                                
+
+                                <Grid Margin="20">
+
+                                    <Border Background="#40FFFFFF"
+                                        CornerRadius="18"
+                                        Padding="20"
+                                        Effect="{DynamicResource DropShadowEffect}">    
+
+                                        <StackPanel Orientation="Vertical" Margin="10">
+
+                                            <!-- ========================= -->
+                                            <!-- SEZIONE 1: Soglia minuti  -->
+                                            <!-- ========================= -->
+                                            <TextBlock Text="Soglia minuti per straordinario"
+                                               FontSize="18"
+                                               FontWeight="Bold"
+                                               Foreground="White"
+                                               Margin="0 0 0 10"/>          
+
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                                                <Slider x:Name="SogliaSlider"
+                                                Minimum="0"
+                                                Maximum="120"
+                                                Value="15"
+                                                TickFrequency="5"
+                                                IsSnapToTickEnabled="True"
+                                                Width="250"
+                                                ValueChanged="SogliaSlider_ValueChanged"/>
+
+
+                                             <TextBlock x:Name="SogliaValore"
+                                               Text="15 min"
+                                               Margin="15 0"
+                                               FontSize="20"
+                                               FontWeight="Bold"
+                                               Foreground="Beige"/>
+                                              </StackPanel>
+
+
+                                            <Separator Margin="0 20"/>
+
+
+                                            <!-- ===================================== -->
+                                            <!-- SEZIONE 2: Giorni della settimana      -->
+                                            <!-- ===================================== -->
+                                            <TextBlock Text="Giorni considerati festivi"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Margin="0 0 0 10"/>
+
+                                            <UniformGrid Columns="4" Rows="2" Margin="0 5">
+
+                                                <CheckBox x:Name="ChkLun" Content="Lunedi" Foreground="White"/>
+                                                <CheckBox x:Name="ChkMar" Content="Martedi" Foreground="White"/>
+                                                <CheckBox x:Name="ChkMer" Content="Mercoledi" Foreground="White"/>
+                                                <CheckBox x:Name="ChkGio" Content="Giovedi" Foreground="White"/>
+                                                <CheckBox x:Name="ChkVen" Content="Venerdi" Foreground="White"/>
+                                                <CheckBox x:Name="ChkSab" Content="Sabato" Foreground="White"/>
+                                                <CheckBox x:Name="ChkDom" Content="Domenica" Foreground="White"/>
+
+                                            </UniformGrid>
+
+
+                                            <Separator Margin="0 20"/>
+
+
+                                            <!-- ===================================== -->
+                                            <!-- SEZIONE 3: Festivit ricorrenti         -->
+                                            <!-- ===================================== -->
+                                            <TextBlock Text="Festivita' nazionali (ricorrenti ogni anno)"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Margin="0 0 0 10"/>
+
+                                            <StackPanel Orientation="Horizontal">
+
+                                                <ListBox x:Name="ListaFestivitaRicorrenti"
+                             Width="300"
+                             Height="150"
+                             Margin="0 0 10 0"
+                             Foreground="Black"
+                             Background="White"/>
+
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ComboBox x:Name="ComboMeseRic"
+                                      Width="120"
+                                      Margin="0 5"
+                                      Foreground="Black">
+                                                            <ComboBoxItem Content="Gennaio" Tag="1"/>
+                                                            <ComboBoxItem Content="Febbraio" Tag="2"/>
+                                                            <ComboBoxItem Content="Marzo" Tag="3"/>
+                                                            <ComboBoxItem Content="Aprile" Tag="4"/>
+                                                            <ComboBoxItem Content="Maggio" Tag="5"/>
+                                                            <ComboBoxItem Content="Giugno" Tag="6"/>
+                                                            <ComboBoxItem Content="Luglio" Tag="7"/>
+                                                            <ComboBoxItem Content="Agosto" Tag="8"/>
+                                                            <ComboBoxItem Content="Settembre" Tag="9"/>
+                                                            <ComboBoxItem Content="Ottobre" Tag="10"/>
+                                                            <ComboBoxItem Content="Novembre" Tag="11"/>
+                                                            <ComboBoxItem Content="Dicembre" Tag="12"/>
+                                                        </ComboBox>
+
+                                                        <TextBox x:Name="TxtGiornoRic"
+                                     Width="50"
+                                     Margin="5"
+                                     VerticalContentAlignment="Center"
+                                     Style="{StaticResource GlassTextBox}"/>
+                                                    </StackPanel>
+
+                                                    <Button Content="Aggiungi"
+                                Width="100"
+                                Margin="0 5"
+                                Style="{StaticResource GlassButton}"
+                                Click="AggiungiFestivitaRicorrente_Click"/>
+
+                                                    <Button Content="Rimuovi selezionata"
+                                Width="150"
+                                Margin="0 5"
+                                Style="{StaticResource GlassButton}"
+                                Click="RimuoviFestivitaRicorrente_Click"/>
+                                                </StackPanel>
+
+                                            </StackPanel>
+
+
+                                            <Separator Margin="0 20"/>
+
+
+                                            <!-- ===================================== -->
+                                            <!-- SEZIONE 4: Festivit aggiuntive         -->
+                                            <!-- ===================================== -->
+                                            <TextBlock Text="Festivita' aggiuntive (una sola data)"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Margin="0 0 0 10"/>
+
+                                            <StackPanel Orientation="Horizontal">
+
+                                                <ListBox x:Name="ListaFestivitaExtra"
+                             Width="300"
+                             Height="150"
+                             Margin="0 0 10 0"
+                             Foreground="Black"
+                             Background="White"/>
+
+                                                <StackPanel>
+
+                                                    <DatePicker x:Name="DateExtra"
+                                    Width="150"
+                                    Margin="0 5"
+                                    Foreground="Black"
+                                    Background="White"/>
+
+                                                    <Button Content="Aggiungi"
+                                Width="100"
+                                Margin="0 5"
+                                Style="{StaticResource GlassButton}"
+                                Click="AggiungiFestivitaExtra_Click"/>
+
+                                                    <Button Content="Rimuovi selezionata"
+                                Width="150"
+                                Margin="0 5"
+                                Style="{StaticResource GlassButton}"
+                                Click="RimuoviFestivitaExtra_Click"/>
+                                                </StackPanel>
+
+                                            </StackPanel>
+
+
+                                            <Separator Margin="0 20"/>
+
+
+                                            <!-- ========================= -->
+                                            <!-- SEZIONE SALVATAGGIO        -->
+                                            <!-- ========================= -->
+
+                                            <Button Content="SALVA PARAMETRI"
+                        Width="200"
+                        HorizontalAlignment="Right"
+                        Margin="0 20 0 0"
+                        Style="{StaticResource GlassButton}"
+                        Click="SalvaParametri_Click"/>
+
+                                        </StackPanel>
+
+                                    </Border>
+
+                                </Grid>
+                            </TabItem>
+
+
+
+
+
+
+
+                            <!-- REPORT -->
+                            <TabItem Header="Report">
+                                <StackPanel Margin="20">
+                                    <TextBlock Text="Genera report mensile"
+                                               Foreground="White"
+                                               FontSize="18"/>
+
+                                    <ComboBox x:Name="UserSelectorReport"
+                                              Width="auto"
+                                              Margin="0,10,0,20"/>
+
+                                    <Button Content="Genera report"
+                                            Style="{StaticResource AddButton}"
+                                            Width="200"
+                                            Click="GenerateReport_Click"/>
+                                </StackPanel>
+                            </TabItem>
+
+                            <!-- CARTELLA -->
+                            <TabItem Header="Cartella CSV">
+                                <StackPanel Margin="20">
+                                    <TextBlock Text="Percorso cartella condivisa:"
+                                               Foreground="White"/>
+
+                                    <TextBox x:Name="CsvPathBox"
+                                             Margin="0,10"
+                                             Background="#10FFFFFF"
+                                             Foreground="White"
+                                             BorderBrush="#40FFFFFF"/>
+
+                                    <Button Content="Scegli cartella"
+                                            Style="{StaticResource GlassButton}"
+                                            Width="150"
+                                            Click="SelectCsvFolder_Click"/>
+                                </StackPanel>
+                            </TabItem>
+
+                        </TabControl>
+
+                    </Border>
+                </Grid>
+
+            </Grid>
+        </Border>
+    </Grid>
+
+</Window>

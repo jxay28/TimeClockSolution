@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -8,18 +7,18 @@ namespace TimeClock.Server
 {
     public partial class App : Application
     {
-        public static ParametriStraordinari ParametriGlobali;
+        public static ParametriStraordinari ParametriGlobali { get; private set; } = null!;
+
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            string file = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "parametri_straordinari.json");
+            string file = "parametri_straordinari.json";
 
             if (File.Exists(file))
             {
-                ParametriGlobali = JsonSerializer.Deserialize<ParametriStraordinari>(
-                    File.ReadAllText(file));
+                ParametriGlobali = JsonSerializer.Deserialize<ParametriStraordinari>(File.ReadAllText(file));
             }
             else
             {
@@ -31,7 +30,7 @@ namespace TimeClock.Server
 
         public static void SalvaParametriGlobali()
         {
-            File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "parametri_straordinari.json"),
+            File.WriteAllText("parametri_straordinari.json",
                 JsonSerializer.Serialize(ParametriGlobali, new JsonSerializerOptions { WriteIndented = true }));
         }
     }

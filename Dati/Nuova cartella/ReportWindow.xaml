@@ -3,14 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Report Mensile"
         Height="700"
-        Width="1200"
+        Width="1100"
         WindowStartupLocation="CenterOwner"
         Background="#FF0F172A"
         WindowStyle="None"
         AllowsTransparency="True">
 
-    
-   
     <Grid Margin="20">
 
         <!-- CARD CENTRALE -->
@@ -57,9 +55,6 @@
                                    Foreground="Beige"/>
                         <ComboBox x:Name="UserCombo"
                                   Width="280"
-                                  
-                                  
-                                  
                                   Text="."
                                   DisplayMemberPath="FullName"
                                   Margin="0 5"/>
@@ -68,25 +63,18 @@
                     <!-- PULSANTI -->
                     <StackPanel Orientation="Horizontal"
                                 VerticalAlignment="Bottom">
-                        
-                        
-
 
                         <Button Content="Carica Report"
                                 Width="100"
-                                
                                 Margin="1 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="CaricaReport_Click" RenderTransformOrigin="0.5,0.5" FontSize="12">
-                            <Button.RenderTransform>
-                                <TransformGroup>
-                                    <ScaleTransform/>
-                                   
-                                </TransformGroup>
-                            </Button.RenderTransform>
-                        </Button>
+                                Click="CaricaReport_Click"/>
 
-                        
+                        <Button Content="Ricalcola"
+                                Width="100"
+                                Margin="1 0"
+                                Style="{StaticResource GlassButton}"
+                                Click="RicalcolaReport_Click"/>
 
                         <Button Content="Esporta PDF"
                                 Width="100"
@@ -103,19 +91,12 @@
                                 Width="100"
                                 Margin="1 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="SalvaModifiche_Click" FontSize="12"/>
+                                Click="SalvaModifiche_Click"/>
                         <Button Content="Aggiungi Timbratura"
                                 Width="120"
                                 Margin="1 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="AggiungiTimbratura_Click" FontSize="12"/>
-                        <Button Content="Chiudi"
-                                Width="90"
-                                Margin="20 0 0 0" 
-                                Style="{StaticResource GlassButton}"
-                                Background="#40FF4B4B"
-                                Click="Chiudi_Click"/>
-                        
+                                Click="AggiungiTimbratura_Click"/>
 
 
 
@@ -124,84 +105,37 @@
 
                 <!-- TABELLA -->
                 <DataGrid x:Name="ReportGrid"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="False"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="Horizontal"
-                      Background="#10FFFFFF"
-                      RowStyle="{StaticResource FestiviRowStyle}"
-                      Margin="0"
-                      DockPanel.Dock="Top"
-                      Height="450"
-                      CellEditEnding="ReportGrid_CellEditEnding">
-
+          AutoGenerateColumns="False"
+          IsReadOnly="False"
+          CanUserAddRows="False"
+          CanUserDeleteRows="False"
+          HeadersVisibility="Column"
+          GridLinesVisibility="Horizontal"
+          Background="#10FFFFFF"
+          RowStyle="{StaticResource FestiviRowStyle}"
+          Margin="0"
+          DockPanel.Dock="Top"
+          Height="450">
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Giorno"
-                        Binding="{Binding Giorno}"
-                        Width="60"
-                        />
-
-                        <DataGridTextColumn Header="Entrata 1" Binding="{Binding Entrata1Visual}" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Uscita 1"  Binding="{Binding Uscita1Visual}"  IsReadOnly="True"/>
-                        <!-- <DataGridTextColumn Header="Entrata 1"
-                        Binding="{Binding Entrata1}"
-                        Width="100"/> 
-
-                        <DataGridTextColumn Header="Uscita 1"
-                        Binding="{Binding Uscita1}"
-                        Width="100"/>-->
-
-                        <DataGridTextColumn Header="Durata 1"
-                        Binding="{Binding Durata1Visual}"
-                        Width="90"
-                        />
-
-                        <DataGridTextColumn Header="Entrata 2" Binding="{Binding Entrata2Visual}" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Uscita 2"  Binding="{Binding Uscita2Visual}"  IsReadOnly="True"/>
-                        <!--<DataGridTextColumn Header="Entrata 2"
-                        Binding="{Binding Entrata2}"
-                        Width="100"/>
-
-                        <DataGridTextColumn Header="Uscita 2"
-                        Binding="{Binding Uscita2}"
-                        Width="100"/> -->
-
-                        <DataGridTextColumn Header="Durata 2"
-                        Binding="{Binding Durata2Visual}"
-                        Width="90"
-                        />
-
-                        <DataGridCheckBoxColumn Header="Festivo"
-                            Binding="{Binding IsFestivo}"
-                            Width="70"
-/>
-
-                        <DataGridTextColumn Header="Ordinarie"
-                        Binding="{Binding OreOrdinarieVisual}"
-                        Width="90"
-                        />
-
-                        <DataGridTextColumn Header="Straord."
-                        Binding="{Binding OreStraordinarieVisual}"
-                        Width="90"
-                        />
-
-                        <DataGridTextColumn Header="Note"
-                        Binding="{Binding Note}"
-                        Width="*"/>
+                        <DataGridTextColumn Header="Giorno" Binding="{Binding Giorno}" Width="60" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Entrata 1" Binding="{Binding Entrata1}" Width="100"/>
+                        <DataGridTextColumn Header="Uscita 1" Binding="{Binding Uscita1}" Width="100"/>
+                        <DataGridTextColumn Header="Entrata 2" Binding="{Binding Entrata2}" Width="100"/>
+                        <DataGridTextColumn Header="Uscita 2" Binding="{Binding Uscita2}" Width="100"/>
+                        <DataGridTextColumn Header="Ordinarie" Binding="{Binding OreOrdinarie}" Width="90" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Straord." Binding="{Binding OreStraordinarie}" Width="90" IsReadOnly="True"/>
+                        <DataGridCheckBoxColumn Header="Festivo" Binding="{Binding IsFestivo}" Width="70" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Note" Binding="{Binding Note}" Width="*"/>
                     </DataGrid.Columns>
-
 
                 </DataGrid>
 
                 <!-- TOTALI -->
                 <StackPanel DockPanel.Dock="Bottom"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0 15 0 0">
+            Orientation="Horizontal"
+            HorizontalAlignment="Right"
+            Margin="0 15 0 0">
 
                     <Border Background="#30FFFFFF" Padding="1" CornerRadius="10" Margin="10">
                         <StackPanel>

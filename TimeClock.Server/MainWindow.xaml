@@ -349,27 +349,13 @@
                                     </Grid>
                                 </ScrollViewer>
                             </TabItem>
-
-
-
-
-
-
                             <!-- REPORT -->
                             <TabItem Header="Report">
                                 <StackPanel Margin="20">
-                                    <TextBlock Text="Genera report mensile"
-                                               Foreground="White"
-                                               FontSize="18"/>
-
-                                    <ComboBox x:Name="UserSelectorReport"
-                                              Width="auto"
-                                              Margin="0,10,0,20"/>
-
-                                    <Button Content="Genera report"
+                                    <Button Content="Genera report mensili"
                                             Style="{StaticResource AddButton}"
                                             Width="200"
-                                            Click="GenerateReport_Click"/>
+                                            Click="GenerateReport_Click" HorizontalAlignment="Left"/>
                                 </StackPanel>
                             </TabItem>
 
