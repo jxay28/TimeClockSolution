@@ -482,8 +482,8 @@ namespace TimeClock.Server
             CancelOvertimeParamsButton.Click += CancelOvertimeParamsButton_Click;
 
             // Vecchio switch: lo lasciamo visibile ma non lo usiamo più.
-            UseExpectedHoursCheck.IsChecked = false;
-            UseExpectedHoursCheck.IsEnabled = false;
+           // UseExpectedHoursCheck.IsChecked = false;
+           // UseExpectedHoursCheck.IsEnabled = false;
 
             HookNationalHolidayCheckboxes();
         }

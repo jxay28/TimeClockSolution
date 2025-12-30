@@ -107,7 +107,7 @@
                                 Style="{StaticResource GlassButton}"
                                 Tag="3"
                                 Click="Menu_Click"/>
-                        <Button Content="Cartella CSV"
+                        <Button Content="Opzioni"
                                 Style="{StaticResource GlassButton}"
                                 Tag="4"
                                 Click="Menu_Click"/>
@@ -217,7 +217,7 @@
                             Margin="10">
 
                                                 <!-- SOGLIA MINUTI -->
-                                                <TextBlock Text="Soglia minuti oltre i quali  considerato straordinario"
+                                                <TextBlock Text="Intervallo di arrotondamento"
                                FontSize="18"
                                Foreground="White"
                                Margin="0 0 0 10"/>
@@ -243,17 +243,6 @@
 
 
                                                 <!-- ORARI PREVISTI DELLANAGRAFICA -->
-                                                <TextBlock Text="Regola orari previsti dell'anagrafica"
-                               FontSize="18"
-                               Foreground="White"
-                               Margin="0 0 0 10"/>
-
-                                                <CheckBox x:Name="UseExpectedHoursCheck"
-                              Content="Usa gli orari previsti dell'anagrafica per determinare lo straordinario"
-                              Foreground="White"
-                              Margin="0 5"/>
-
-                                                <Separator Margin="0 20"/>
 
 
                                                 <!-- FESTIVIT NAZIONALI -->
@@ -360,7 +349,7 @@
                             </TabItem>
 
                             <!-- CARTELLA -->
-                            <TabItem Header="Cartella CSV">
+                            <TabItem Header="Opzioni">
                                 <StackPanel Margin="20">
                                     <TextBlock Text="Percorso cartella condivisa:"
                                                Foreground="White"/>
