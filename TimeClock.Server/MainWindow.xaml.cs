@@ -47,6 +47,66 @@ namespace TimeClock.Server
                 ["25 dicembre - Natale"] = (12, 25),
                 ["26 dicembre - Santo Stefano"] = (12, 26),
             };
+        private void Nazionali_Changed(object sender, RoutedEventArgs e)
+        {
+            if (sender is not System.Windows.Controls.CheckBox cb) return;
+            if (cb.Content is not string text) return;
+
+            if (!TryMapFixedNationalHoliday(text, out int mese, out int giorno))
+                return; // per ora ignoriamo Pasqua e Lunedì dell'Angelo
+
+            var lista = App.ParametriGlobali.FestivitaRicorrenti; // List<(int Mese, int Giorno)>
+            var key = (Mese: mese, Giorno: giorno);
+
+            bool isChecked = cb.IsChecked == true;
+
+            if (isChecked)
+            {
+                if (!lista.Any(x => x.Mese == mese && x.Giorno == giorno))
+                    lista.Add(key);
+            }
+            else
+            {
+                // per le tuple: non esiste null, rimuovi direttamente
+                lista.RemoveAll(x => x.Mese == mese && x.Giorno == giorno);
+            }
+
+            App.SalvaParametriGlobali();
+        }
+
+
+        private bool TryMapFixedNationalHoliday(string text, out int mese, out int giorno)
+        {
+            mese = 0; giorno = 0;
+
+            // Normalizzo un minimo
+            string t = text.Trim().ToLowerInvariant();
+
+            return t switch
+            {
+                var s when s.StartsWith("1 gennaio") => Set(1, 1, out mese, out giorno),
+                var s when s.StartsWith("6 gennaio") => Set(1, 6, out mese, out giorno),
+                var s when s.StartsWith("25 aprile") => Set(4, 25, out mese, out giorno),
+                var s when s.StartsWith("1 maggio") => Set(5, 1, out mese, out giorno),
+                var s when s.StartsWith("2 giugno") => Set(6, 2, out mese, out giorno),
+                var s when s.StartsWith("15 agosto") => Set(8, 15, out mese, out giorno),
+                var s when s.StartsWith("1 novembre") => Set(11, 1, out mese, out giorno),
+                var s when s.StartsWith("8 dicembre") => Set(12, 8, out mese, out giorno),
+                var s when s.StartsWith("25 dicembre") => Set(12, 25, out mese, out giorno),
+                var s when s.StartsWith("26 dicembre") => Set(12, 26, out mese, out giorno),
+
+                // Feste mobili -> false (Pasqua / Lunedì dell'Angelo)
+                _ => false
+            };
+        }
+
+        private bool Set(int m, int g, out int mese, out int giorno)
+        {
+            mese = m;
+            giorno = g;
+            return true;
+        }
+
 
         public MainWindow()
         {

@@ -257,10 +257,6 @@
 
                                                     <CheckBox x:Name="CbEpifania" Content="6 gennaio - Epifania" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
 
-                                                    <CheckBox x:Name="CbPasqua" Content="Pasqua" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbPasquetta" Content="Lunedì dell'Angelo" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
                                                     <CheckBox x:Name="CbLiberazione" Content="25 aprile - Liberazione" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
 
                                                     <CheckBox x:Name="CbLavoro" Content="1 maggio - Festa dei lavoratori" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
