@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Aggiungi Utente"
-        Height="730"
+        Height="601"
         Width="500"
         WindowStartupLocation="CenterOwner"
         AllowsTransparency="True"
@@ -169,84 +169,12 @@
                          Margin="0 4"/>
 
                 <!-- Orario ingresso previsto 1 -->
-                <TextBlock Text="Orario ingresso previsto 1"
-                           Grid.Row="10" Grid.Column="0"
-                           Foreground="White"
-                           VerticalAlignment="Center"
-                           Margin="0 4"/>
-                <ComboBox x:Name="Ingresso1Combo"
-                          Grid.Row="10" Grid.Column="1"
-                          Margin="0 4">
-                    <ComboBoxItem Content="06:00"/>
-                    <ComboBoxItem Content="06:30"/>
-                    <ComboBoxItem Content="07:00"/>
-                    <ComboBoxItem Content="07:30"/>
-                    <ComboBoxItem Content="08:00"/>
-                    <ComboBoxItem Content="08:30"/>
-                    <ComboBoxItem Content="09:00"/>
-                    <ComboBoxItem Content="09:30"/>
-                    <ComboBoxItem Content="10:00"/>
-                </ComboBox>
 
                 <!-- Orario uscita prevista 1 -->
-                <TextBlock Text="Orario uscita prevista 1"
-                           Grid.Row="11" Grid.Column="0"
-                           Foreground="White"
-                           VerticalAlignment="Center"
-                           Margin="0 4"/>
-                <ComboBox x:Name="Uscita1Combo"
-                          Grid.Row="11" Grid.Column="1"
-                          Margin="0 4">
-                    <ComboBoxItem Content="12:00"/>
-                    <ComboBoxItem Content="12:30"/>
-                    <ComboBoxItem Content="13:00"/>
-                    <ComboBoxItem Content="13:30"/>
-                    <ComboBoxItem Content="14:00"/>
-                    <ComboBoxItem Content="14:30"/>
-                    <ComboBoxItem Content="15:00"/>
-                    <ComboBoxItem Content="15:30"/>
-                    <ComboBoxItem Content="16:00"/>
-                </ComboBox>
 
                 <!-- Orario ingresso previsto 2 -->
-                <TextBlock Text="Orario ingresso previsto 2"
-                           Grid.Row="12" Grid.Column="0"
-                           Foreground="White"
-                           VerticalAlignment="Center"
-                           Margin="0 4"/>
-                <ComboBox x:Name="Ingresso2Combo"
-                          Grid.Row="12" Grid.Column="1"
-                          Margin="0 4">
-                    <ComboBoxItem Content="12:00"/>
-                    <ComboBoxItem Content="12:30"/>
-                    <ComboBoxItem Content="13:00"/>
-                    <ComboBoxItem Content="13:30"/>
-                    <ComboBoxItem Content="14:00"/>
-                    <ComboBoxItem Content="14:30"/>
-                    <ComboBoxItem Content="15:00"/>
-                    <ComboBoxItem Content="15:30"/>
-                    <ComboBoxItem Content="16:00"/>
-                </ComboBox>
 
                 <!-- Orario uscita prevista 2 -->
-                <TextBlock Text="Orario uscita prevista 2"
-                           Grid.Row="13" Grid.Column="0"
-                           Foreground="White"
-                           VerticalAlignment="Center"
-                           Margin="0 4"/>
-                <ComboBox x:Name="Uscita2Combo"
-                          Grid.Row="13" Grid.Column="1"
-                          Margin="0 4">
-                    <ComboBoxItem Content="16:00"/>
-                    <ComboBoxItem Content="16:30"/>
-                    <ComboBoxItem Content="17:00"/>
-                    <ComboBoxItem Content="17:30"/>
-                    <ComboBoxItem Content="18:00"/>
-                    <ComboBoxItem Content="18:30"/>
-                    <ComboBoxItem Content="19:00"/>
-                    <ComboBoxItem Content="19:30"/>
-                    <ComboBoxItem Content="20:00"/>
-                </ComboBox>
 
                 <!-- Pulsanti -->
                 <StackPanel Grid.Row="14" Grid.ColumnSpan="2"

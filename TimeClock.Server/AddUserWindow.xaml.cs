@@ -26,11 +26,7 @@ namespace TimeClock.Server
 
             LoadSequentialNumber();
 
-            // valori di default per i turni
-            Ingresso1Combo.SelectedIndex = 0;
-            Uscita1Combo.SelectedIndex = 0;
-            Ingresso2Combo.SelectedIndex = 0;
-            Uscita2Combo.SelectedIndex = 0;
+            
         }
 
         /// <summary>
@@ -142,17 +138,10 @@ namespace TimeClock.Server
                 return;
             }
 
-            // Orari previsti
-            string ingresso1 = (Ingresso1Combo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? string.Empty;
-            string uscita1 = (Uscita1Combo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? string.Empty;
-            string ingresso2 = (Ingresso2Combo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? string.Empty;
-            string uscita2 = (Uscita2Combo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? string.Empty;
+            
 
-            if (string.IsNullOrWhiteSpace(ingresso1) || string.IsNullOrWhiteSpace(uscita1))
-            {
-                MessageBox.Show("Inserire almeno l'orario ingresso/uscita previsto 1.");
-                return;
-            }
+            
+            
 
             // CREAZIONE OGGETTO UTENTE COMPLETO
             User = new UserProfile
@@ -166,10 +155,7 @@ namespace TimeClock.Server
                 OreContrattoSettimanali = ore,
                 CompensoOrarioBase = salarioBase,
                 CompensoOrarioExtra = salarioExtra,
-                OrarioIngresso1 = ingresso1,
-                OrarioUscita1 = uscita1,
-                OrarioIngresso2 = ingresso2,
-                OrarioUscita2 = uscita2
+               
             };
 
             DialogResult = true;
