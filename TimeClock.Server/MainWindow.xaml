@@ -91,26 +91,26 @@
                                    Foreground="White"
                                    Margin="0,0,0,10"/>
 
-                        <Button Content="Anagrafica utenti"
+                        <Button Content="Dashboard&#224;"
                                 Style="{StaticResource GlassButton}"
                                 Tag="0"
                                 Click="Menu_Click"/>
-                        <Button Content="Festivit&#224;"
+                        <Button Content="Anagrafica utenti"
                                 Style="{StaticResource GlassButton}"
                                 Tag="1"
                                 Click="Menu_Click"/>
                         <Button Content="Parametri straordinari"
                                 Style="{StaticResource GlassButton}"
-                                Tag="2"
+                                Tag="3"
                                 Click="Menu_Click"/>
                         <Button Content="Report"
                                 Style="{StaticResource GlassButton}"
-                                Tag="3"
+                                Tag="4"
                                 Click="Menu_Click"/>
                         <Button Content="Opzioni"
                                 Style="{StaticResource GlassButton}"
-                                Tag="4"
-                                Click="Menu_Click"/>
+                                Tag="5"
+                                Click="Menu_Click" Cursor="Hand"/>
 
                     </StackPanel>
 
@@ -124,7 +124,14 @@
                                     BorderThickness="0" Cursor="">
 
                             <!-- ANAGRAFICA -->
-                            <TabItem Header="Anagrafica utenti" IsSelected="True" VerticalAlignment="Bottom">
+
+                            <TabItem Header="Dashboard" IsSelected="True">
+                                <Grid>
+                                    <!-- Per ora pagina vuota -->
+                                </Grid>
+                            </TabItem>
+                            <!-- ANAGRAFICA UTENTI -->
+                            <TabItem Header="Anagrafica utenti" VerticalAlignment="Bottom">
                                 <Grid Margin="20">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -186,7 +193,7 @@
                             </TabItem>
 
 
-                            <TabItem Header="Festivit&#224;" Visibility="Visible">
+                            <TabItem Header="Festivit&#224;" Visibility="Collapsed">
                                 <Grid Margin="20">
                                     <Button Content="Aggiungi giorno festivo"
                                             Style="{StaticResource AddButton}"
@@ -246,10 +253,10 @@
 
 
                                                 <!-- FESTIVIT NAZIONALI -->
-                                                <TextBlock Text="Festivit nazionali"
-                               FontSize="18"
-                               Foreground="White"
-                               Margin="0 0 0 10"/>
+                                                <TextBlock Text="Feste nazionali"
+                                                           FontSize="18"
+                                                           Foreground="White"
+                                                           Margin="0 0 0 10"/>
 
                                                 <StackPanel Orientation="Vertical">
 
