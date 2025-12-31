@@ -137,12 +137,7 @@ namespace TimeClock.Server
                 MessageBox.Show("Il salario extra deve essere un numero.");
                 return;
             }
-
-            
-
-            
-            
-
+ 
             // CREAZIONE OGGETTO UTENTE COMPLETO
             User = new UserProfile
             {

@@ -2,32 +2,41 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using TimeClock.Core.Models;
 using TimeClock.Core.Services;
-using System.Windows.Input;
 
 namespace TimeClock.Client
 {
     public partial class MainWindow : Window
     {
         private List<UserProfile> _users = new();
+
+        // CSV repository: lo usiamo SOLO per le timbrature (Id.csv)
         private readonly CsvRepository _repo = new();
 
-        private string _csvFolder = string.Empty;   // ? variabile definitiva per la cartella
+        private string _csvFolder = string.Empty;
+
+        // Opzioni JSON (case-insensitive per sicurezza)
+        private readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // ?? Carica la cartella salvata nelle impostazioni
+            // Carica la cartella salvata nelle impostazioni
             _csvFolder = Properties.Settings.Default.CsvFolderPath;
 
             if (!string.IsNullOrWhiteSpace(_csvFolder) && Directory.Exists(_csvFolder))
             {
                 SharedFolderTextBox.Text = _csvFolder;
-                LoadUsers();
+                LoadUsersFromJson();
             }
             else
             {
@@ -46,18 +55,17 @@ namespace TimeClock.Client
                     _csvFolder = dialog.SelectedPath;
                     SharedFolderTextBox.Text = _csvFolder;
 
-                    // ?? Salvataggio preferenza
+                    // Salvataggio preferenza
                     Properties.Settings.Default.CsvFolderPath = _csvFolder;
                     Properties.Settings.Default.Save();
 
-                    LoadUsers();
+                    LoadUsersFromJson();
                 }
             }
         }
 
-
-        // ?? Caricamento utenti dal CSV
-        private void LoadUsers()
+        // Caricamento utenti dal JSON (utenti.json)
+        private void LoadUsersFromJson()
         {
             UserComboBox.ItemsSource = null;
             _users.Clear();
@@ -65,57 +73,44 @@ namespace TimeClock.Client
             if (string.IsNullOrWhiteSpace(_csvFolder))
                 return;
 
-            var path = Path.Combine(_csvFolder, "utenti.csv");
+            var path = Path.Combine(_csvFolder, "utenti.json");
             if (!File.Exists(path))
+            {
+                // opzionale: messaggio, oppure lasciare silenzioso
+                // MessageBox.Show("File utenti.json non trovato nella cartella selezionata.");
                 return;
+            }
 
-            _users = _repo.Load(path)
-    .Select(f => new UserProfile
-    {
-        Id = f.ElementAtOrDefault(0) ?? "",
-        Nome = f.ElementAtOrDefault(1) ?? "",
-        Cognome = f.ElementAtOrDefault(2) ?? "",
-        Ruolo = f.ElementAtOrDefault(3) ?? "",
+            try
+            {
+                var json = File.ReadAllText(path);
 
-        // DATA ASSUNZIONE: se vuota o errata ? oggi
-        DataAssunzione = DateTime.TryParse(f.ElementAtOrDefault(4), out var dt)
-            ? dt
-            : DateTime.Today,
+                // Nel tuo caso è un array JSON: [ { ... }, { ... } ]
+                var users = JsonSerializer.Deserialize<List<UserProfile>>(json, _jsonOptions);
 
-        // ORE SETTIMANALI (vuoto ? 0)
-        OreContrattoSettimanali = double.TryParse(
-            f.ElementAtOrDefault(5)?.Replace(",", "."),
-            System.Globalization.NumberStyles.Any,
-            System.Globalization.CultureInfo.InvariantCulture,
-            out var ore)
-            ? ore
-            : 0,
+                _users = users ?? new List<UserProfile>();
 
-        // SALARIO BASE (vuoto ? 0)
-        CompensoOrarioBase = decimal.TryParse(
-            f.ElementAtOrDefault(6)?.Replace(",", "."),
-            System.Globalization.NumberStyles.Any,
-            System.Globalization.CultureInfo.InvariantCulture,
-            out var baseSal)
-            ? baseSal
-            : 0,
+                // Se vuoi ordinare per nome/cognome:
+                _users = _users
+                    .OrderBy(u => u.Cognome)
+                    .ThenBy(u => u.Nome)
+                    .ToList();
 
-        // SALARIO EXTRA
-        CompensoOrarioExtra = decimal.TryParse(
-            f.ElementAtOrDefault(7)?.Replace(",", "."),
-            System.Globalization.NumberStyles.Any,
-            System.Globalization.CultureInfo.InvariantCulture,
-            out var extraSal)
-            ? extraSal
-            : 0
-    })
+                UserComboBox.ItemsSource = _users;
 
-                .ToList();
+                // Mostra FullName se presente (nel tuo JSON c'è "000 - aaa aaa")
+                // altrimenti mostra Nome
+                // Se vuoi SOLO Nome, rimetti "Nome"
+                UserComboBox.DisplayMemberPath = "FullName";
 
-            UserComboBox.ItemsSource = _users;
-            UserComboBox.DisplayMemberPath = "Nome";
+                // Se FullName a volte è vuoto, puoi invece usare il ToString() in UserProfile
+                // o una proprietà calcolata; qui teniamo semplice.
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore lettura utenti.json: {ex.Message}");
+            }
         }
-
 
         private void UserComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -149,7 +144,6 @@ namespace TimeClock.Client
                     EntrataButton.IsEnabled = true;
             }
         }
-
 
         private void EntrataButton_Click(object sender, RoutedEventArgs e)
         {
@@ -186,7 +180,6 @@ namespace TimeClock.Client
                 MessageBox.Show($"Errore scrittura: {ex.Message}");
             }
         }
-
 
         // Permette di trascinare la finestra
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)

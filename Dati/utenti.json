@@ -1,19 +1,14 @@
 [
   {
-    "Id": "fa1b2d9b-7758-44d0-a42e-5b8f077863f1",
+    "Id": "76a336a3-597f-4afe-b25a-9e11983ee2c6",
     "SequenceNumber": 0,
-    "Nome": "ale",
-    "Cognome": "ale",
-    "Ruolo": "ale",
-    "DataAssunzione": "2025-12-27T00:00:00",
+    "Nome": "aaa",
+    "Cognome": "aaa",
+    "Ruolo": "aaa",
+    "DataAssunzione": "2025-12-01T00:00:00",
     "OreContrattoSettimanali": 40,
-    "CompensoOrarioBase": 10,
-    "CompensoOrarioExtra": 10,
-    "OrarioIngresso1": "06:00",
-    "OrarioUscita1": "12:00",
-    "OrarioIngresso2": "12:00",
-    "OrarioUscita2": "16:00",
-    "OreGiornalierePreviste": 8,
-    "GiorniLavorativiSettimana": 5
+    "CompensoOrarioBase": 20,
+    "CompensoOrarioExtra": 30,
+    "FullName": "000 - aaa aaa"
   }
 ]
