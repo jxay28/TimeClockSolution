@@ -10,5 +10,17 @@
     "CompensoOrarioBase": 20,
     "CompensoOrarioExtra": 30,
     "FullName": "000 - aaa aaa"
+  },
+  {
+    "Id": "2b27d3ba-e19b-46ce-8f4e-5637974594a0",
+    "SequenceNumber": 1,
+    "Nome": "pippo",
+    "Cognome": "pappa",
+    "Ruolo": "ppp",
+    "DataAssunzione": "2025-12-31T00:00:00",
+    "OreContrattoSettimanali": 40,
+    "CompensoOrarioBase": 50,
+    "CompensoOrarioExtra": 100,
+    "FullName": "001 - pippo pappa"
   }
 ]

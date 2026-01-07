@@ -1,5 +1,10 @@
 [
   {
+    "UserId": "2b27d3ba-e19b-46ce-8f4e-5637974594a0",
+    "OreGiornalierePreviste": 8,
+    "GiorniLavorativiSettimana": 5
+  },
+  {
     "UserId": "76a336a3-597f-4afe-b25a-9e11983ee2c6",
     "OreGiornalierePreviste": 8,
     "GiorniLavorativiSettimana": 5

@@ -119,6 +119,8 @@ namespace TimeClock.Server
             LoadCsvFolderFromSettings();
             WireOvertimeTabEvents();
             RefreshAll();
+            UsersGrid.CellEditEnding += UsersGrid_CellEditEnding;
+
         }
 
         // ---------------------------
@@ -318,6 +320,48 @@ namespace TimeClock.Server
                 MessageBox.Show($"Errore nel salvataggio utenti: {ex.Message}", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void UsersGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            if (e.EditAction != DataGridEditAction.Commit)
+                return;
+
+            if (e.Row.Item is not UserProfile user)
+                return;
+
+            Dispatcher.InvokeAsync(() =>
+            {
+                try
+                {
+                    // 1) Salva SEMPRE utenti.json
+                    SaveUsers();
+
+                    // 2) Aggiorna utenti_extras.json SOLO se serve
+                    if (_extrasRepo != null)
+                    {
+                        double oreGiornaliere =
+                            user.OreContrattoSettimanali > 0
+                                ? user.OreContrattoSettimanali / 5.0
+                                : 8.0;
+
+                        int giorniSettimanali = 5; // valore coerente col tuo modello
+
+                        _extrasRepo.Set(user.Id, oreGiornaliere, giorniSettimanali);
+                        _extrasRepo.Save();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Errore salvataggio automatico:\n{ex.Message}",
+                        "Errore",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
+                }
+            }, System.Windows.Threading.DispatcherPriority.Background);
+        }
+
 
         private void AddUser_Click(object sender, RoutedEventArgs e)
         {
