@@ -136,34 +136,99 @@
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Text="Stato Utenti in Tempo Reale" FontSize="20" Foreground="White" Margin="0,0,0,15"/>
+                                    <DataGrid x:Name="DashboardGrid" 
+          Grid.Row="1" 
+          AutoGenerateColumns="False" 
+          
+          Background="Transparent"
+          RowBackground="Transparent"
+          Foreground="White"
+          
+          RowHeight="45" 
+          IsReadOnly="True"
+          BorderBrush="#40FFFFFF" 
+          BorderThickness="1" 
+          CanUserAddRows="False"
+          GridLinesVisibility="Horizontal"
+          HorizontalGridLinesBrush="#30FFFFFF"
+          HeadersVisibility="Column">
 
-                                    <DataGrid x:Name="DashboardGrid" Grid.Row="1" AutoGenerateColumns="False" 
-                  Background="#15FFFFFF" Foreground="Black" RowHeight="40" IsReadOnly="True"
-                  BorderBrush="#40FFFFFF" BorderThickness="1" CanUserAddRows="False">
+                                        <DataGrid.ColumnHeaderStyle>
+                                            <Style TargetType="DataGridColumnHeader">
+                                                <Setter Property="Background" Value="#20FFFFFF"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                                <Setter Property="Padding" Value="10,0"/>
+                                                <Setter Property="Height" Value="35"/>
+                                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                            </Style>
+                                        </DataGrid.ColumnHeaderStyle>
+
+                                        <DataGrid.CellStyle>
+                                            <Style TargetType="DataGridCell">
+                                                <Setter Property="Padding" Value="10,0"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="DataGridCell">
+                                                            <Border Padding="{TemplateBinding Padding}" Background="Transparent">
+                                                                <ContentPresenter VerticalAlignment="Center" />
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter Property="Background" Value="#30FFFFFF"/>
+                                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                                        <Setter Property="Foreground" Value="White"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </DataGrid.CellStyle>
+
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Utente" Binding="{Binding NomeCompleto}" Width="200"/>
-                                            <DataGridTemplateColumn Header="Stato" Width="120">
+                                            <DataGridTextColumn Header="Utente" 
+                            Binding="{Binding NomeCompleto}" 
+                            Width="200"/>
+
+                                            <DataGridTemplateColumn Header="Stato" Width="140">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <Ellipse Width="10" Height="10" Margin="5,0"
-                                         Fill="{Binding Stato, Converter={StaticResource StatusToColorConverter}}"/>
-                                                            <TextBlock Text="{Binding Stato}" VerticalAlignment="Center" FontWeight="Bold"/>
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <Ellipse Width="10" Height="10" Margin="0,0,10,0"
+                                 Fill="{Binding Stato, Converter={StaticResource StatusToColorConverter}}"/>
+                                                            <TextBlock Text="{Binding Stato}" 
+                                   VerticalAlignment="Center" 
+                                   FontWeight="SemiBold"/>
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
-                                            <DataGridTextColumn Header="Ultimo Evento" Binding="{Binding UltimaTimbratura, StringFormat=\{0:HH:mm:ss\}}" Width="120"/>
-                                            <DataGridTextColumn Header="Tempo Trascorso (Lavoro)" Binding="{Binding TempoTrascorso}" Width="*">
+
+                                            <DataGridTextColumn Header="Orario" 
+                            Binding="{Binding UltimaTimbratura, StringFormat=\{0:HH:mm:ss\}}" 
+                            Width="120"/>
+
+                                            <DataGridTextColumn Header="Tempo Trascorso" 
+                            Binding="{Binding TempoTrascorso}" 
+                            Width="*">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
+                                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                        <Setter Property="Padding" Value="0,0,20,0"/>
                                                         <Setter Property="FontWeight" Value="Bold"/>
                                                         <Setter Property="Foreground" Value="#FFD4D4"/>
+                                                        <Setter Property="FontSize" Value="16"/>
+                                                        <Setter Property="FontFamily" Value="Consolas, Courier New, Monospace"/>
                                                     </Style>
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
+
                                         </DataGrid.Columns>
                                     </DataGrid>
+
+
                                 </Grid>
                             </TabItem>
                             <!-- ANAGRAFICA UTENTI -->
