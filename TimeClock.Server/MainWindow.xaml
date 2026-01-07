@@ -1,6 +1,7 @@
 <Window x:Class="TimeClock.Server.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TimeClock.Server" 
         WindowStartupLocation="CenterScreen"
         Background="Transparent"
         AllowsTransparency="True"
@@ -8,14 +9,16 @@
         Height="650" Width="1100"
         Title="TimeClock Server">
 
-    <Window.Resources>
-        <DropShadowEffect x:Key="DropShadow"
+       <Window.Resources>
+            <local:StatusToColorConverter x:Key="StatusToColorConverter"/>
+
+            <DropShadowEffect x:Key="DropShadow"
                           Color="Black"
                           Opacity="0.45"
                           BlurRadius="30"
                           ShadowDepth="5"/>
 
-        <Style x:Key="GlassButton" TargetType="Button">
+            <Style x:Key="GlassButton" TargetType="Button">
             <Setter Property="Margin" Value="0,5"/>
             <Setter Property="Height" Value="40"/>
             <Setter Property="Background" Value="#20FFFFFF"/>
@@ -126,8 +129,41 @@
                             <!-- ANAGRAFICA -->
 
                             <TabItem Header="Dashboard" IsSelected="True">
-                                <Grid>
-                                    <!-- Per ora pagina vuota -->
+                                <Grid Margin="20">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Text="Stato Utenti in Tempo Reale" FontSize="20" Foreground="White" Margin="0,0,0,15"/>
+
+                                    <DataGrid x:Name="DashboardGrid" Grid.Row="1" AutoGenerateColumns="False" 
+                  Background="#15FFFFFF" Foreground="Black" RowHeight="40" IsReadOnly="True"
+                  BorderBrush="#40FFFFFF" BorderThickness="1" CanUserAddRows="False">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Utente" Binding="{Binding NomeCompleto}" Width="200"/>
+                                            <DataGridTemplateColumn Header="Stato" Width="120">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Ellipse Width="10" Height="10" Margin="5,0"
+                                         Fill="{Binding Stato, Converter={StaticResource StatusToColorConverter}}"/>
+                                                            <TextBlock Text="{Binding Stato}" VerticalAlignment="Center" FontWeight="Bold"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                            <DataGridTextColumn Header="Ultimo Evento" Binding="{Binding UltimaTimbratura, StringFormat=\{0:HH:mm:ss\}}" Width="120"/>
+                                            <DataGridTextColumn Header="Tempo Trascorso (Lavoro)" Binding="{Binding TempoTrascorso}" Width="*">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                        <Setter Property="Foreground" Value="#FFD4D4"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
                                 </Grid>
                             </TabItem>
                             <!-- ANAGRAFICA UTENTI -->

@@ -10,6 +10,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using TimeClock.Core.Models;
 using Forms = System.Windows.Forms;
+using System.Windows.Threading; // Aggiungi questo in alto
+using System.Collections.ObjectModel;
 
 namespace TimeClock.Server
 {
@@ -19,7 +21,12 @@ namespace TimeClock.Server
         private List<UserProfile> _users = new();
         private List<HolidayRow> _holidays = new();
 
+        private DispatcherTimer _refreshTimer; // Il timer per il countdown 
+        private ObservableCollection<DashboardUserStatus> _dashboardUsers = new(); // La lista collegata alla tabella
+
         private UserExtrasRepository? _extrasRepo;
+
+
 
         private bool _loadingOvertimeUI;
         private readonly JsonSerializerOptions _jsonOptions = new()
@@ -116,13 +123,73 @@ namespace TimeClock.Server
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadCsvFolderFromSettings();
-            WireOvertimeTabEvents();
-            RefreshAll();
-            UsersGrid.CellEditEnding += UsersGrid_CellEditEnding;
+            LoadCsvFolderFromSettings(); // [cite: 2]
+            WireOvertimeTabEvents(); // [cite: 2]
+            RefreshAll(); // [cite: 2]
+            UsersGrid.CellEditEnding += UsersGrid_CellEditEnding; // [cite: 2]
 
+            // --- AGGIUNGI QUESTE RIGHE ---
+            DashboardGrid.ItemsSource = _dashboardUsers; // Collega la lista alla tabella XAML
+
+            _refreshTimer = new DispatcherTimer();
+            _refreshTimer.Interval = TimeSpan.FromSeconds(1); // Scatta ogni secondo
+            _refreshTimer.Tick += (s, ev) => UpdateDashboardTimers();
+            _refreshTimer.Start();
+
+            LoadDashboardData(); // Carica i dati iniziali dai CSV
+                                 // ----------------------------
         }
+        private void LoadDashboardData()
+        {
+            _dashboardUsers.Clear();
+            if (string.IsNullOrWhiteSpace(_csvFolder) || !Directory.Exists(_csvFolder)) return;
 
+            foreach (var user in _users)
+            {
+                var userFile = Path.Combine(_csvFolder, $"{user.Id}.csv");
+                if (!File.Exists(userFile)) continue;
+
+                try
+                {
+                    // Legge l'ultima riga del file CSV per sapere se è ENTRATA o USCITA
+                    var lastLine = File.ReadLines(userFile).LastOrDefault(l => !string.IsNullOrWhiteSpace(l));
+                    if (lastLine == null) continue;
+
+                    var parts = lastLine.Split(';');
+                    if (parts.Length < 2) parts = lastLine.Split(',');
+
+                    if (DateTime.TryParse(parts[0], out DateTime dt) && Enum.TryParse(parts[1], out PunchType tipo))
+                    {
+                        _dashboardUsers.Add(new DashboardUserStatus
+                        {
+                            UserId = user.Id,
+                            NomeCompleto = $"{user.Nome} {user.Cognome}",
+                            Stato = tipo.ToString().ToUpper(), // "ENTRATA" o "USCITA"
+                            UltimaTimbratura = dt,
+                            TempoTrascorso = ""
+                        });
+                    }
+                }
+                catch { /* Errore lettura file singolo utente */ }
+            }
+        }
+        
+        private void UpdateDashboardTimers()
+        {
+            foreach (var item in _dashboardUsers)
+            {
+                if (item.Stato == "ENTRATA" && item.UltimaTimbratura.HasValue)
+                {
+                    // Calcola quanto tempo è passato da quando è entrato
+                    TimeSpan diff = DateTime.Now - item.UltimaTimbratura.Value;
+                    item.TempoTrascorso = $"{(int)diff.TotalHours:00}:{diff.Minutes:00}:{diff.Seconds:00}";
+                }
+                else
+                {
+                    item.TempoTrascorso = "--:--:--";
+                }
+            }
+        }
         // ---------------------------
         // Top bar + menu laterale
         // ---------------------------
@@ -862,6 +929,43 @@ namespace TimeClock.Server
         {
             public DateTime Date { get; set; }
             public string Description { get; set; } = "";
+        }
+        public class DashboardUserStatus : System.ComponentModel.INotifyPropertyChanged
+        {
+            public string UserId { get; set; }
+            public string NomeCompleto { get; set; }
+            public string Stato { get; set; } // "INGRESSO" o "USCITA"
+            public DateTime? UltimaTimbratura { get; set; }
+
+            private string _tempoTrascorso;
+            public string TempoTrascorso
+            {
+                get => _tempoTrascorso;
+                set { _tempoTrascorso = value; OnPropertyChanged(nameof(TempoTrascorso)); }
+            }
+
+            public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+            protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+        }
+    }
+    // Incolla questo in fondo al file MainWindow.xaml.cs, PRIMA dell'ultima parentesi graffa di chiusura del namespace
+    public class StatusToColorConverter : System.Windows.Data.IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            string stato = value as string;
+            if (!string.IsNullOrEmpty(stato) &&
+               (stato.Equals("ENTRATA", StringComparison.OrdinalIgnoreCase) ||
+                stato.Equals("INGRESSO", StringComparison.OrdinalIgnoreCase)))
+            {
+                return new SolidColorBrush(Colors.LightGreen); // Verde per Entrata
+            }
+            return new SolidColorBrush(Colors.Red); // Rosso per Uscita
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 }
