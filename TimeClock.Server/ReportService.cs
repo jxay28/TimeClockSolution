@@ -31,22 +31,27 @@ namespace TimeClock.Server
             File.WriteAllLines(Path.Combine(outputFolder, $"report_paghe_{year}{monthStr}.csv"), reportPagheLines);
         }
 
+        // Dentro ReportService.cs
+
         private bool ÈFestivo(DateTime data)
         {
+            // Assicurati che App.ParametriGlobali sia accessibile
             var p = App.ParametriGlobali;
+            if (p == null) return false;
 
-            // Sabato/domenica o giorni scelti
+            // 1. Sabato/domenica
             if (p.GiorniSempreFestivi.Contains(data.DayOfWeek))
                 return true;
 
-            // Festività ricorrenti
-            foreach (var (mese, giorno) in p.FestivitaRicorrenti)
+            // 2. Festività ricorrenti (CORRETTO QUI)
+            // Non usare (mese, giorno), usa la variabile 'f'
+            foreach (var f in p.FestivitaRicorrenti)
             {
-                if (data.Month == mese && data.Day == giorno)
+                if (data.Month == f.Mese && data.Day == f.Giorno)
                     return true;
             }
 
-            // Festività extra specifiche
+            // 3. Festività extra specifiche (Ora funzionerà perché abbiamo sistemato la classe al punto 1)
             if (p.FestivitaAggiuntive.Contains(data.Date))
                 return true;
 

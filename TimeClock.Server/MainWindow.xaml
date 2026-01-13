@@ -314,40 +314,40 @@
                             <!-- STRAORDINARI -->
                             <TabItem Header="Parametri straordinari">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <Grid Margin="20">
+                                    <Grid Margin="20" Loaded="OvertimeTab_Loaded">
 
                                         <!-- CARD VETRO -->
                                         <Border Background="#40FFFFFF"
-                    CornerRadius="18"
-                    Padding="25"
-                    Effect="{DynamicResource DropShadowEffect}">
+                                            CornerRadius="18"
+                                            Padding="25"
+                                            Effect="{DynamicResource DropShadowEffect}">
 
                                             <StackPanel Orientation="Vertical"
-                            VerticalAlignment="Top"
-                            Margin="10">
+                                                VerticalAlignment="Top"
+                                                Margin="10">
 
                                                 <!-- SOGLIA MINUTI -->
                                                 <TextBlock Text="Intervallo di arrotondamento"
-                               FontSize="18"
-                               Foreground="White"
-                               Margin="0 0 0 10"/>
+                                                       FontSize="18"
+                                                       Foreground="White"
+                                                       Margin="0 0 0 10"/>
 
                                                 <Slider x:Name="OvertimeSlider"
-                            Minimum="5"
-                            Maximum="120"
-                            Value="15"
-                            TickFrequency="5"
-                            IsSnapToTickEnabled="True"
-                            Margin="0,10"/>
+                                                        Minimum="5"
+                                                        Maximum="120"
+                                                        Value="15"
+                                                        TickFrequency="5"
+                                                        IsSnapToTickEnabled="True"
+                                                        Margin="0,10"/>
 
                                                 <TextBlock Text="Valore attuale:"
-                               Foreground="White"
-                               FontSize="14"/>
+                                                       Foreground="White"
+                                                       FontSize="14"/>
 
                                                 <TextBlock x:Name="OvertimeValue"
-                               Text="15 minuti"
-                               FontSize="26"
-                               Foreground="#FFD4D4"/>
+                                                       Text="15 minuti"
+                                                       FontSize="26"
+                                                       Foreground="#FFD4D4"/>
 
                                                 <Separator Margin="0 20"/>
 
@@ -362,27 +362,16 @@
                                                            Margin="0 0 0 10"/>
 
                                                 <StackPanel Orientation="Vertical">
-
-                                                    <CheckBox x:Name="CbCapodanno" Content="1 gennaio - Capodanno" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbEpifania" Content="6 gennaio - Epifania" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbLiberazione" Content="25 aprile - Liberazione" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbLavoro" Content="1 maggio - Festa dei lavoratori" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbRepubblica" Content="2 giugno - Festa della Repubblica" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbFerragosto" Content="15 agosto - Ferragosto" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbOgnissanti" Content="1 novembre - Ognissanti" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbImmacolata" Content="8 dicembre - Immacolata Concezione" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbNatale" Content="25 dicembre - Natale" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
-                                                    <CheckBox x:Name="CbSantoStefano" Content="26 dicembre - Santo Stefano" Foreground="White" Checked="Nazionali_Changed" Unchecked="Nazionali_Changed"/>
-
+                                                    <CheckBox x:Name="CbCapodanno" Content="1 gennaio - Capodanno" Foreground="White"/>
+                                                    <CheckBox x:Name="CbEpifania" Content="6 gennaio - Epifania" Foreground="White"/>
+                                                    <CheckBox x:Name="CbLiberazione" Content="25 aprile - Liberazione" Foreground="White"/>
+                                                    <CheckBox x:Name="CbLavoro" Content="1 maggio - Festa dei lavoratori" Foreground="White"/>
+                                                    <CheckBox x:Name="CbRepubblica" Content="2 giugno - Festa della Repubblica" Foreground="White"/>
+                                                    <CheckBox x:Name="CbFerragosto" Content="15 agosto - Ferragosto" Foreground="White"/>
+                                                    <CheckBox x:Name="CbOgnissanti" Content="1 novembre - Ognissanti" Foreground="White"/>
+                                                    <CheckBox x:Name="CbImmacolata" Content="8 dicembre - Immacolata Concezione" Foreground="White"/>
+                                                    <CheckBox x:Name="CbNatale" Content="25 dicembre - Natale" Foreground="White"/>
+                                                    <CheckBox x:Name="CbSantoStefano" Content="26 dicembre - Santo Stefano" Foreground="White"/>
                                                 </StackPanel>
 
 
@@ -391,41 +380,40 @@
 
                                                 <!-- WEEKEND -->
                                                 <TextBlock Text="Weekend"
-                               FontSize="18"
-                               Foreground="White"
-                               Margin="0 0 0 10"/>
+                                                       FontSize="18"
+                                                       Foreground="White"
+                                                       Margin="0 0 0 10"/>
 
                                                 <CheckBox x:Name="SaturdayCheck"
-                              Content="Sabato considerato straordinario"
-                              Foreground="White"/>
+                                                      Content="Sabato considerato straordinario"
+                                                      Foreground="White"/>
 
                                                 <CheckBox x:Name="SundayCheck"
-                              Content="Domenica considerata straordinario"
-                              Foreground="White"/>
+                                                      Content="Domenica considerata straordinario"
+                                                      Foreground="White"/>
 
                                                 <Separator Margin="0 20"/>
 
 
                                                 <!-- FESTIVIT PERSONALIZZATE -->
                                                 <TextBlock Text="Festivit personalizzate"
-                               FontSize="18"
-                               Foreground="White"
-                               Margin="0 0 0 10"/>
+                                                       FontSize="18"
+                                                       Foreground="White"
+                                                       Margin="0 0 0 10"/>
 
                                                 <StackPanel Orientation="Horizontal" Margin="0 5">
                                                     <DatePicker x:Name="CustomHolidayPicker"
-                                    Width="150"/>
+                                                         Width="150"/>
                                                     <Button x:Name="AddCustomHolidayButton"
-                                Content="Aggiungi"
-                                Width="120"
-                                Margin="20 0"
-                                Style="{StaticResource GlassButton}"/>
+                                                        Content="Aggiungi"
+                                                        Width="120"
+                                                        Margin="20 0"
+                                                        Style="{StaticResource GlassButton}"/>
                                                 </StackPanel>
 
                                                 <ItemsControl x:Name="CustomHolidayList"
-                                  Margin="0 10">
-                                                    <!-- Righe aggiunte da codice:
-                             Es: "15/02/2025    [Rimuovi]" -->
+                                                      Margin="0 10">
+                                                  
                                                 </ItemsControl>
 
 
@@ -433,19 +421,19 @@
 
                                                 <!-- PULSANTI FINALI -->
                                                 <StackPanel Orientation="Horizontal"
-                                HorizontalAlignment="Right">
+                                                     HorizontalAlignment="Right">
 
                                                     <Button x:Name="SaveOvertimeParamsButton"
-                                Content="Salva parametri"
-                                Width="150"
-                                Margin="5"
-                                Style="{StaticResource GlassButton}"/>
+                                                        Content="Salva parametri"
+                                                        Width="150"
+                                                        Margin="5"
+                                                        Style="{StaticResource GlassButton}"/>
 
                                                     <Button x:Name="CancelOvertimeParamsButton"
-                                Content="Annulla"
-                                Width="120"
-                                Margin="5"
-                                Style="{StaticResource GlassButton}"/>
+                                                        Content="Annulla"
+                                                        Width="120"
+                                                        Margin="5"
+                                                        Style="{StaticResource GlassButton}"/>
 
                                                 </StackPanel>
 

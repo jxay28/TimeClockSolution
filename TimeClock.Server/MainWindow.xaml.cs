@@ -60,22 +60,31 @@ namespace TimeClock.Server
             if (cb.Content is not string text) return;
 
             if (!TryMapFixedNationalHoliday(text, out int mese, out int giorno))
-                return; // per ora ignoriamo Pasqua e Lunedì dell'Angelo
+                return;
 
-            var lista = App.ParametriGlobali.FestivitaRicorrenti; // List<(int Mese, int Giorno)>
-            var key = (Mese: mese, Giorno: giorno);
+            // Ora questa è una List<GiornoMese>
+            var lista = App.ParametriGlobali.FestivitaRicorrenti;
 
             bool isChecked = cb.IsChecked == true;
 
+            // Cerchiamo se esiste già l'oggetto nella lista
+            var elementoEsistente = lista.FirstOrDefault(x => x.Mese == mese && x.Giorno == giorno);
+
             if (isChecked)
             {
-                if (!lista.Any(x => x.Mese == mese && x.Giorno == giorno))
-                    lista.Add(key);
+                // Se spuntato e non esiste, creiamo un NUOVO oggetto GiornoMese (non una tupla)
+                if (elementoEsistente == null)
+                {
+                    lista.Add(new GiornoMese { Mese = mese, Giorno = giorno });
+                }
             }
             else
             {
-                // per le tuple: non esiste null, rimuovi direttamente
-                lista.RemoveAll(x => x.Mese == mese && x.Giorno == giorno);
+                // Se deselezionato ed esiste, rimuoviamo quell'oggetto specifico
+                if (elementoEsistente != null)
+                {
+                    lista.Remove(elementoEsistente);
+                }
             }
 
             App.SalvaParametriGlobali();
@@ -631,6 +640,12 @@ namespace TimeClock.Server
         // --------------------------------------------------------------------
         // PARAMETRI STRAORDINARI (parametri_straordinari.json)
         // --------------------------------------------------------------------
+        private void OvertimeTab_Loaded(object sender, RoutedEventArgs e)
+        {
+            HookNationalHolidayCheckboxes(); // Trova le checkbox nella pagina
+            ApplyGlobalOvertimeParamsToUI(); // Imposta le spunte salvate
+        }
+
         private void WireOvertimeTabEvents()
         {
             // Forziamo la barra ai valori richiesti (0-15-30).
@@ -667,7 +682,7 @@ namespace TimeClock.Server
                 App.SalvaParametriGlobali();
             }
 
-            _loadingOvertimeUI = true;
+            _loadingOvertimeUI = true; // Blocca gli eventi mentre modifichi la UI
             try
             {
                 int block = SnapBlock(App.ParametriGlobali.SogliaMinutiStraordinario);
@@ -678,13 +693,18 @@ namespace TimeClock.Server
                 SaturdayCheck.IsChecked = App.ParametriGlobali.GiorniSempreFestivi.Contains(DayOfWeek.Saturday);
                 SundayCheck.IsChecked = App.ParametriGlobali.GiorniSempreFestivi.Contains(DayOfWeek.Sunday);
 
-                App.ParametriGlobali.FestivitaRicorrenti ??= new List<(int Mese, int Giorno)>();
+                // Assicuriamoci che la lista esista
+                App.ParametriGlobali.FestivitaRicorrenti ??= new List<GiornoMese>();
+
+                // Ciclo su tutte le checkbox trovate
                 foreach (var cb in _nationalHolidayCheckBoxes)
                 {
                     var key = (cb.Content?.ToString() ?? "").Trim();
                     if (!NationalHolidayMap.TryGetValue(key, out var md)) continue;
 
-                    cb.IsChecked = App.ParametriGlobali.FestivitaRicorrenti.Any(x => x.Mese == md.Mese && x.Giorno == md.Giorno);
+                    // Controllo se il giorno è presente nella lista salvata
+                    cb.IsChecked = App.ParametriGlobali.FestivitaRicorrenti
+                        .Any(x => x.Mese == md.Mese && x.Giorno == md.Giorno);
                 }
 
                 App.ParametriGlobali.FestivitaAggiuntive ??= new List<DateTime>();
@@ -692,7 +712,7 @@ namespace TimeClock.Server
             }
             finally
             {
-                _loadingOvertimeUI = false;
+                _loadingOvertimeUI = false; // Riattiva gli eventi
             }
         }
 
@@ -778,25 +798,47 @@ namespace TimeClock.Server
             }
         }
 
+        // Dentro MainWindow.xaml.cs
+
         private void NationalHolidayCheck_Changed(object sender, RoutedEventArgs e)
         {
+            // Se la UI si sta caricando, usciamo per evitare errori
             if (_loadingOvertimeUI) return;
+
             if (sender is not CheckBox cb) return;
+            var keyText = (cb.Content?.ToString() ?? "").Trim();
 
-            var key = (cb.Content?.ToString() ?? "").Trim();
-            if (!NationalHolidayMap.TryGetValue(key, out var md)) return;
+            if (!NationalHolidayMap.TryGetValue(keyText, out var md)) return;
 
-            App.ParametriGlobali.FestivitaRicorrenti ??= new List<(int Mese, int Giorno)>();
-            bool enabled = cb.IsChecked == true;
+            // Assicuriamoci che la lista esista
+            if (App.ParametriGlobali.FestivitaRicorrenti == null)
+                App.ParametriGlobali.FestivitaRicorrenti = new List<GiornoMese>();
 
-            if (enabled)
+            bool isChecked = cb.IsChecked == true;
+
+            // Cerchiamo se esiste già un elemento con lo stesso Mese e Giorno
+            var esistente = App.ParametriGlobali.FestivitaRicorrenti
+                .FirstOrDefault(x => x.Mese == md.Mese && x.Giorno == md.Giorno);
+
+            if (isChecked)
             {
-                if (!App.ParametriGlobali.FestivitaRicorrenti.Any(x => x.Mese == md.Mese && x.Giorno == md.Giorno))
-                    App.ParametriGlobali.FestivitaRicorrenti.Add((md.Mese, md.Giorno));
+                // Se spuntato e non esiste, lo aggiungiamo come NUOVO OGGETTO
+                if (esistente == null)
+                {
+                    App.ParametriGlobali.FestivitaRicorrenti.Add(new GiornoMese
+                    {
+                        Mese = md.Mese,
+                        Giorno = md.Giorno
+                    });
+                }
             }
             else
             {
-                App.ParametriGlobali.FestivitaRicorrenti.RemoveAll(x => x.Mese == md.Mese && x.Giorno == md.Giorno);
+                // Se deselezionato ed esiste, lo rimuoviamo
+                if (esistente != null)
+                {
+                    App.ParametriGlobali.FestivitaRicorrenti.Remove(esistente);
+                }
             }
 
             App.SalvaParametriGlobali();

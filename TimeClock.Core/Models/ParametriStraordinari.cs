@@ -5,16 +5,19 @@ namespace TimeClock.Core.Models
 {
     public class ParametriStraordinari
     {
-        // Soglia minuti per conteggiare straordinario
         public int SogliaMinutiStraordinario { get; set; } = 15;
+        public List<DayOfWeek> GiorniSempreFestivi { get; set; } = new List<DayOfWeek>();
 
-        // Giorni della settimana considerati festivi
-        public List<DayOfWeek> GiorniSempreFestivi { get; set; } = new();
+        // Qui usiamo la classe GiornoMese, non le tuple
+        public List<GiornoMese> FestivitaRicorrenti { get; set; } = new List<GiornoMese>();
 
-        // Festività ricorrenti (ogni anno alla stessa data, es. 25 dicembre)
-        public List<(int Mese, int Giorno)> FestivitaRicorrenti { get; set; } = new();
+        // Questa è la proprietà che il compilatore ti diceva che mancava
+        public List<DateTime> FestivitaAggiuntive { get; set; } = new List<DateTime>();
+    }
 
-        // Festività specifiche per anno (Pasqua, ponti…)
-        public List<DateTime> FestivitaAggiuntive { get; set; } = new();
+    public class GiornoMese
+    {
+        public int Mese { get; set; }
+        public int Giorno { get; set; }
     }
 }
