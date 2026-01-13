@@ -18,7 +18,7 @@
     "Cognome": "pappa",
     "Ruolo": "ppp",
     "DataAssunzione": "2025-12-31T00:00:00",
-    "OreContrattoSettimanali": 40,
+    "OreContrattoSettimanali": 20,
     "CompensoOrarioBase": 50,
     "CompensoOrarioExtra": 100,
     "FullName": "001 - pippo pappa"

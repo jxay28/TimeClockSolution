@@ -41,7 +41,12 @@ namespace TimeClock.Server
         {
             // MonthCombo in XAML contiene già i 12 mesi: selezioniamo il mese corrente
             MonthCombo.SelectedIndex = Math.Max(0, DateTime.Today.Month - 1);
-
+            int currentYear = DateTime.Today.Year;
+            for (int y = currentYear; y >= currentYear - 5; y--)
+            {
+                YearCombo.Items.Add(y);
+            }
+            YearCombo.SelectedIndex = 0; // Seleziona l'anno corrente di default
             var users = _users
                 .OrderBy(u => u.SequenceNumber)
                 .Select(u => new UserItem(u))
@@ -99,8 +104,8 @@ namespace TimeClock.Server
             int month = MonthCombo.SelectedIndex + 1;
 
             // anno: scegliamo l'occorrenza più recente del mese selezionato (non nel futuro)
-            int year = DateTime.Today.Year;
-            if (month > DateTime.Today.Month) year--;
+            int year = (int)YearCombo.SelectedItem;
+           // if (month > DateTime.Today.Month) year--;
 
             _loadedYear = year;
             _loadedMonth = month;

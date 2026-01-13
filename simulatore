@@ -1,0 +1,47 @@
+import csv
+import os
+from datetime import datetime, timedelta
+import random
+
+def genera_timbrature_anno(user_id, anno, cartella_output="."):
+    # Nome del file basato sull'ID utente come richiesto dal server
+    file_path = os.path.join(cartella_output, f"{user_id}.csv")
+    
+    start_date = datetime(anno, 1, 1)
+    end_date = datetime(anno, 12, 31)
+    
+    timbrature = []
+    current_date = start_date
+
+    while current_date <= end_date:
+        # Escludiamo Sabato (5) e Domenica (6) se non vuoi timbrature nei weekend
+        if current_date.weekday() < 5:
+            # --- Turno Mattina ---
+            # Ingresso tra le 08:00 e le 08:45
+            ora_ingresso_1 = current_date.replace(hour=8, minute=random.randint(0, 45))
+            timbrature.append([ora_ingresso_1.strftime("%Y-%m-%d %H:%M"), "Entrata"])
+            
+            # Uscita tra le 12:30 e le 13:15
+            ora_uscita_1 = current_date.replace(hour=12, minute=random.randint(30, 59))
+            timbrature.append([ora_uscita_1.strftime("%Y-%m-%d %H:%M"), "Uscita"])
+            
+            # --- Turno Pomeriggio ---
+            # Ingresso tra le 14:00 e le 14:30
+            ora_ingresso_2 = current_date.replace(hour=14, minute=random.randint(0, 30))
+            timbrature.append([ora_ingresso_2.strftime("%Y-%m-%d %H:%M"), "Entrata"])
+            
+            # Uscita tra le 18:00 e le 18:45
+            ora_uscita_2 = current_date.replace(hour=18, minute=random.randint(0, 45))
+            timbrature.append([ora_uscita_2.strftime("%Y-%m-%d %H:%M"), "Uscita"])
+            
+        current_date += timedelta(days=1)
+
+    # Scrittura su file con separatore ";"
+    with open(file_path, mode='w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, delimiter=';')
+        writer.writerows(timbrature)
+    
+    print(f"Generato file: {file_path} con {len(timbrature)} timbrature.")
+
+# Esempio d'uso: genera il 2025 per l'utente 'mario.rossi'
+genera_timbrature_anno("mario.rossi", 2025)
