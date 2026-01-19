@@ -217,6 +217,39 @@ namespace TimeClock.Client
             }
         }
 
+        private string GetLastTimbraturaText(UserProfile user)
+        {
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+                return "Cartella condivisa non selezionata";
+
+            string userFile = Path.Combine(_csvFolder, user.Id + ".csv");
+            if (!File.Exists(userFile))
+                return "Nessuna timbratura registrata";
+
+            var lines = _repo.Load(userFile).ToList();
+            if (!lines.Any())
+                return "Nessuna timbratura registrata";
+
+            var last = lines.Last();
+            if (last.Length == 0)
+                return "Nessuna timbratura registrata";
+
+            var timestamp = last[0];
+            var tipo = last.Length > 1 ? last[1] : "Sconosciuta";
+            return $"{timestamp} - {tipo}";
+        }
+
+        private void ShowLastTimbraturaButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (UserComboBox.SelectedItem is not UserProfile user)
+            {
+                LastActionTextBlock.Text = "Seleziona un utente";
+                return;
+            }
+
+            LastActionTextBlock.Text = GetLastTimbraturaText(user);
+        }
+
         private void EntrataButton_Click(object sender, RoutedEventArgs e)
         {
             if (UserComboBox.SelectedItem is not UserProfile user) return;
