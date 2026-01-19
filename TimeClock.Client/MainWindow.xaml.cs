@@ -14,6 +14,9 @@ namespace TimeClock.Client
     public partial class MainWindow : Window
     {
         private List<UserProfile> _users = new();
+        private string _userFilter = string.Empty;
+        private bool _isUpdatingFilterText;
+
 
         // CSV repository: lo usiamo SOLO per le timbrature (Id.csv)
         private readonly CsvRepository _repo = new();
@@ -35,12 +38,12 @@ namespace TimeClock.Client
 
             if (!string.IsNullOrWhiteSpace(_csvFolder) && Directory.Exists(_csvFolder))
             {
-                SharedFolderTextBox.Text = _csvFolder;
+                SharedFolderTextBlock.Text = _csvFolder;
                 LoadUsersFromJson();
             }
             else
             {
-                SharedFolderTextBox.Text = "Nessuna cartella selezionata";
+                SharedFolderTextBlock.Text = "Nessuna cartella selezionata";
                 _csvFolder = string.Empty;
             }
         }
@@ -53,7 +56,7 @@ namespace TimeClock.Client
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     _csvFolder = dialog.SelectedPath;
-                    SharedFolderTextBox.Text = _csvFolder;
+                    SharedFolderTextBlock.Text = _csvFolder;
 
                     // Salvataggio preferenza
                     Properties.Settings.Default.CsvFolderPath = _csvFolder;
@@ -85,7 +88,7 @@ namespace TimeClock.Client
             {
                 var json = File.ReadAllText(path);
 
-                // Nel tuo caso è un array JSON: [ { ... }, { ... } ]
+                // Nel tuo caso Ã¨ un array JSON: [ { ... }, { ... } ]
                 var users = JsonSerializer.Deserialize<List<UserProfile>>(json, _jsonOptions);
 
                 _users = users ?? new List<UserProfile>();
@@ -96,15 +99,15 @@ namespace TimeClock.Client
                     .ThenBy(u => u.Nome)
                     .ToList();
 
-                UserComboBox.ItemsSource = _users;
+                ApplyUserFilter();
 
-                // Mostra FullName se presente (nel tuo JSON c'è "000 - aaa aaa")
+                // Mostra FullName se presente (nel tuo JSON c'Ã¨ "000 - aaa aaa")
                 // altrimenti mostra Nome
                 // Se vuoi SOLO Nome, rimetti "Nome"
                 UserComboBox.DisplayMemberPath = "FullName";
 
-                // Se FullName a volte è vuoto, puoi invece usare il ToString() in UserProfile
-                // o una proprietà calcolata; qui teniamo semplice.
+                // Se FullName a volte Ã¨ vuoto, puoi invece usare il ToString() in UserProfile
+                // o una proprietÃ  calcolata; qui teniamo semplice.
             }
             catch (Exception ex)
             {
@@ -114,6 +117,75 @@ namespace TimeClock.Client
 
         private void UserComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            UpdateButtonsState();
+        }
+
+        private void UserFilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isUpdatingFilterText)
+                return;
+
+            var sanitized = new string(UserFilterTextBox.Text.Where(char.IsDigit).ToArray());
+            if (!string.Equals(UserFilterTextBox.Text, sanitized, StringComparison.Ordinal))
+            {
+                _isUpdatingFilterText = true;
+                UserFilterTextBox.Text = sanitized;
+                UserFilterTextBox.CaretIndex = sanitized.Length;
+                _isUpdatingFilterText = false;
+            }
+
+            _userFilter = sanitized;
+            ApplyUserFilter();
+        }
+
+        private void KeypadNumber_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button || button.Tag is not string digit)
+                return;
+
+            _userFilter += digit;
+            UpdateFilterTextBox();
+            ApplyUserFilter();
+        }
+
+        private void KeypadClear_Click(object sender, RoutedEventArgs e)
+        {
+            _userFilter = string.Empty;
+            UpdateFilterTextBox();
+            ApplyUserFilter();
+        }
+
+        private void UpdateFilterTextBox()
+        {
+            _isUpdatingFilterText = true;
+            UserFilterTextBox.Text = _userFilter;
+            UserFilterTextBox.CaretIndex = _userFilter.Length;
+            _isUpdatingFilterText = false;
+        }
+
+        private void ApplyUserFilter()
+        {
+            var selectedUser = UserComboBox.SelectedItem as UserProfile;
+            var filteredUsers = _users.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_userFilter))
+            {
+                filteredUsers = filteredUsers.Where(user =>
+                    (user.FullName ?? string.Empty).Contains(_userFilter, StringComparison.OrdinalIgnoreCase) ||
+                    (user.Nome ?? string.Empty).Contains(_userFilter, StringComparison.OrdinalIgnoreCase) ||
+                    (user.Cognome ?? string.Empty).Contains(_userFilter, StringComparison.OrdinalIgnoreCase) ||
+                    (user.Id ?? string.Empty).Contains(_userFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var result = filteredUsers.ToList();
+            UserComboBox.ItemsSource = result;
+
+            if (selectedUser != null)
+            {
+                var match = result.FirstOrDefault(user => user.Id == selectedUser.Id);
+                UserComboBox.SelectedItem = match;
+            }
+
             UpdateButtonsState();
         }
 
