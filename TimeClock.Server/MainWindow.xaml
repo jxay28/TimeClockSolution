@@ -129,29 +129,40 @@
                             <!-- ANAGRAFICA -->
 
                             <TabItem Header="Dashboard" IsSelected="True">
-                                <Grid Margin="20">
+                                <Grid Margin="5">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Text="Stato Utenti in Tempo Reale" FontSize="20" Foreground="White" Margin="0,0,0,15"/>
+                                    <!-- Sezione grafico ingressi e pulsante aggiorna -->
+                                    <StackPanel Margin="1">
+                                       
+                                        <!-- Pulsante per aggiornare il contenuto della tabella -->
+                                        <Button Content="Aggiorna"
+                                                Style="{StaticResource AddButton}"
+                                                Width="100"
+                                                HorizontalAlignment="Right"
+                                                Margin="0,10,0,0"
+                                                Click="RefreshDashboard_Click" RenderTransformOrigin="0.525,-0.53"/>
+                                    </StackPanel>
+
                                     <DataGrid x:Name="DashboardGrid" 
-          Grid.Row="1" 
-          AutoGenerateColumns="False" 
+                                                  Grid.Row="1" 
+                                                  AutoGenerateColumns="False" 
           
-          Background="Transparent"
-          RowBackground="Transparent"
-          Foreground="White"
+                                                  Background="Transparent"
+                                                  RowBackground="Transparent"
+                                                  Foreground="White"
           
-          RowHeight="45" 
-          IsReadOnly="True"
-          BorderBrush="#40FFFFFF" 
-          BorderThickness="1" 
-          CanUserAddRows="False"
-          GridLinesVisibility="Horizontal"
-          HorizontalGridLinesBrush="#30FFFFFF"
-          HeadersVisibility="Column">
+                                                  RowHeight="45" 
+                                                  IsReadOnly="True"
+                                                  BorderBrush="#40FFFFFF" 
+                                                  BorderThickness="1" 
+                                                  CanUserAddRows="False"
+                                                  GridLinesVisibility="Horizontal"
+                                                  HorizontalGridLinesBrush="#30FFFFFF"
+                                                  HeadersVisibility="Column">
 
                                         <DataGrid.ColumnHeaderStyle>
                                             <Style TargetType="DataGridColumnHeader">

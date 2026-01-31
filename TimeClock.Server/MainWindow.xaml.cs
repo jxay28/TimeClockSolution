@@ -1,5 +1,11 @@
+// ===============================
+// MainWindow.xaml.cs (VERSIONE CORRETTA)
+// Upgrade Dashboard: riquadri (Presenti/Assenti/Ore settimanali) + grafico colonne ingressi Lun-Dom
+// ===============================
+
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -8,25 +14,29 @@ using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using TimeClock.Core.Models;
 using Forms = System.Windows.Forms;
-using System.Windows.Threading; // Aggiungi questo in alto
-using System.Collections.ObjectModel;
 
 namespace TimeClock.Server
 {
+    // DTO per il grafico colonne (Lun-Dom)
+    public sealed class IngressiGiorno
+    {
+        public string Giorno { get; set; } = "";
+        public int Conteggio { get; set; }
+    }
+
     public partial class MainWindow : Window
     {
         private string _csvFolder = "";
         private List<UserProfile> _users = new();
         private List<HolidayRow> _holidays = new();
 
-        private DispatcherTimer _refreshTimer; // Il timer per il countdown 
-        private ObservableCollection<DashboardUserStatus> _dashboardUsers = new(); // La lista collegata alla tabella
+        private DispatcherTimer _refreshTimer; // timer per countdown dashboard
+        private ObservableCollection<DashboardUserStatus> _dashboardUsers = new(); // lista collegata alla tabella DashboardGrid
 
         private UserExtrasRepository? _extrasRepo;
-
-
 
         private bool _loadingOvertimeUI;
         private readonly JsonSerializerOptions _jsonOptions = new()
@@ -34,6 +44,15 @@ namespace TimeClock.Server
             WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
+
+        // ===============================
+        //   NUOVE PROPRIETÀ DASHBOARD
+        // ===============================
+        public int PresentiOggi { get; set; }
+        public int AssentiOggi { get; set; }
+        public string OreSettimanaliTotali { get; set; } = "00:00";
+
+        public ObservableCollection<IngressiGiorno> IngressiPerGiorno { get; set; } = new();
 
         // I CheckBox delle festività nazionali in XAML non hanno x:Name: li troviamo via VisualTree.
         private readonly List<CheckBox> _nationalHolidayCheckBoxes = new();
@@ -54,75 +73,6 @@ namespace TimeClock.Server
                 ["25 dicembre - Natale"] = (12, 25),
                 ["26 dicembre - Santo Stefano"] = (12, 26),
             };
-        private void Nazionali_Changed(object sender, RoutedEventArgs e)
-        {
-            if (sender is not System.Windows.Controls.CheckBox cb) return;
-            if (cb.Content is not string text) return;
-
-            if (!TryMapFixedNationalHoliday(text, out int mese, out int giorno))
-                return;
-
-            // Ora questa è una List<GiornoMese>
-            var lista = App.ParametriGlobali.FestivitaRicorrenti;
-
-            bool isChecked = cb.IsChecked == true;
-
-            // Cerchiamo se esiste già l'oggetto nella lista
-            var elementoEsistente = lista.FirstOrDefault(x => x.Mese == mese && x.Giorno == giorno);
-
-            if (isChecked)
-            {
-                // Se spuntato e non esiste, creiamo un NUOVO oggetto GiornoMese (non una tupla)
-                if (elementoEsistente == null)
-                {
-                    lista.Add(new GiornoMese { Mese = mese, Giorno = giorno });
-                }
-            }
-            else
-            {
-                // Se deselezionato ed esiste, rimuoviamo quell'oggetto specifico
-                if (elementoEsistente != null)
-                {
-                    lista.Remove(elementoEsistente);
-                }
-            }
-
-            App.SalvaParametriGlobali();
-        }
-
-
-        private bool TryMapFixedNationalHoliday(string text, out int mese, out int giorno)
-        {
-            mese = 0; giorno = 0;
-
-            // Normalizzo un minimo
-            string t = text.Trim().ToLowerInvariant();
-
-            return t switch
-            {
-                var s when s.StartsWith("1 gennaio") => Set(1, 1, out mese, out giorno),
-                var s when s.StartsWith("6 gennaio") => Set(1, 6, out mese, out giorno),
-                var s when s.StartsWith("25 aprile") => Set(4, 25, out mese, out giorno),
-                var s when s.StartsWith("1 maggio") => Set(5, 1, out mese, out giorno),
-                var s when s.StartsWith("2 giugno") => Set(6, 2, out mese, out giorno),
-                var s when s.StartsWith("15 agosto") => Set(8, 15, out mese, out giorno),
-                var s when s.StartsWith("1 novembre") => Set(11, 1, out mese, out giorno),
-                var s when s.StartsWith("8 dicembre") => Set(12, 8, out mese, out giorno),
-                var s when s.StartsWith("25 dicembre") => Set(12, 25, out mese, out giorno),
-                var s when s.StartsWith("26 dicembre") => Set(12, 26, out mese, out giorno),
-
-                // Feste mobili -> false (Pasqua / Lunedì dell'Angelo)
-                _ => false
-            };
-        }
-
-        private bool Set(int m, int g, out int mese, out int giorno)
-        {
-            mese = m;
-            giorno = g;
-            return true;
-        }
-
 
         public MainWindow()
         {
@@ -132,22 +82,40 @@ namespace TimeClock.Server
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadCsvFolderFromSettings(); // [cite: 2]
-            WireOvertimeTabEvents(); // [cite: 2]
-            RefreshAll(); // [cite: 2]
-            UsersGrid.CellEditEnding += UsersGrid_CellEditEnding; // [cite: 2]
+            LoadCsvFolderFromSettings();
+            WireOvertimeTabEvents();
+            RefreshAll();
+            UsersGrid.CellEditEnding += UsersGrid_CellEditEnding;
 
-            // --- AGGIUNGI QUESTE RIGHE ---
-            DashboardGrid.ItemsSource = _dashboardUsers; // Collega la lista alla tabella XAML
+            // Dashboard: collega lista al DataGrid
+            DashboardGrid.ItemsSource = _dashboardUsers;
 
+            // Timer per aggiornare il tempo trascorso (solo UI)
             _refreshTimer = new DispatcherTimer();
-            _refreshTimer.Interval = TimeSpan.FromSeconds(1); // Scatta ogni secondo
-            _refreshTimer.Tick += (s, ev) => UpdateDashboardTimers();
+            _refreshTimer.Interval = TimeSpan.FromSeconds(1);
+            _refreshTimer.Tick += (s, ev) =>
+            {
+                UpdateDashboardTimers();
+                // Se vuoi che i numeri in alto cambino "live" durante la giornata, puoi ricalcolare qui.
+                // Lo facciamo in modo leggero: solo presenti/assenti.
+                AggiornaRiepilogoDashboardSoloPresenze();
+            };
             _refreshTimer.Start();
 
-            LoadDashboardData(); // Carica i dati iniziali dai CSV
-                                 // ----------------------------
+            // Carica stato iniziale (ultima timbratura di ciascun utente)
+            LoadDashboardData();
+
+            // Calcola riepilogo + grafico
+            AggiornaRiepilogoDashboard();
+            AggiornaGraficoIngressi();
+
+            // Binding: il XAML può fare Binding a queste proprietà
+            DataContext = this;
         }
+
+        // ===============================
+        //   DASHBOARD: CARICAMENTO STATO
+        // ===============================
         private void LoadDashboardData()
         {
             _dashboardUsers.Clear();
@@ -166,30 +134,33 @@ namespace TimeClock.Server
 
                     var parts = lastLine.Split(';');
                     if (parts.Length < 2) parts = lastLine.Split(',');
+                    if (parts.Length < 2) continue;
 
-                    if (DateTime.TryParse(parts[0], out DateTime dt) && Enum.TryParse(parts[1], out PunchType tipo))
+                    if (DateTime.TryParse(parts[0], out DateTime dt) && Enum.TryParse(parts[1], true, out PunchType tipo))
                     {
                         _dashboardUsers.Add(new DashboardUserStatus
                         {
                             UserId = user.Id,
                             NomeCompleto = $"{user.Nome} {user.Cognome}",
-                            Stato = tipo.ToString().ToUpper(), // "ENTRATA" o "USCITA"
+                            Stato = tipo.ToString().ToUpperInvariant(), // "ENTRATA" o "USCITA"
                             UltimaTimbratura = dt,
                             TempoTrascorso = ""
                         });
                     }
                 }
-                catch { /* Errore lettura file singolo utente */ }
+                catch
+                {
+                    // errore lettura file singolo utente: ignora
+                }
             }
         }
-        
+
         private void UpdateDashboardTimers()
         {
             foreach (var item in _dashboardUsers)
             {
                 if (item.Stato == "ENTRATA" && item.UltimaTimbratura.HasValue)
                 {
-                    // Calcola quanto tempo è passato da quando è entrato
                     TimeSpan diff = DateTime.Now - item.UltimaTimbratura.Value;
                     item.TempoTrascorso = $"{(int)diff.TotalHours:00}:{diff.Minutes:00}:{diff.Seconds:00}";
                 }
@@ -199,6 +170,180 @@ namespace TimeClock.Server
                 }
             }
         }
+
+        // ===============================
+        //   RIEPILOGO (Presenti/Assenti/Ore settimana)
+        // ===============================
+        private void AggiornaRiepilogoDashboardSoloPresenze()
+        {
+            var oggi = DateTime.Today;
+
+            PresentiOggi = _dashboardUsers.Count(u =>
+                u.Stato == "ENTRATA" && u.UltimaTimbratura.HasValue && u.UltimaTimbratura.Value.Date == oggi);
+
+            AssentiOggi = Math.Max(0, _users.Count - PresentiOggi);
+            // Niente calcolo ore qui per non fare I/O ogni secondo.
+        }
+
+        private void AggiornaRiepilogoDashboard()
+        {
+            AggiornaRiepilogoDashboardSoloPresenze();
+
+            // Ore totali settimana Lun-Ven di tutti i dipendenti
+            // Calcolo robusto: per ogni utente, crea coppie Entrata/Uscita e somma solo i segmenti che cadono tra Lun e Ven.
+            var startWeek = InizioSettimanaLunedi(DateTime.Today);
+            var endWeek = startWeek.AddDays(5); // esclusivo: Sab 00:00
+
+            double totalMinutes = 0;
+
+            foreach (var user in _users)
+            {
+                var file = Path.Combine(_csvFolder, $"{user.Id}.csv");
+                if (!File.Exists(file)) continue;
+
+                List<(DateTime dt, PunchType tipo)> entries = new();
+
+                try
+                {
+                    foreach (var line in File.ReadLines(file))
+                    {
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+
+                        var parts = line.Split(';');
+                        if (parts.Length < 2) parts = line.Split(',');
+                        if (parts.Length < 2) continue;
+
+                        if (!DateTime.TryParse(parts[0].Trim(), out var dt)) continue;
+                        if (dt < startWeek || dt >= endWeek) continue;
+
+                        if (!Enum.TryParse(parts[1].Trim(), true, out PunchType tipo)) continue;
+
+                        entries.Add((dt, tipo));
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (entries.Count == 0) continue;
+
+                entries = entries.OrderBy(x => x.dt).ToList();
+
+                // Coppie Entrata/Uscita
+                DateTime? lastIn = null;
+                foreach (var e in entries)
+                {
+                    if (e.tipo == PunchType.Entrata)
+                    {
+                        lastIn = e.dt;
+                    }
+                    else if (e.tipo == PunchType.Uscita)
+                    {
+                        if (lastIn.HasValue && e.dt > lastIn.Value)
+                        {
+                            var segStart = lastIn.Value;
+                            var segEnd = e.dt;
+
+                            // Clippa al range Lun-Ven
+                            if (segEnd > startWeek && segStart < endWeek)
+                            {
+                                var a = segStart < startWeek ? startWeek : segStart;
+                                var b = segEnd > endWeek ? endWeek : segEnd;
+                                if (b > a)
+                                    totalMinutes += (b - a).TotalMinutes;
+                            }
+
+                            lastIn = null;
+                        }
+                    }
+                }
+            }
+
+            OreSettimanaliTotali = FormatMinutesAsHHmm((int)Math.Round(totalMinutes));
+        }
+
+        // ===============================
+        //   GRAFICO INGRESSI Lun-Dom (conteggio ENTRATA)
+        // ===============================
+        private void AggiornaGraficoIngressi()
+        {
+            IngressiPerGiorno.Clear();
+
+            // Ultimi 7 giorni (Lun-Dom della settimana corrente)
+            var start = InizioSettimanaLunedi(DateTime.Today);
+            var end = start.AddDays(7); // esclusivo
+
+            var labels = new[] { "Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom" };
+            var counts = new int[7];
+
+            foreach (var user in _users)
+            {
+                var file = Path.Combine(_csvFolder, $"{user.Id}.csv");
+                if (!File.Exists(file)) continue;
+
+                try
+                {
+                    foreach (var line in File.ReadLines(file))
+                    {
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+
+                        var parts = line.Split(';');
+                        if (parts.Length < 2) parts = line.Split(',');
+                        if (parts.Length < 2) continue;
+
+                        if (!DateTime.TryParse(parts[0].Trim(), out var dt)) continue;
+                        if (dt < start || dt >= end) continue;
+
+                        if (!Enum.TryParse(parts[1].Trim(), true, out PunchType tipo)) continue;
+
+                        if (tipo == PunchType.Entrata)
+                        {
+                            // mappa DayOfWeek -> indice lun=0 ... dom=6
+                            int idx = ((int)dt.DayOfWeek + 6) % 7;
+                            counts[idx]++;
+                        }
+                    }
+                }
+                catch
+                {
+                    // ignora file problematico
+                }
+            }
+
+            // Scala visiva per altezza barra (WPF puro): 1 unità = 4 px
+            // Nota: in XAML l'altezza del Border è binding su Conteggio, quindi Conteggio deve essere "altezza".
+            // Qui trasformiamo conteggi reali in altezza.
+            int pxPerIngresso = 6;
+            int minHeight = 6;
+
+            for (int i = 0; i < 7; i++)
+            {
+                int h = Math.Max(minHeight, counts[i] * pxPerIngresso);
+
+                IngressiPerGiorno.Add(new IngressiGiorno
+                {
+                    Giorno = labels[i],
+                    Conteggio = h
+                });
+            }
+        }
+
+        private static DateTime InizioSettimanaLunedi(DateTime d)
+        {
+            d = d.Date;
+            int diff = (7 + (d.DayOfWeek - DayOfWeek.Monday)) % 7;
+            return d.AddDays(-diff);
+        }
+
+        private static string FormatMinutesAsHHmm(int minutes)
+        {
+            if (minutes < 0) minutes = 0;
+            int h = minutes / 60;
+            int m = minutes % 60;
+            return $"{h:00}:{m:00}";
+        }
+
         // ---------------------------
         // Top bar + menu laterale
         // ---------------------------
@@ -209,6 +354,23 @@ namespace TimeClock.Server
         {
             if (sender is Button btn && int.TryParse(btn.Tag?.ToString(), out int idx))
                 MainTabs.SelectedIndex = idx;
+        }
+
+        // ---------------------------
+        // Dashboard: aggiornamento manuale
+        // ---------------------------
+        /// <summary>
+        /// Gestisce il click sul pulsante di refresh della dashboard.
+        /// Ricarica i dati dello stato utenti e aggiorna il grafico.
+        /// </summary>
+        private void RefreshDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            // Carica nuovamente i dati sulla timbratura degli utenti
+            LoadDashboardData();
+            // Aggiorna il grafico degli ingressi
+            AggiornaGraficoIngressi();
+            // Forza l'aggiornamento della griglia
+            DashboardGrid.Items.Refresh();
         }
 
         // ---------------------------
@@ -262,6 +424,11 @@ namespace TimeClock.Server
             _extrasRepo = Directory.Exists(_csvFolder) ? new UserExtrasRepository(_csvFolder) : null;
 
             RefreshAll();
+
+            // Ricarica dashboard con nuova cartella
+            LoadDashboardData();
+            AggiornaRiepilogoDashboard();
+            AggiornaGraficoIngressi();
         }
 
         // ---------------------------
@@ -324,13 +491,11 @@ namespace TimeClock.Server
 
                 var parts = line.Split(';');
                 if (parts.Length < 4) parts = line.Split(',');
-
                 if (parts.Length < 4) continue;
 
                 var u = new UserProfile();
                 int idx = 0;
 
-                // se il primo campo è numerico, lo consideriamo SequenceNumber
                 if (int.TryParse(parts[0].Trim(), out var seq))
                 {
                     u.SequenceNumber = seq;
@@ -342,7 +507,6 @@ namespace TimeClock.Server
                 if (parts.Length > idx) u.Cognome = parts[idx++].Trim();
                 if (parts.Length > idx) u.Ruolo = parts[idx++].Trim();
 
-                // opzionali (se presenti)
                 if (parts.Length > idx && DateTime.TryParse(parts[idx].Trim(), out var da)) u.DataAssunzione = da; idx++;
                 if (parts.Length > idx && double.TryParse(parts[idx].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var oreSett)) u.OreContrattoSettimanali = oreSett; idx++;
                 if (parts.Length > idx && decimal.TryParse(parts[idx].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var basePay)) u.CompensoOrarioBase = basePay; idx++;
@@ -368,7 +532,6 @@ namespace TimeClock.Server
             {
                 File.WriteAllText(UsersJsonPath, JsonSerializer.Serialize(_users, _jsonOptions));
 
-                // export legacy
                 var lines = _users
                     .OrderBy(u => u.SequenceNumber)
                     .Select(u => string.Join(";", new[]
@@ -409,22 +572,22 @@ namespace TimeClock.Server
             {
                 try
                 {
-                    // 1) Salva SEMPRE utenti.json
                     SaveUsers();
 
-                    // 2) Aggiorna utenti_extras.json SOLO se serve
                     if (_extrasRepo != null)
                     {
-                        double oreGiornaliere =
-                            user.OreContrattoSettimanali > 0
-                                ? user.OreContrattoSettimanali / 5.0
-                                : 8.0;
+                        double oreGiornaliere = user.OreContrattoSettimanali > 0
+                            ? user.OreContrattoSettimanali / 5.0
+                            : 8.0;
 
-                        int giorniSettimanali = 5; // valore coerente col tuo modello
-
+                        int giorniSettimanali = 5;
                         _extrasRepo.Set(user.Id, oreGiornaliere, giorniSettimanali);
                         _extrasRepo.Save();
                     }
+
+                    // Aggiorna riepilogo dopo modifiche utenti
+                    AggiornaRiepilogoDashboard();
+                    AggiornaGraficoIngressi();
                 }
                 catch (Exception ex)
                 {
@@ -435,9 +598,8 @@ namespace TimeClock.Server
                         MessageBoxImage.Error
                     );
                 }
-            }, System.Windows.Threading.DispatcherPriority.Background);
+            }, DispatcherPriority.Background);
         }
-
 
         private void AddUser_Click(object sender, RoutedEventArgs e)
         {
@@ -456,7 +618,6 @@ namespace TimeClock.Server
                 _users.Add(wnd.User);
                 SaveUsers();
 
-                // inizializza extras (ore giornaliere previste) con un default sensato
                 try
                 {
                     if (_extrasRepo != null)
@@ -473,6 +634,11 @@ namespace TimeClock.Server
 
                 UsersGrid.ItemsSource = null;
                 UsersGrid.ItemsSource = _users;
+
+                // refresh dashboard
+                LoadDashboardData();
+                AggiornaRiepilogoDashboard();
+                AggiornaGraficoIngressi();
             }
         }
 
@@ -506,7 +672,6 @@ namespace TimeClock.Server
 
                     var parts = line.Split(';');
                     if (parts.Length < 2) parts = line.Split(',');
-
                     if (parts.Length < 2) continue;
 
                     if (!DateTime.TryParse(parts[0].Trim(), out var dt)) continue;
@@ -642,14 +807,12 @@ namespace TimeClock.Server
         // --------------------------------------------------------------------
         private void OvertimeTab_Loaded(object sender, RoutedEventArgs e)
         {
-            HookNationalHolidayCheckboxes(); // Trova le checkbox nella pagina
-            ApplyGlobalOvertimeParamsToUI(); // Imposta le spunte salvate
+            HookNationalHolidayCheckboxes();
+            ApplyGlobalOvertimeParamsToUI();
         }
 
         private void WireOvertimeTabEvents()
         {
-            // Forziamo la barra ai valori richiesti (0-15-30).
-            // Se in XAML era diverso, così la UI torna coerente.
             OvertimeSlider.Minimum = 0;
             OvertimeSlider.Maximum = 30;
             OvertimeSlider.TickFrequency = 15;
@@ -667,10 +830,6 @@ namespace TimeClock.Server
             SaveOvertimeParamsButton.Click += SaveOvertimeParamsButton_Click;
             CancelOvertimeParamsButton.Click += CancelOvertimeParamsButton_Click;
 
-            // Vecchio switch: lo lasciamo visibile ma non lo usiamo più.
-           // UseExpectedHoursCheck.IsChecked = false;
-           // UseExpectedHoursCheck.IsEnabled = false;
-
             HookNationalHolidayCheckboxes();
         }
 
@@ -682,7 +841,7 @@ namespace TimeClock.Server
                 App.SalvaParametriGlobali();
             }
 
-            _loadingOvertimeUI = true; // Blocca gli eventi mentre modifichi la UI
+            _loadingOvertimeUI = true;
             try
             {
                 int block = SnapBlock(App.ParametriGlobali.SogliaMinutiStraordinario);
@@ -693,16 +852,13 @@ namespace TimeClock.Server
                 SaturdayCheck.IsChecked = App.ParametriGlobali.GiorniSempreFestivi.Contains(DayOfWeek.Saturday);
                 SundayCheck.IsChecked = App.ParametriGlobali.GiorniSempreFestivi.Contains(DayOfWeek.Sunday);
 
-                // Assicuriamoci che la lista esista
                 App.ParametriGlobali.FestivitaRicorrenti ??= new List<GiornoMese>();
 
-                // Ciclo su tutte le checkbox trovate
                 foreach (var cb in _nationalHolidayCheckBoxes)
                 {
                     var key = (cb.Content?.ToString() ?? "").Trim();
                     if (!NationalHolidayMap.TryGetValue(key, out var md)) continue;
 
-                    // Controllo se il giorno è presente nella lista salvata
                     cb.IsChecked = App.ParametriGlobali.FestivitaRicorrenti
                         .Any(x => x.Mese == md.Mese && x.Giorno == md.Giorno);
                 }
@@ -712,7 +868,7 @@ namespace TimeClock.Server
             }
             finally
             {
-                _loadingOvertimeUI = false; // Riattiva gli eventi
+                _loadingOvertimeUI = false;
             }
         }
 
@@ -741,7 +897,6 @@ namespace TimeClock.Server
 
             int snapped = SnapBlock((int)Math.Round(e.NewValue));
 
-            // se non è esattamente un valore valido, lo forziamo
             if (Math.Abs(e.NewValue - snapped) > 0.001)
             {
                 _loadingOvertimeUI = true;
@@ -798,11 +953,8 @@ namespace TimeClock.Server
             }
         }
 
-        // Dentro MainWindow.xaml.cs
-
         private void NationalHolidayCheck_Changed(object sender, RoutedEventArgs e)
         {
-            // Se la UI si sta caricando, usciamo per evitare errori
             if (_loadingOvertimeUI) return;
 
             if (sender is not CheckBox cb) return;
@@ -810,19 +962,15 @@ namespace TimeClock.Server
 
             if (!NationalHolidayMap.TryGetValue(keyText, out var md)) return;
 
-            // Assicuriamoci che la lista esista
-            if (App.ParametriGlobali.FestivitaRicorrenti == null)
-                App.ParametriGlobali.FestivitaRicorrenti = new List<GiornoMese>();
+            App.ParametriGlobali.FestivitaRicorrenti ??= new List<GiornoMese>();
 
             bool isChecked = cb.IsChecked == true;
 
-            // Cerchiamo se esiste già un elemento con lo stesso Mese e Giorno
             var esistente = App.ParametriGlobali.FestivitaRicorrenti
                 .FirstOrDefault(x => x.Mese == md.Mese && x.Giorno == md.Giorno);
 
             if (isChecked)
             {
-                // Se spuntato e non esiste, lo aggiungiamo come NUOVO OGGETTO
                 if (esistente == null)
                 {
                     App.ParametriGlobali.FestivitaRicorrenti.Add(new GiornoMese
@@ -834,11 +982,8 @@ namespace TimeClock.Server
             }
             else
             {
-                // Se deselezionato ed esiste, lo rimuoviamo
                 if (esistente != null)
-                {
                     App.ParametriGlobali.FestivitaRicorrenti.Remove(esistente);
-                }
             }
 
             App.SalvaParametriGlobali();
@@ -915,7 +1060,6 @@ namespace TimeClock.Server
 
         private void SaveOvertimeParamsButton_Click(object sender, RoutedEventArgs e)
         {
-            // le modifiche vengono già salvate in tempo reale: qui solo feedback
             try
             {
                 App.SalvaParametriGlobali();
@@ -929,7 +1073,6 @@ namespace TimeClock.Server
 
         private void CancelOvertimeParamsButton_Click(object sender, RoutedEventArgs e)
         {
-            // ripristina dal file parametri_straordinari.json
             try
             {
                 var file = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "parametri_straordinari.json");
@@ -967,42 +1110,44 @@ namespace TimeClock.Server
             }
         }
 
-        private class HolidayRow
+        private sealed class HolidayRow
         {
             public DateTime Date { get; set; }
             public string Description { get; set; } = "";
         }
-        public class DashboardUserStatus : System.ComponentModel.INotifyPropertyChanged
+
+        public sealed class DashboardUserStatus : System.ComponentModel.INotifyPropertyChanged
         {
-            public string UserId { get; set; }
-            public string NomeCompleto { get; set; }
-            public string Stato { get; set; } // "INGRESSO" o "USCITA"
+            public string UserId { get; set; } = "";
+            public string NomeCompleto { get; set; } = "";
+            public string Stato { get; set; } = ""; // "ENTRATA" o "USCITA"
             public DateTime? UltimaTimbratura { get; set; }
 
-            private string _tempoTrascorso;
+            private string _tempoTrascorso = "";
             public string TempoTrascorso
             {
                 get => _tempoTrascorso;
                 set { _tempoTrascorso = value; OnPropertyChanged(nameof(TempoTrascorso)); }
             }
 
-            public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
-            protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+            public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+            private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
         }
     }
-    // Incolla questo in fondo al file MainWindow.xaml.cs, PRIMA dell'ultima parentesi graffa di chiusura del namespace
+
+    // Converter per colorare lo stato in dashboard (già presente nel tuo progetto)
     public class StatusToColorConverter : System.Windows.Data.IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string stato = value as string;
+            string? stato = value as string;
             if (!string.IsNullOrEmpty(stato) &&
                (stato.Equals("ENTRATA", StringComparison.OrdinalIgnoreCase) ||
                 stato.Equals("INGRESSO", StringComparison.OrdinalIgnoreCase)))
             {
-                return new SolidColorBrush(Colors.LightGreen); // Verde per Entrata
+                return new SolidColorBrush(Colors.LightGreen);
             }
-            return new SolidColorBrush(Colors.Red); // Rosso per Uscita
+            return new SolidColorBrush(Colors.Red);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

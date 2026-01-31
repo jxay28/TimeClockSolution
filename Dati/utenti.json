@@ -14,14 +14,14 @@
   {
     "Id": "2b27d3ba-e19b-46ce-8f4e-5637974594a0",
     "SequenceNumber": 1,
-    "Nome": "pippo",
+    "Nome": "cacca",
     "Cognome": "pappa",
     "Ruolo": "ppp",
     "DataAssunzione": "2025-12-31T00:00:00",
     "OreContrattoSettimanali": 20,
     "CompensoOrarioBase": 50,
     "CompensoOrarioExtra": 100,
-    "FullName": "001 - pippo pappa"
+    "FullName": "001 - cacca pappa"
   },
   {
     "Id": "3caf97d1-38b8-4b53-afa8-1772035757d5",
@@ -34,5 +34,101 @@
     "CompensoOrarioBase": 10,
     "CompensoOrarioExtra": 20,
     "FullName": "002 - Plaintext Plaintext"
+  },
+  {
+    "Id": "6b23831b-a2f6-4943-9644-6c3ec1ab0963",
+    "SequenceNumber": 3,
+    "Nome": "3",
+    "Cognome": "3",
+    "Ruolo": "",
+    "DataAssunzione": "2026-01-31T00:00:00",
+    "OreContrattoSettimanali": 40,
+    "CompensoOrarioBase": 2,
+    "CompensoOrarioExtra": 22,
+    "FullName": "003 - 3 3"
+  },
+  {
+    "Id": "0be1cb6d-c8fe-42a9-a82a-c828fe740b75",
+    "SequenceNumber": 4,
+    "Nome": "4",
+    "Cognome": "4",
+    "Ruolo": "4",
+    "DataAssunzione": "2026-01-31T00:00:00",
+    "OreContrattoSettimanali": 4,
+    "CompensoOrarioBase": 4,
+    "CompensoOrarioExtra": 4,
+    "FullName": "004 - 4 4"
+  },
+  {
+    "Id": "7133df47-8022-4083-adc7-855f917a04ee",
+    "SequenceNumber": 5,
+    "Nome": "5",
+    "Cognome": "5",
+    "Ruolo": "5",
+    "DataAssunzione": "2026-01-31T00:00:00",
+    "OreContrattoSettimanali": 5,
+    "CompensoOrarioBase": 5,
+    "CompensoOrarioExtra": 5,
+    "FullName": "005 - 5 5"
+  },
+  {
+    "Id": "ff43c3c1-ebc0-42da-ab03-268388325c23",
+    "SequenceNumber": 6,
+    "Nome": "6",
+    "Cognome": "6",
+    "Ruolo": "6",
+    "DataAssunzione": "2026-01-31T00:00:00",
+    "OreContrattoSettimanali": 6,
+    "CompensoOrarioBase": 6,
+    "CompensoOrarioExtra": 6,
+    "FullName": "006 - 6 6"
+  },
+  {
+    "Id": "e86b5948-3053-4645-8e20-2ce8e2ef571e",
+    "SequenceNumber": 7,
+    "Nome": "7",
+    "Cognome": "7",
+    "Ruolo": "7",
+    "DataAssunzione": "2026-01-31T00:00:00",
+    "OreContrattoSettimanali": 7,
+    "CompensoOrarioBase": 7,
+    "CompensoOrarioExtra": 7,
+    "FullName": "007 - 7 7"
+  },
+  {
+    "Id": "1faad1c4-d988-4772-9e64-0a6189db7fa3",
+    "SequenceNumber": 8,
+    "Nome": "8",
+    "Cognome": "8",
+    "Ruolo": "88",
+    "DataAssunzione": "2026-01-31T00:00:00",
+    "OreContrattoSettimanali": 8,
+    "CompensoOrarioBase": 8,
+    "CompensoOrarioExtra": 8,
+    "FullName": "008 - 8 8"
+  },
+  {
+    "Id": "a7054065-5801-4546-a21a-2849a6a6a343",
+    "SequenceNumber": 9,
+    "Nome": "9",
+    "Cognome": "9",
+    "Ruolo": "9",
+    "DataAssunzione": "2026-01-31T00:00:00",
+    "OreContrattoSettimanali": 9,
+    "CompensoOrarioBase": 9,
+    "CompensoOrarioExtra": 9,
+    "FullName": "009 - 9 9"
+  },
+  {
+    "Id": "8a8dab8c-25fa-4a36-ae7b-dc7537bdbffb",
+    "SequenceNumber": 10,
+    "Nome": "11",
+    "Cognome": "1",
+    "Ruolo": "11",
+    "DataAssunzione": "2026-01-31T00:00:00",
+    "OreContrattoSettimanali": 11,
+    "CompensoOrarioBase": 11,
+    "CompensoOrarioExtra": 11,
+    "FullName": "010 - 11 1"
   }
 ]

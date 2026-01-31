@@ -1,5 +1,15 @@
 [
   {
+    "UserId": "0be1cb6d-c8fe-42a9-a82a-c828fe740b75",
+    "OreGiornalierePreviste": 0.8,
+    "GiorniLavorativiSettimana": 5
+  },
+  {
+    "UserId": "1faad1c4-d988-4772-9e64-0a6189db7fa3",
+    "OreGiornalierePreviste": 1.6,
+    "GiorniLavorativiSettimana": 5
+  },
+  {
     "UserId": "2b27d3ba-e19b-46ce-8f4e-5637974594a0",
     "OreGiornalierePreviste": 4,
     "GiorniLavorativiSettimana": 5
@@ -10,8 +20,38 @@
     "GiorniLavorativiSettimana": 5
   },
   {
+    "UserId": "6b23831b-a2f6-4943-9644-6c3ec1ab0963",
+    "OreGiornalierePreviste": 8,
+    "GiorniLavorativiSettimana": 5
+  },
+  {
+    "UserId": "7133df47-8022-4083-adc7-855f917a04ee",
+    "OreGiornalierePreviste": 1,
+    "GiorniLavorativiSettimana": 5
+  },
+  {
     "UserId": "76a336a3-597f-4afe-b25a-9e11983ee2c6",
     "OreGiornalierePreviste": 8,
+    "GiorniLavorativiSettimana": 5
+  },
+  {
+    "UserId": "8a8dab8c-25fa-4a36-ae7b-dc7537bdbffb",
+    "OreGiornalierePreviste": 2.2,
+    "GiorniLavorativiSettimana": 5
+  },
+  {
+    "UserId": "a7054065-5801-4546-a21a-2849a6a6a343",
+    "OreGiornalierePreviste": 1.8,
+    "GiorniLavorativiSettimana": 5
+  },
+  {
+    "UserId": "e86b5948-3053-4645-8e20-2ce8e2ef571e",
+    "OreGiornalierePreviste": 1.4,
+    "GiorniLavorativiSettimana": 5
+  },
+  {
+    "UserId": "ff43c3c1-ebc0-42da-ab03-268388325c23",
+    "OreGiornalierePreviste": 1.2,
     "GiorniLavorativiSettimana": 5
   }
 ]
