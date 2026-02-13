@@ -5,6 +5,9 @@ namespace TimeClock.Core.Models
 {
     public class ParametriStraordinari
     {
+        // Abilita il conteggio delle festività nazionali predefinite
+        public bool UsaFestivitaNazionali { get; set; } = true;
+
         // Soglia minuti per conteggiare straordinario
         public int SogliaMinutiStraordinario { get; set; } = 15;
 

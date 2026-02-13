@@ -21,15 +21,7 @@ namespace TimeClock.Server
         // elenco utenti caricati
         private List<UserProfile> _users = new List<UserProfile>();
 
-        // elenco festività caricate
-        private List<Holiday> _holidays = new List<Holiday>();
-
-        // impostazioni straordinari correnti
-        private OvertimeSettings _overtimeSettings = new OvertimeSettings
-        {
-            SogliaMinuti = 0,
-            UnitaArrotondamentoMinuti = 15
-        };
+        // i parametri globali sono gestiti in App.ParametriGlobali
 
         public MainWindow()
         {
@@ -44,7 +36,6 @@ namespace TimeClock.Server
 
                 // Carica subito i dati
                 LoadUsers();
-                LoadHolidays();
                 LoadSettings();
             }
             else
@@ -221,75 +212,34 @@ namespace TimeClock.Server
 
 
         /// <summary>
-        /// Carica le festività da festivita.csv e aggiorna la griglia dedicata.
-        /// </summary>
-        private void LoadHolidays()
-        {
-            _holidays = new List<Holiday>();
-
-            if (string.IsNullOrWhiteSpace(_csvFolder))
-                return;
-
-            string path = Path.Combine(_csvFolder, "festivita.csv");
-            if (!File.Exists(path))
-                return;
-
-            var repo = new CsvRepository();
-
-            foreach (var fields in repo.Load(path))
-            {
-                try
-                {
-                    var h = new Holiday
-                    {
-                        Data = DateTime.TryParse(fields.ElementAtOrDefault(0), out var d) ? d : DateTime.MinValue,
-                        Descrizione = fields.ElementAtOrDefault(1)
-                    };
-                    _holidays.Add(h);
-                }
-                catch
-                {
-                    // ignora riga malformata
-                }
-            }
-
-            var grid = this.FindName("HolidayGrid") as System.Windows.Controls.DataGrid;
-            if (grid != null)
-            {
-                grid.ItemsSource = null;
-                grid.ItemsSource = _holidays;
-            }
-        }
-
-        /// <summary>
-        /// Carica le impostazioni straordinari dal file parametri_straordinari.csv e aggiorna lo slider.
+        /// Carica i parametri globali nella UI.
         /// </summary>
         private void LoadSettings()
         {
-            if (string.IsNullOrWhiteSpace(_csvFolder))
-                return;
+            var p = App.ParametriGlobali ?? new ParametriStraordinari();
+            App.ParametriGlobali = p;
 
-            string path = Path.Combine(_csvFolder, "parametri_straordinari.csv");
-            if (!File.Exists(path))
-                return;
+            OvertimeSlider.Value = p.SogliaMinutiStraordinario;
+            OvertimeValue.Text = $"{p.SogliaMinutiStraordinario} minuti";
 
-            var repo = new CsvRepository();
-            var fields = repo.Load(path).FirstOrDefault();
+            EnableNationalHolidaysCheck.IsChecked = p.UsaFestivitaNazionali;
+            SaturdayCheck.IsChecked = p.GiorniSempreFestivi.Contains(DayOfWeek.Saturday);
+            SundayCheck.IsChecked = p.GiorniSempreFestivi.Contains(DayOfWeek.Sunday);
 
-            if (fields != null)
-            {
-                _overtimeSettings.SogliaMinuti = int.TryParse(fields.ElementAtOrDefault(0), out var s) ? s : 0;
-                _overtimeSettings.UnitaArrotondamentoMinuti = int.TryParse(fields.ElementAtOrDefault(1), out var u) ? u : 15;
-            }
+            RefreshCustomHolidayList();
+        }
 
-            var slider = this.FindName("OvertimeSlider") as System.Windows.Controls.Slider;
-            var valueLabel = this.FindName("OvertimeValue") as System.Windows.Controls.TextBlock;
+        private void RefreshCustomHolidayList()
+        {
+            var p = App.ParametriGlobali ?? new ParametriStraordinari();
+            var items = p.FestivitaAggiuntive
+                .Select(d => d.ToString("dd/MM/yyyy"))
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
 
-            if (slider != null)
-                slider.Value = _overtimeSettings.SogliaMinuti;
-
-            if (valueLabel != null)
-                valueLabel.Text = $"{_overtimeSettings.SogliaMinuti} minuti";
+            CustomHolidayList.ItemsSource = null;
+            CustomHolidayList.ItemsSource = items;
         }
 
         /// <summary>
@@ -381,68 +331,58 @@ namespace TimeClock.Server
         }
 
 
-
         /// <summary>
-        /// Aggiunge una festività chiedendo data e descrizione e salva su festivita.csv.
-        /// </summary>
-        private void AddHoliday_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(_csvFolder))
-            {
-                MessageBox.Show("Seleziona prima la cartella CSV");
-                return;
-            }
-
-            try
-            {
-                string dataStr = Interaction.InputBox("Data (YYYY-MM-DD):", "Nuova festività", DateTime.Now.ToString("yyyy-MM-dd"));
-                if (!DateTime.TryParse(dataStr, out var dt))
-                {
-                    MessageBox.Show("Data non valida");
-                    return;
-                }
-
-                string descrizione = Interaction.InputBox("Descrizione:", "Nuova festività", "");
-
-                string line = string.Join(",", new[] { dt.ToString("yyyy-MM-dd"), descrizione });
-
-                string path = Path.Combine(_csvFolder, "festivita.csv");
-                File.AppendAllText(path, line + Environment.NewLine);
-
-                LoadHolidays();
-                AuditLogger.Log(_csvFolder, "add_holiday", $"data={dt:yyyy-MM-dd}; descrizione={descrizione}");
-                MessageBox.Show("Festività aggiunta con successo");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Errore durante l'aggiunta della festività: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Aggiorna la soglia dei minuti straordinari quando lo slider cambia e salva il file.
+        /// Aggiorna solo l'etichetta della soglia nella UI.
+        /// Il salvataggio avviene con il pulsante "Salva parametri".
         /// </summary>
         private void OvertimeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             int value = (int)e.NewValue;
+            OvertimeValue.Text = $"{value} minuti";
+        }
 
-            var label = this.FindName("OvertimeValue") as System.Windows.Controls.TextBlock;
-            if (label != null)
+        private void AddCustomHolidayButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (CustomHolidayPicker.SelectedDate == null)
             {
-                label.Text = $"{value} minuti";
+                MessageBox.Show("Seleziona una data festiva personalizzata.");
+                return;
             }
 
-            _overtimeSettings.SogliaMinuti = value;
+            var p = App.ParametriGlobali ?? new ParametriStraordinari();
+            App.ParametriGlobali = p;
 
-            if (!string.IsNullOrWhiteSpace(_csvFolder))
+            var data = CustomHolidayPicker.SelectedDate.Value.Date;
+            if (!p.FestivitaAggiuntive.Contains(data))
             {
-                string path = Path.Combine(_csvFolder, "parametri_straordinari.csv");
-                File.WriteAllText(path, string.Join(",", new[]
-                {
-                    _overtimeSettings.SogliaMinuti.ToString(),
-                    _overtimeSettings.UnitaArrotondamentoMinuti.ToString()
-                }));
+                p.FestivitaAggiuntive.Add(data);
+                RefreshCustomHolidayList();
             }
+        }
+
+        private void SaveOvertimeParamsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var p = App.ParametriGlobali ?? new ParametriStraordinari();
+            App.ParametriGlobali = p;
+
+            p.SogliaMinutiStraordinario = (int)OvertimeSlider.Value;
+            p.UsaFestivitaNazionali = EnableNationalHolidaysCheck.IsChecked == true;
+
+            p.GiorniSempreFestivi = new List<DayOfWeek>();
+            if (SaturdayCheck.IsChecked == true)
+                p.GiorniSempreFestivi.Add(DayOfWeek.Saturday);
+            if (SundayCheck.IsChecked == true)
+                p.GiorniSempreFestivi.Add(DayOfWeek.Sunday);
+
+            App.SalvaParametriGlobali();
+            AuditLogger.Log(_csvFolder, "save_overtime_params", $"soglia={p.SogliaMinutiStraordinario}; nazionali={p.UsaFestivitaNazionali}; sabato={SaturdayCheck.IsChecked == true}; domenica={SundayCheck.IsChecked == true}; festiviCustom={p.FestivitaAggiuntive.Count}");
+
+            MessageBox.Show("Parametri salvati.");
+        }
+
+        private void CancelOvertimeParamsButton_Click(object sender, RoutedEventArgs e)
+        {
+            LoadSettings();
         }
 
         /// <summary>
@@ -464,7 +404,6 @@ namespace TimeClock.Server
 
                     // ricarica i dati
                     LoadUsers();
-                    LoadHolidays();
                     LoadSettings();
                 }
             }

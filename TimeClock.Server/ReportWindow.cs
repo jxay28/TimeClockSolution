@@ -602,18 +602,45 @@ namespace TimeClock.Server
         // Helper per i festivi globali
         private bool IsGiornoFestivo(DateTime data)
         {
-            if (App.ParametriGlobali == null) return data.DayOfWeek == DayOfWeek.Saturday || data.DayOfWeek == DayOfWeek.Sunday;
+            if (App.ParametriGlobali == null)
+                return data.DayOfWeek == DayOfWeek.Saturday || data.DayOfWeek == DayOfWeek.Sunday;
 
-            // Check Weekend
-            if (App.ParametriGlobali.GiorniSempreFestivi.Contains(data.DayOfWeek)) return true;
+            // Weekend configurati da Parametri
+            if (App.ParametriGlobali.GiorniSempreFestivi.Contains(data.DayOfWeek))
+                return true;
 
-            // Check Date fisse (Natale, ecc)
-            if (App.ParametriGlobali.FestivitaRicorrenti.Any(f => f.Mese == data.Month && f.Giorno == data.Day)) return true;
+            // Festività nazionali predefinite (se abilitate)
+            if (App.ParametriGlobali.UsaFestivitaNazionali && IsFestivitaNazionale(data))
+                return true;
 
-            // Check Date custom (se implementate)
-            if (App.ParametriGlobali.FestivitaAggiuntive.Contains(data.Date)) return true;
+            // Festività ricorrenti custom
+            if (App.ParametriGlobali.FestivitaRicorrenti.Any(f => f.Mese == data.Month && f.Giorno == data.Day))
+                return true;
+
+            // Festività personalizzate
+            if (App.ParametriGlobali.FestivitaAggiuntive.Contains(data.Date))
+                return true;
 
             return false;
+        }
+
+        private bool IsFestivitaNazionale(DateTime data)
+        {
+            var fixedDates = new HashSet<(int Mese, int Giorno)>
+            {
+                (1, 1),   // Capodanno
+                (1, 6),   // Epifania
+                (4, 25),  // Liberazione
+                (5, 1),   // Festa del lavoro
+                (6, 2),   // Festa della Repubblica
+                (8, 15),  // Ferragosto
+                (11, 1),  // Ognissanti
+                (12, 8),  // Immacolata
+                (12, 25), // Natale
+                (12, 26)  // Santo Stefano
+            };
+
+            return fixedDates.Contains((data.Month, data.Day));
         }
 
         /// <summary>
