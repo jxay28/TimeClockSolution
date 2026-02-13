@@ -50,6 +50,16 @@
                         </ComboBox>
                     </StackPanel>
 
+                    <!-- ANNO -->
+                    <StackPanel Orientation="Vertical" Margin="0 0 20 0">
+                        <TextBlock Text="Anno"
+                                   FontSize="16"
+                                   Foreground="White"/>
+                        <ComboBox x:Name="YearCombo"
+                                  Width="110"
+                                  Margin="0 5"/>
+                    </StackPanel>
+
                     <!-- UTENTE -->
                     <StackPanel Orientation="Vertical" Margin="0 0 5 0" Width="200">
                         <TextBlock Text="Seleziona utente"

@@ -64,6 +64,11 @@ namespace TimeClock.Server
             int currentMonth = DateTime.Now.Month;
             if (currentMonth >= 1 && currentMonth <= 12)
                 MonthCombo.SelectedIndex = currentMonth - 1;
+
+            // Popola e seleziona anno corrente
+            int currentYear = DateTime.Now.Year;
+            YearCombo.ItemsSource = Enumerable.Range(currentYear - 5, 8).ToList();
+            YearCombo.SelectedItem = currentYear;
         }
 
         // ===========================
@@ -86,7 +91,11 @@ namespace TimeClock.Server
             }
 
             int month = MonthCombo.SelectedIndex + 1;
-            int year = DateTime.Now.Year;
+            if (YearCombo.SelectedItem is not int year)
+            {
+                MessageBox.Show("Seleziona un anno.");
+                return;
+            }
 
             // Controllo cartella
             if (string.IsNullOrWhiteSpace(_csvFolder))
@@ -264,10 +273,9 @@ namespace TimeClock.Server
         private void RicalcolaLogicaRiga(ReportRow r)
         {
             var user = UserCombo.SelectedItem as UserProfile;
-            if (user == null || MonthCombo.SelectedIndex < 0) return;
+            if (user == null || MonthCombo.SelectedIndex < 0 || YearCombo.SelectedItem is not int year) return;
 
             int month = MonthCombo.SelectedIndex + 1;
-            int year = DateTime.Now.Year;
             DateTime dataBase = new DateTime(year, month, r.Giorno);
 
             // --- RICOSTRUZIONE COPPIA 1 ---
@@ -770,7 +778,12 @@ namespace TimeClock.Server
                 return;
             }
 
-            int year = DateTime.Now.Year;
+            if (YearCombo.SelectedItem is not int year)
+            {
+                MessageBox.Show("Seleziona un anno.");
+                return;
+            }
+
             int month = MonthCombo.SelectedIndex + 1;
 
             string filePath = Path.Combine(_csvFolder, $"{user.Id}.csv");
@@ -925,9 +938,9 @@ namespace TimeClock.Server
             }
 
             var selectedUser = UserCombo.SelectedItem as UserProfile;
-            if (selectedUser != null && MonthCombo.SelectedIndex >= 0)
+            if (selectedUser != null && MonthCombo.SelectedIndex >= 0 && YearCombo.SelectedItem is int selectedYear)
             {
-                AuditLogger.Log(_csvFolder, "add_manual_punch", $"user={selectedUser.Id}; day={currentRow.Giorno}; month={MonthCombo.SelectedIndex + 1}; year={DateTime.Now.Year}");
+                AuditLogger.Log(_csvFolder, "add_manual_punch", $"user={selectedUser.Id}; day={currentRow.Giorno}; month={MonthCombo.SelectedIndex + 1}; year={selectedYear}");
             }
 
             AggiornaTotali();
