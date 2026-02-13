@@ -507,13 +507,13 @@ namespace TimeClock.Server
                 // Oltre il previsto: monte ore ordinario pieno + possibile straordinario
                 minutiOrdinari = minutiPrevisti;
                 int extraRaw = minutiLavorati - minutiPrevisti;
-                minutiStraordinari = ApplicaSogliaBlocchi(extraRaw, sogliaMinuti);
+                minutiStraordinari = CalcolaStraordinarioBlocchi(extraRaw, sogliaMinuti);
             }
             else
             {
                 // Sotto il previsto: applica recupero a blocchi (es. ritardo 5' con soglia 15 => penalità 15')
                 int deficit = minutiPrevisti - minutiLavorati;
-                int recuperoRichiesto = ApplicaSogliaBlocchi(deficit, sogliaMinuti);
+                int recuperoRichiesto = ApplicaRecuperoBlocchi(deficit, sogliaMinuti);
                 minutiOrdinari = Math.Max(0, minutiLavorati - recuperoRichiesto);
                 minutiStraordinari = 0;
 
@@ -786,7 +786,7 @@ namespace TimeClock.Server
             return minuti;
         }
 
-        private int ApplicaSogliaBlocchi(int minuti, int soglia)
+        private int ApplicaRecuperoBlocchi(int minuti, int soglia)
         {
             if (minuti <= 0)
                 return 0;
@@ -794,7 +794,24 @@ namespace TimeClock.Server
             if (soglia <= 0)
                 return minuti;
 
+            // Recupero: arrotonda sempre al blocco superiore
             return (int)Math.Ceiling(minuti / (double)soglia) * soglia;
+        }
+
+        private int CalcolaStraordinarioBlocchi(int minutiExtra, int soglia)
+        {
+            if (minutiExtra <= 0)
+                return 0;
+
+            if (soglia <= 0)
+                return minutiExtra;
+
+            // Straordinario: deve superare la soglia (non basta raggiungerla)
+            // E poi conteggia blocchi completi.
+            if (minutiExtra <= soglia)
+                return 0;
+
+            return (minutiExtra / soglia) * soglia;
         }
 
         private double OreDentro(TimeSpan start, TimeSpan end, TimeSpan from, TimeSpan to)
