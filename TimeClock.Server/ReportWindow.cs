@@ -137,6 +137,14 @@ namespace TimeClock.Server
                 .Where(c => c.Ingresso.Month == month && c.Ingresso.Year == year)
                 .ToList();
 
+            // Assenze (ferie/permesso/malattia)
+            var absenceRepo = new AbsenceRepository();
+            string assenzePath = Path.Combine(_csvFolder, "assenze.csv");
+            var assenzePerGiorno = absenceRepo.Load(assenzePath)
+                .Where(a => a.UserId == user.Id && a.Data.Year == year && a.Data.Month == month)
+                .GroupBy(a => a.Data.Day)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
             // 3. GENERAZIONE RIGHE 
             var righeReport = new List<ReportRow>();
             int daysInMonth = DateTime.DaysInMonth(year, month);
@@ -157,6 +165,12 @@ namespace TimeClock.Server
                     var emptyRow = new ReportRow { Giorno = day };
                     // Passiamo null come coppie
                     CalcolaTotaliRiga(emptyRow, dataCorrente, user, null, null);
+
+                    if (assenzePerGiorno.TryGetValue(day, out var assenzeGiorno) && assenzeGiorno.Any())
+                    {
+                        ApplicaAssenzeAllaRiga(emptyRow, user, assenzeGiorno);
+                    }
+
                     righeReport.Add(emptyRow);
                 }
                 else
@@ -192,6 +206,13 @@ namespace TimeClock.Server
 
                         // Calcolo ore
                         CalcolaTotaliRiga(row, dataCorrente, user, c1, c2);
+
+                        if (assenzePerGiorno.TryGetValue(day, out var assenzeGiorno) && assenzeGiorno.Any())
+                        {
+                            row.Note = string.IsNullOrWhiteSpace(row.Note)
+                                ? "ATTENZIONE: presenti assenze registrate e timbrature nello stesso giorno"
+                                : row.Note + " | ATTENZIONE: presenti assenze registrate e timbrature nello stesso giorno";
+                        }
 
                         // Aggiungiamo alla lista TEMPORANEA (non alla Grid!)
                         righeReport.Add(row);
@@ -828,6 +849,7 @@ namespace TimeClock.Server
 
             // 6. Scriviamo il file completo
             File.WriteAllLines(filePath, allLines);
+            AuditLogger.Log(_csvFolder, "save_report_edits", $"user={user.Id}; year={year}; month={month}; righe={righeReport.Count}");
 
             MessageBox.Show("Modifiche salvate correttamente!");
         }
@@ -902,8 +924,34 @@ namespace TimeClock.Server
                 ReportGrid.Items.Refresh();
             }
 
+            var selectedUser = UserCombo.SelectedItem as UserProfile;
+            if (selectedUser != null && MonthCombo.SelectedIndex >= 0)
+            {
+                AuditLogger.Log(_csvFolder, "add_manual_punch", $"user={selectedUser.Id}; day={currentRow.Giorno}; month={MonthCombo.SelectedIndex + 1}; year={DateTime.Now.Year}");
+            }
+
             AggiornaTotali();
         }
+        private void ApplicaAssenzeAllaRiga(ReportRow row, UserProfile user, List<AbsenceRecord> assenze)
+        {
+            if (assenze == null || assenze.Count == 0)
+                return;
+
+            double oreDefault = user.OreContrattoSettimanali > 0
+                ? Math.Round(user.OreContrattoSettimanali / 5.0, 2)
+                : 8.0;
+
+            double oreTotali = assenze.Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
+            row.OreOrdinarie = Math.Round(oreTotali, 2);
+            row.OreStraordinarie = 0;
+
+            var tags = assenze
+                .Select(a => $"{a.Tipo} ({(a.Ore > 0 ? a.Ore.ToString("0.##", CultureInfo.InvariantCulture) : oreDefault.ToString("0.##", CultureInfo.InvariantCulture))}h)")
+                .ToList();
+
+            row.Note = "Assenza: " + string.Join("; ", tags);
+        }
+
         private void AggiornaTotali()
         {
             var righe = ReportGrid.ItemsSource as IEnumerable<ReportRow>;

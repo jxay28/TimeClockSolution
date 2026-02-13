@@ -160,6 +160,7 @@ namespace TimeClock.Client
             try
             {
                 _repo.AppendLine(path, line);
+                AuditLogger.Log(_csvFolder, "punch_in", $"user={user.Id}; at={DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
                 UpdateButtonsState();
             }
             catch (IOException ex)
@@ -178,6 +179,7 @@ namespace TimeClock.Client
             try
             {
                 _repo.AppendLine(path, line);
+                AuditLogger.Log(_csvFolder, "punch_out", $"user={user.Id}; at={DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
                 UpdateButtonsState();
             }
             catch (IOException ex)

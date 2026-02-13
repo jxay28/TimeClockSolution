@@ -370,6 +370,7 @@ namespace TimeClock.Server
                         combo.ItemsSource = _users;
                     }
 
+                    AuditLogger.Log(_csvFolder, "add_user", $"id={dlg.User.Id}; nome={dlg.User.Nome} {dlg.User.Cognome}; seq={dlg.User.SequenceNumber}");
                     MessageBox.Show("Utente aggiunto con successo");
                 }
             }
@@ -409,6 +410,7 @@ namespace TimeClock.Server
                 File.AppendAllText(path, line + Environment.NewLine);
 
                 LoadHolidays();
+                AuditLogger.Log(_csvFolder, "add_holiday", $"data={dt:yyyy-MM-dd}; descrizione={descrizione}");
                 MessageBox.Show("Festività aggiunta con successo");
             }
             catch (Exception ex)
