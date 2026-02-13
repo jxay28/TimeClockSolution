@@ -495,38 +495,38 @@ namespace TimeClock.Server
                 return;
             }
 
-            // SE FERIALE -> Divisione Ordinario/Extra (Regola base 8 ore)
-            double limiteGiornaliero = 8.0;
+            // SE FERIALE -> calcolo su ore previste + soglia blocchi (0/15/30)
+            int minutiLavorati = (int)Math.Round(oreLavorateTotali * 60);
+            int minutiPrevisti = CalcolaMinutiPrevisti(user);
 
-            // Eventuale override da contratto utente
-            if (user.OreContrattoSettimanali > 0)
+            int minutiOrdinari;
+            int minutiStraordinari;
+
+            if (minutiLavorati >= minutiPrevisti)
             {
-                // Esempio: limiteGiornaliero = user.OreContrattoSettimanali / 5.0; 
-            }
-
-            double ord = 0;
-            double extra = 0;
-
-            if (oreLavorateTotali > limiteGiornaliero)
-            {
-                ord = limiteGiornaliero;
-                extra = oreLavorateTotali - limiteGiornaliero;
+                // Oltre il previsto: monte ore ordinario pieno + possibile straordinario
+                minutiOrdinari = minutiPrevisti;
+                int extraRaw = minutiLavorati - minutiPrevisti;
+                minutiStraordinari = ApplicaSogliaBlocchi(extraRaw, sogliaMinuti);
             }
             else
             {
-                ord = oreLavorateTotali;
-                extra = 0;
+                // Sotto il previsto: applica recupero a blocchi (es. ritardo 5' con soglia 15 => penalità 15')
+                int deficit = minutiPrevisti - minutiLavorati;
+                int recuperoRichiesto = ApplicaSogliaBlocchi(deficit, sogliaMinuti);
+                minutiOrdinari = Math.Max(0, minutiLavorati - recuperoRichiesto);
+                minutiStraordinari = 0;
+
+                if (recuperoRichiesto > 0)
+                {
+                    row.Note = string.IsNullOrWhiteSpace(row.Note)
+                        ? $"Recupero minimo applicato: {recuperoRichiesto} min"
+                        : row.Note + $" | Recupero minimo applicato: {recuperoRichiesto} min";
+                }
             }
 
-            // Controllo Soglia Minima Straordinari (es. se fai 8h e 5min, i 5min vengono assorbiti)
-            if (extra * 60 < sogliaMinuti)
-            {
-                ord += extra;
-                extra = 0;
-            }
-
-            row.OreOrdinarie = Math.Round(ord, 2);
-            row.OreStraordinarie = Math.Round(extra, 2);
+            row.OreOrdinarie = Math.Round(minutiOrdinari / 60.0, 2);
+            row.OreStraordinarie = Math.Round(minutiStraordinari / 60.0, 2);
         }
 
         // Funzione helper per confrontare orari reali con previsti
@@ -763,6 +763,38 @@ namespace TimeClock.Server
                 return ts;
 
             return TimeSpan.Zero;
+        }
+
+        private int CalcolaMinutiPrevisti(UserProfile user)
+        {
+            int minuti = 0;
+
+            var in1 = ParseOrario(user.OrarioIngresso1);
+            var out1 = ParseOrario(user.OrarioUscita1);
+            var in2 = ParseOrario(user.OrarioIngresso2);
+            var out2 = ParseOrario(user.OrarioUscita2);
+
+            if (out1 > in1)
+                minuti += (int)(out1 - in1).TotalMinutes;
+            if (out2 > in2)
+                minuti += (int)(out2 - in2).TotalMinutes;
+
+            // fallback: 8 ore
+            if (minuti <= 0)
+                minuti = 8 * 60;
+
+            return minuti;
+        }
+
+        private int ApplicaSogliaBlocchi(int minuti, int soglia)
+        {
+            if (minuti <= 0)
+                return 0;
+
+            if (soglia <= 0)
+                return minuti;
+
+            return (int)Math.Ceiling(minuti / (double)soglia) * soglia;
         }
 
         private double OreDentro(TimeSpan start, TimeSpan end, TimeSpan from, TimeSpan to)

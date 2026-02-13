@@ -219,6 +219,7 @@ namespace TimeClock.Server
             var p = App.ParametriGlobali ?? new ParametriStraordinari();
             App.ParametriGlobali = p;
 
+            p.SogliaMinutiStraordinario = NormalizzaSoglia(p.SogliaMinutiStraordinario);
             OvertimeSlider.Value = p.SogliaMinutiStraordinario;
             OvertimeValue.Text = $"{p.SogliaMinutiStraordinario} minuti";
 
@@ -337,7 +338,7 @@ namespace TimeClock.Server
         /// </summary>
         private void OvertimeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            int value = (int)e.NewValue;
+            int value = NormalizzaSoglia((int)e.NewValue);
 
             // In fase di inizializzazione il ValueChanged può scattare prima che i controlli siano pronti
             if (OvertimeValue != null)
@@ -368,7 +369,7 @@ namespace TimeClock.Server
             var p = App.ParametriGlobali ?? new ParametriStraordinari();
             App.ParametriGlobali = p;
 
-            p.SogliaMinutiStraordinario = (int)OvertimeSlider.Value;
+            p.SogliaMinutiStraordinario = NormalizzaSoglia((int)OvertimeSlider.Value);
             p.UsaFestivitaNazionali = EnableNationalHolidaysCheck.IsChecked == true;
 
             p.GiorniSempreFestivi = new List<DayOfWeek>();
@@ -386,6 +387,13 @@ namespace TimeClock.Server
         private void CancelOvertimeParamsButton_Click(object sender, RoutedEventArgs e)
         {
             LoadSettings();
+        }
+
+        private int NormalizzaSoglia(int value)
+        {
+            if (value <= 0) return 0;
+            if (value <= 15) return 15;
+            return 30;
         }
 
         /// <summary>
