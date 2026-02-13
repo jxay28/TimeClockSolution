@@ -114,7 +114,8 @@ namespace TimeClock.Server
                 // Carichiamo il mese target E i primi 2 giorni del mese successivo 
                 // per catturare eventuali uscite di turni notturni (es. 31/01 22:00 -> 01/02 06:00)
                 bool isTargetMonth = (dt.Year == year && dt.Month == month);
-                bool isBufferNextMonth = (dt.Date <= new DateTime(year, month, 1).AddMonths(1).AddDays(2));
+                DateTime firstNextMonth = new DateTime(year, month, 1).AddMonths(1);
+                bool isBufferNextMonth = (dt.Date >= firstNextMonth && dt.Date <= firstNextMonth.AddDays(2));
 
                 if (isTargetMonth || isBufferNextMonth)
                 {
@@ -331,7 +332,26 @@ namespace TimeClock.Server
         // ===========================
         private void EsportaPDF_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Per il PDF servirà una libreria esterna (es. iTextSharp, PdfSharp). Al momento è disponibile l'esportazione TXT.");
+            var righe = ReportGrid.ItemsSource as IEnumerable<ReportRow>;
+            if (righe == null || !righe.Any())
+            {
+                MessageBox.Show("Non ci sono dati da esportare.");
+                return;
+            }
+
+            try
+            {
+                var pd = new PrintDialog();
+                if (pd.ShowDialog() == true)
+                {
+                    pd.PrintVisual(ReportGrid, "Report Mensile TimeClock");
+                    MessageBox.Show("Stampa avviata. Per salvare in PDF scegli la stampante 'Microsoft Print to PDF'.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore durante l'esportazione PDF: {ex.Message}");
+            }
         }
 
         // ===========================
@@ -763,22 +783,30 @@ namespace TimeClock.Server
             {
                 DateTime giorno = new DateTime(year, month, row.Giorno);
 
-                // Coppia 1
+                // Coppia 1 (supporto turni notturni: uscita il giorno successivo)
                 if (TimeSpan.TryParse(row.Entrata1, out var e1) &&
-                    TimeSpan.TryParse(row.Uscita1, out var u1) &&
-                    u1 > e1)
+                    TimeSpan.TryParse(row.Uscita1, out var u1))
                 {
-                    newLines.Add($"{giorno:yyyy-MM-dd} {e1:hh\\:mm},Entrata");
-                    newLines.Add($"{giorno:yyyy-MM-dd} {u1:hh\\:mm},Uscita");
+                    DateTime in1 = giorno.Add(e1);
+                    DateTime out1 = giorno.Add(u1);
+                    if (out1 <= in1)
+                        out1 = out1.AddDays(1);
+
+                    newLines.Add($"{in1:yyyy-MM-dd HH:mm},Entrata");
+                    newLines.Add($"{out1:yyyy-MM-dd HH:mm},Uscita");
                 }
 
-                // Coppia 2
+                // Coppia 2 (supporto turni notturni)
                 if (TimeSpan.TryParse(row.Entrata2, out var e2) &&
-                    TimeSpan.TryParse(row.Uscita2, out var u2) &&
-                    u2 > e2)
+                    TimeSpan.TryParse(row.Uscita2, out var u2))
                 {
-                    newLines.Add($"{giorno:yyyy-MM-dd} {e2:hh\\:mm},Entrata");
-                    newLines.Add($"{giorno:yyyy-MM-dd} {u2:hh\\:mm},Uscita");
+                    DateTime in2 = giorno.Add(e2);
+                    DateTime out2 = giorno.Add(u2);
+                    if (out2 <= in2)
+                        out2 = out2.AddDays(1);
+
+                    newLines.Add($"{in2:yyyy-MM-dd HH:mm},Entrata");
+                    newLines.Add($"{out2:yyyy-MM-dd HH:mm},Uscita");
                 }
             }
 

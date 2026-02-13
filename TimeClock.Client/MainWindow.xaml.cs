@@ -56,7 +56,7 @@ namespace TimeClock.Client
         }
 
 
-        // ?? Caricamento utenti dal CSV
+        // Caricamento utenti dal CSV (compatibile formato nuovo e legacy)
         private void LoadUsers()
         {
             UserComboBox.ItemsSource = null;
@@ -69,51 +69,50 @@ namespace TimeClock.Client
             if (!File.Exists(path))
                 return;
 
-            _users = _repo.Load(path)
-    .Select(f => new UserProfile
-    {
-        Id = f.ElementAtOrDefault(0) ?? "",
-        Nome = f.ElementAtOrDefault(1) ?? "",
-        Cognome = f.ElementAtOrDefault(2) ?? "",
-        Ruolo = f.ElementAtOrDefault(3) ?? "",
+            var list = new List<UserProfile>();
 
-        // DATA ASSUNZIONE: se vuota o errata ? oggi
-        DataAssunzione = DateTime.TryParse(f.ElementAtOrDefault(4), out var dt)
-            ? dt
-            : DateTime.Today,
+            foreach (var f in _repo.Load(path))
+            {
+                if (f.Length == 0 || string.IsNullOrWhiteSpace(f[0]))
+                    continue;
 
-        // ORE SETTIMANALI (vuoto ? 0)
-        OreContrattoSettimanali = double.TryParse(
-            f.ElementAtOrDefault(5)?.Replace(",", "."),
-            System.Globalization.NumberStyles.Any,
-            System.Globalization.CultureInfo.InvariantCulture,
-            out var ore)
-            ? ore
-            : 0,
+                // Formato attuale (server):
+                // 0 Id, 1 SequenceNumber, 2 Nome, 3 Cognome, 4 Ruolo, 5 DataAssunzione, 6 Ore, 7 Base, 8 Extra, ...
+                // Formato legacy (vecchio client):
+                // 0 Id, 1 Nome, 2 Cognome, 3 Ruolo, 4 DataAssunzione, 5 Ore, 6 Base, 7 Extra
+                bool hasSequence = int.TryParse(f.ElementAtOrDefault(1), out var seq);
 
-        // SALARIO BASE (vuoto ? 0)
-        CompensoOrarioBase = decimal.TryParse(
-            f.ElementAtOrDefault(6)?.Replace(",", "."),
-            System.Globalization.NumberStyles.Any,
-            System.Globalization.CultureInfo.InvariantCulture,
-            out var baseSal)
-            ? baseSal
-            : 0,
+                int offset = hasSequence ? 1 : 0;
 
-        // SALARIO EXTRA
-        CompensoOrarioExtra = decimal.TryParse(
-            f.ElementAtOrDefault(7)?.Replace(",", "."),
-            System.Globalization.NumberStyles.Any,
-            System.Globalization.CultureInfo.InvariantCulture,
-            out var extraSal)
-            ? extraSal
-            : 0
-    })
+                list.Add(new UserProfile
+                {
+                    Id = f.ElementAtOrDefault(0) ?? string.Empty,
+                    SequenceNumber = hasSequence ? seq : 0,
+                    Nome = f.ElementAtOrDefault(1 + offset) ?? string.Empty,
+                    Cognome = f.ElementAtOrDefault(2 + offset) ?? string.Empty,
+                    Ruolo = f.ElementAtOrDefault(3 + offset) ?? string.Empty,
+                    DataAssunzione = DateTime.TryParse(f.ElementAtOrDefault(4 + offset), out var dt) ? dt : DateTime.Today,
+                    OreContrattoSettimanali = double.TryParse(
+                        f.ElementAtOrDefault(5 + offset)?.Replace(",", "."),
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var ore) ? ore : 0,
+                    CompensoOrarioBase = decimal.TryParse(
+                        f.ElementAtOrDefault(6 + offset)?.Replace(",", "."),
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var baseSal) ? baseSal : 0,
+                    CompensoOrarioExtra = decimal.TryParse(
+                        f.ElementAtOrDefault(7 + offset)?.Replace(",", "."),
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var extraSal) ? extraSal : 0
+                });
+            }
 
-                .ToList();
-
+            _users = list;
             UserComboBox.ItemsSource = _users;
-            UserComboBox.DisplayMemberPath = "Nome";
+            UserComboBox.DisplayMemberPath = "FullName";
         }
 
 
