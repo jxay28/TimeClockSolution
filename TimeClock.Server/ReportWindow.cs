@@ -504,10 +504,28 @@ namespace TimeClock.Server
 
             if (minutiLavorati >= minutiPrevisti)
             {
-                // Oltre il previsto: monte ore ordinario pieno + possibile straordinario
+                // Oltre il previsto: ordinarie al monte ore giornaliero,
+                // straordinari calcolati per singola fascia/timbrata (non sommando i piccoli extra tra fasce).
                 minutiOrdinari = minutiPrevisti;
-                int extraRaw = minutiLavorati - minutiPrevisti;
-                minutiStraordinari = CalcolaStraordinarioBlocchi(extraRaw, sogliaMinuti);
+
+                int minutiLavorati1 = c1.HasValue ? (int)Math.Round((c1.Value.Out - c1.Value.In).TotalMinutes) : 0;
+                int minutiLavorati2 = c2.HasValue ? (int)Math.Round((c2.Value.Out - c2.Value.In).TotalMinutes) : 0;
+
+                int previsti1 = CalcolaMinutiPrevistiFascia(user, 1);
+                int previsti2 = CalcolaMinutiPrevistiFascia(user, 2);
+
+                // fallback se non ci sono fasce anagrafiche definite
+                if (previsti1 + previsti2 <= 0)
+                {
+                    previsti1 = minutiPrevisti;
+                    previsti2 = 0;
+                }
+
+                int extra1 = Math.Max(0, minutiLavorati1 - previsti1);
+                int extra2 = Math.Max(0, minutiLavorati2 - previsti2);
+
+                minutiStraordinari = CalcolaStraordinarioBlocchi(extra1, sogliaMinuti)
+                                   + CalcolaStraordinarioBlocchi(extra2, sogliaMinuti);
             }
             else
             {
@@ -767,23 +785,24 @@ namespace TimeClock.Server
 
         private int CalcolaMinutiPrevisti(UserProfile user)
         {
-            int minuti = 0;
-
-            var in1 = ParseOrario(user.OrarioIngresso1);
-            var out1 = ParseOrario(user.OrarioUscita1);
-            var in2 = ParseOrario(user.OrarioIngresso2);
-            var out2 = ParseOrario(user.OrarioUscita2);
-
-            if (out1 > in1)
-                minuti += (int)(out1 - in1).TotalMinutes;
-            if (out2 > in2)
-                minuti += (int)(out2 - in2).TotalMinutes;
+            int minuti = CalcolaMinutiPrevistiFascia(user, 1) + CalcolaMinutiPrevistiFascia(user, 2);
 
             // fallback: 8 ore
             if (minuti <= 0)
                 minuti = 8 * 60;
 
             return minuti;
+        }
+
+        private int CalcolaMinutiPrevistiFascia(UserProfile user, int fascia)
+        {
+            var inizio = fascia == 1 ? ParseOrario(user.OrarioIngresso1) : ParseOrario(user.OrarioIngresso2);
+            var fine = fascia == 1 ? ParseOrario(user.OrarioUscita1) : ParseOrario(user.OrarioUscita2);
+
+            if (fine > inizio)
+                return (int)(fine - inizio).TotalMinutes;
+
+            return 0;
         }
 
         private int ApplicaRecuperoBlocchi(int minuti, int soglia)
