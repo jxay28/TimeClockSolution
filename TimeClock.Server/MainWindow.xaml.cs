@@ -338,7 +338,10 @@ namespace TimeClock.Server
         private void OvertimeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             int value = (int)e.NewValue;
-            OvertimeValue.Text = $"{value} minuti";
+
+            // In fase di inizializzazione il ValueChanged può scattare prima che i controlli siano pronti
+            if (OvertimeValue != null)
+                OvertimeValue.Text = $"{value} minuti";
         }
 
         private void AddCustomHolidayButton_Click(object sender, RoutedEventArgs e)
