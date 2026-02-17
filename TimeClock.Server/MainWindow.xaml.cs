@@ -252,6 +252,13 @@ namespace TimeClock.Server
             {
                 if (int.TryParse(btn.Tag.ToString(), out int index))
                 {
+                    // Accesso rapido: dal menu "Report" apre direttamente la finestra report.
+                    if (index == 2)
+                    {
+                        GenerateReport_Click(sender, e);
+                        return;
+                    }
+
                     var tab = this.FindName("MainTabs") as System.Windows.Controls.TabControl;
                     if (tab != null)
                     {

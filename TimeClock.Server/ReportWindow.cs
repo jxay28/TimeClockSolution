@@ -504,28 +504,32 @@ namespace TimeClock.Server
 
             if (minutiLavorati >= minutiPrevisti)
             {
-                // Oltre il previsto: ordinarie al monte ore giornaliero,
-                // straordinari calcolati per singola fascia/timbrata (non sommando i piccoli extra tra fasce).
+                // Oltre il previsto: ordinarie al monte ore giornaliero.
+                // Straordinario calcolato per singolo scostamento di fascia (entrata anticipata / uscita posticipata),
+                // così i piccoli anticipi/posticipi non si sommano tra loro per superare la soglia.
                 minutiOrdinari = minutiPrevisti;
 
-                int minutiLavorati1 = c1.HasValue ? (int)Math.Round((c1.Value.Out - c1.Value.In).TotalMinutes) : 0;
-                int minutiLavorati2 = c2.HasValue ? (int)Math.Round((c2.Value.Out - c2.Value.In).TotalMinutes) : 0;
+                TimeSpan previstoIn1 = ParseOrario(user.OrarioIngresso1);
+                TimeSpan previstoOut1 = ParseOrario(user.OrarioUscita1);
+                TimeSpan previstoIn2 = ParseOrario(user.OrarioIngresso2);
+                TimeSpan previstoOut2 = ParseOrario(user.OrarioUscita2);
 
-                int previsti1 = CalcolaMinutiPrevistiFascia(user, 1);
-                int previsti2 = CalcolaMinutiPrevistiFascia(user, 2);
+                bool coperturaCompletaFasce =
+                    (!c1.HasValue || previstoOut1 > previstoIn1) &&
+                    (!c2.HasValue || previstoOut2 > previstoIn2);
 
-                // fallback se non ci sono fasce anagrafiche definite
-                if (previsti1 + previsti2 <= 0)
+                if (coperturaCompletaFasce && (previstoOut1 > previstoIn1 || previstoOut2 > previstoIn2))
                 {
-                    previsti1 = minutiPrevisti;
-                    previsti2 = 0;
+                    minutiStraordinari = 0;
+                    minutiStraordinari += CalcolaStraordinarioFascia(c1, previstoIn1, previstoOut1, sogliaMinuti);
+                    minutiStraordinari += CalcolaStraordinarioFascia(c2, previstoIn2, previstoOut2, sogliaMinuti);
                 }
-
-                int extra1 = Math.Max(0, minutiLavorati1 - previsti1);
-                int extra2 = Math.Max(0, minutiLavorati2 - previsti2);
-
-                minutiStraordinari = CalcolaStraordinarioBlocchi(extra1, sogliaMinuti)
-                                   + CalcolaStraordinarioBlocchi(extra2, sogliaMinuti);
+                else
+                {
+                    // Fallback: se l'anagrafica non copre le fasce usate, usa il totale giornaliero.
+                    int extraTotale = Math.Max(0, minutiLavorati - minutiPrevisti);
+                    minutiStraordinari = CalcolaStraordinarioBlocchi(extraTotale, sogliaMinuti);
+                }
             }
             else
             {
@@ -831,6 +835,26 @@ namespace TimeClock.Server
                 return 0;
 
             return (minutiExtra / soglia) * soglia;
+        }
+
+        private int CalcolaStraordinarioFascia((DateTime In, DateTime Out)? coppia, TimeSpan previstoIn, TimeSpan previstoOut, int soglia)
+        {
+            if (!coppia.HasValue || previstoOut <= previstoIn)
+                return 0;
+
+            var inReale = coppia.Value.In.TimeOfDay;
+            var outReale = coppia.Value.Out.TimeOfDay;
+
+            int minutiAnticipo = inReale < previstoIn
+                ? (int)Math.Round((previstoIn - inReale).TotalMinutes)
+                : 0;
+
+            int minutiPosticipo = outReale > previstoOut
+                ? (int)Math.Round((outReale - previstoOut).TotalMinutes)
+                : 0;
+
+            return CalcolaStraordinarioBlocchi(minutiAnticipo, soglia)
+                 + CalcolaStraordinarioBlocchi(minutiPosticipo, soglia);
         }
 
         private double OreDentro(TimeSpan start, TimeSpan end, TimeSpan from, TimeSpan to)
