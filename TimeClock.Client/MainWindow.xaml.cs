@@ -155,7 +155,11 @@ namespace TimeClock.Client
             if (UserComboBox.SelectedItem is not UserProfile user) return;
 
             string path = Path.Combine(_csvFolder, user.Id + ".csv");
-            string line = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ",Entrata";
+            string line = CsvCodec.BuildLine(new[]
+            {
+                DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"),
+                "Entrata"
+            });
 
             try
             {
@@ -174,7 +178,11 @@ namespace TimeClock.Client
             if (UserComboBox.SelectedItem is not UserProfile user) return;
 
             string path = Path.Combine(_csvFolder, user.Id + ".csv");
-            string line = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ",Uscita";
+            string line = CsvCodec.BuildLine(new[]
+            {
+                DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"),
+                "Uscita"
+            });
 
             try
             {

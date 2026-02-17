@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using TimeClock.Core.Models;
+using TimeClock.Core.Services;
 
 namespace TimeClock.Server
 {
@@ -13,8 +15,14 @@ namespace TimeClock.Server
     {
         public void GenerateReports(IEnumerable<UserProfile> users, IEnumerable<PaySummary> summaries, int year, int month, string outputFolder)
         {
-            var reportCommLines = new List<string> { "IdUtente,CodiceFiscale,Mese,Anno,OreOrdinarie,OreStraordinarie" };
-            var reportPagheLines = new List<string> { "IdUtente,AnnoMese,OreOrdinarie,OreStraordinarie,CompensoBase,CompensoStraordinario" };
+            var reportCommLines = new List<string>
+            {
+                CsvCodec.BuildLine(new[] { "IdUtente", "CodiceFiscale", "Mese", "Anno", "OreOrdinarie", "OreStraordinarie" })
+            };
+            var reportPagheLines = new List<string>
+            {
+                CsvCodec.BuildLine(new[] { "IdUtente", "AnnoMese", "OreOrdinarie", "OreStraordinarie", "CompensoBase", "CompensoStraordinario" })
+            };
 
             string monthStr = month.ToString("D2");
 
@@ -23,8 +31,25 @@ namespace TimeClock.Server
                 var summary = summaries.FirstOrDefault(s => s.UserId == user.Id);
                 if (summary == null) continue;
                 // CodiceFiscale è lasciato vuoto come placeholder
-                reportCommLines.Add($"{user.Id},,{monthStr},{year},{summary.OreOrdinarie:F2},{summary.OreStraordinarie:F2}");
-                reportPagheLines.Add($"{user.Id},{year}{monthStr},{summary.OreOrdinarie:F2},{summary.OreStraordinarie:F2},{summary.CompensoOrdinarie:F2},{summary.CompensoStraordinarie:F2}");
+                reportCommLines.Add(CsvCodec.BuildLine(new[]
+                {
+                    user.Id,
+                    string.Empty,
+                    monthStr,
+                    year.ToString(CultureInfo.InvariantCulture),
+                    summary.OreOrdinarie.ToString("F2", CultureInfo.InvariantCulture),
+                    summary.OreStraordinarie.ToString("F2", CultureInfo.InvariantCulture)
+                }));
+
+                reportPagheLines.Add(CsvCodec.BuildLine(new[]
+                {
+                    user.Id,
+                    $"{year}{monthStr}",
+                    summary.OreOrdinarie.ToString("F2", CultureInfo.InvariantCulture),
+                    summary.OreStraordinarie.ToString("F2", CultureInfo.InvariantCulture),
+                    summary.CompensoOrdinarie.ToString("F2", CultureInfo.InvariantCulture),
+                    summary.CompensoStraordinarie.ToString("F2", CultureInfo.InvariantCulture)
+                }));
             }
 
             File.WriteAllLines(Path.Combine(outputFolder, $"report_commercialista_{year}{monthStr}.csv"), reportCommLines);

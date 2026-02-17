@@ -25,7 +25,7 @@ namespace TimeClock.Core.Services
 
         public void Append(string path, AbsenceRecord record)
         {
-            var line = string.Join(",", new[]
+            var line = CsvCodec.BuildLine(new[]
             {
                 record.UserId,
                 record.Data.ToString("yyyy-MM-dd"),

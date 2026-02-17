@@ -26,7 +26,7 @@ namespace TimeClock.Core.Services
             string? line;
             while ((line = reader.ReadLine()) != null)
             {
-                var fields = line.Split(',');
+                var fields = CsvCodec.ParseLine(line);
                 yield return fields;
             }
         }

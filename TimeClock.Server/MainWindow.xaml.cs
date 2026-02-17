@@ -199,7 +199,7 @@ namespace TimeClock.Server
             // Esportazione CSV (solo per compatibilità / eventuali strumenti esterni)
             try
             {
-                var lines = _users.Select(u => string.Join(",", new[]
+                var lines = _users.Select(u => CsvCodec.BuildLine(new[]
                 {
             u.Id,
             u.SequenceNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),

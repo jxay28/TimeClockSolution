@@ -921,7 +921,7 @@ namespace TimeClock.Server
                 {
                     if (string.IsNullOrWhiteSpace(line)) return false;
 
-                    var parts = line.Split(',');
+                    var parts = CsvCodec.ParseLine(line);
                     if (parts.Length < 2) return false;
 
                     if (!DateTime.TryParse(parts[0], out var dt)) return false;
@@ -946,8 +946,8 @@ namespace TimeClock.Server
                     if (out1 <= in1)
                         out1 = out1.AddDays(1);
 
-                    newLines.Add($"{in1:yyyy-MM-dd HH:mm},Entrata");
-                    newLines.Add($"{out1:yyyy-MM-dd HH:mm},Uscita");
+                    newLines.Add(CsvCodec.BuildLine(new[] { in1.ToString("yyyy-MM-dd HH:mm"), "Entrata" }));
+                    newLines.Add(CsvCodec.BuildLine(new[] { out1.ToString("yyyy-MM-dd HH:mm"), "Uscita" }));
                 }
 
                 // Coppia 2 (supporto turni notturni)
@@ -959,8 +959,8 @@ namespace TimeClock.Server
                     if (out2 <= in2)
                         out2 = out2.AddDays(1);
 
-                    newLines.Add($"{in2:yyyy-MM-dd HH:mm},Entrata");
-                    newLines.Add($"{out2:yyyy-MM-dd HH:mm},Uscita");
+                    newLines.Add(CsvCodec.BuildLine(new[] { in2.ToString("yyyy-MM-dd HH:mm"), "Entrata" }));
+                    newLines.Add(CsvCodec.BuildLine(new[] { out2.ToString("yyyy-MM-dd HH:mm"), "Uscita" }));
                 }
             }
 
@@ -972,7 +972,7 @@ namespace TimeClock.Server
                 .Where(l => !string.IsNullOrWhiteSpace(l))
                 .Select(l =>
                 {
-                    var parts = l.Split(',');
+                    var parts = CsvCodec.ParseLine(l);
                     DateTime dt = DateTime.Parse(parts[0]);
                     return new { dt, line = l };
                 })
