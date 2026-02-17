@@ -436,6 +436,13 @@ namespace TimeClock.Server
 
             // Recupera parametri globali (default 15 minuti se null)
             int sogliaMinuti = App.ParametriGlobali != null ? App.ParametriGlobali.SogliaMinutiStraordinario : 15;
+            int bloccoMinuti = sogliaMinuti > 0 ? sogliaMinuti : 15;
+
+            // Regola richiesta:
+            // - Entrata: arrotondamento sempre in su al blocco
+            // - Uscita: arrotondamento sempre in giù al blocco
+            var c1Arrotondata = ArrotondaCoppia(c1, bloccoMinuti);
+            var c2Arrotondata = ArrotondaCoppia(c2, bloccoMinuti);
 
             // Determina se festivo
             bool isFestivo = IsGiornoFestivo(dataRiferimento);
@@ -446,9 +453,9 @@ namespace TimeClock.Server
             // =========================================================
 
             // Gestione Durata 1
-            if (c1.HasValue)
+            if (c1Arrotondata.HasValue)
             {
-                TimeSpan durata1 = c1.Value.Out - c1.Value.In;
+                TimeSpan durata1 = c1Arrotondata.Value.Out - c1Arrotondata.Value.In;
                 // Formattazione HH:mm (es. 04:00)
                 row.Durata1Visual = $"{(int)durata1.TotalHours:00}:{durata1.Minutes:00}";
             }
@@ -458,9 +465,9 @@ namespace TimeClock.Server
             }
 
             // Gestione Durata 2
-            if (c2.HasValue)
+            if (c2Arrotondata.HasValue)
             {
-                TimeSpan durata2 = c2.Value.Out - c2.Value.In;
+                TimeSpan durata2 = c2Arrotondata.Value.Out - c2Arrotondata.Value.In;
                 row.Durata2Visual = $"{(int)durata2.TotalHours:00}:{durata2.Minutes:00}";
             }
             else
@@ -473,7 +480,7 @@ namespace TimeClock.Server
             // =========================================================
 
             // Se non ci sono timbrature, resetta e esci
-            if (c1 == null && c2 == null)
+            if (c1Arrotondata == null && c2Arrotondata == null)
             {
                 row.OreOrdinarie = 0;
                 row.OreStraordinarie = 0;
@@ -483,12 +490,12 @@ namespace TimeClock.Server
             double oreLavorateTotali = 0;
 
             // Durata C1
-            if (c1.HasValue)
-                oreLavorateTotali += (c1.Value.Out - c1.Value.In).TotalHours;
+            if (c1Arrotondata.HasValue)
+                oreLavorateTotali += (c1Arrotondata.Value.Out - c1Arrotondata.Value.In).TotalHours;
 
             // Durata C2
-            if (c2.HasValue)
-                oreLavorateTotali += (c2.Value.Out - c2.Value.In).TotalHours;
+            if (c2Arrotondata.HasValue)
+                oreLavorateTotali += (c2Arrotondata.Value.Out - c2Arrotondata.Value.In).TotalHours;
 
             // SE FESTIVO -> TUTTO STRAORDINARIO
             if (isFestivo)
@@ -864,6 +871,38 @@ namespace TimeClock.Server
 
             return CalcolaStraordinarioBlocchi(minutiAnticipo, soglia)
                  + CalcolaStraordinarioBlocchi(minutiPosticipo, soglia);
+        }
+
+        private (DateTime In, DateTime Out)? ArrotondaCoppia((DateTime In, DateTime Out)? coppia, int bloccoMinuti)
+        {
+            if (!coppia.HasValue)
+                return null;
+
+            if (bloccoMinuti <= 0)
+                return coppia;
+
+            var entrata = ArrotondaEntrataSu(coppia.Value.In, bloccoMinuti);
+            var uscita = ArrotondaUscitaGiu(coppia.Value.Out, bloccoMinuti);
+
+            // Evita durate negative dopo arrotondamento.
+            if (uscita < entrata)
+                uscita = entrata;
+
+            return (entrata, uscita);
+        }
+
+        private DateTime ArrotondaEntrataSu(DateTime value, int bloccoMinuti)
+        {
+            var minutiDaGiorno = value.Hour * 60 + value.Minute;
+            var minutiArrotondati = (int)Math.Ceiling(minutiDaGiorno / (double)bloccoMinuti) * bloccoMinuti;
+            return value.Date.AddMinutes(minutiArrotondati);
+        }
+
+        private DateTime ArrotondaUscitaGiu(DateTime value, int bloccoMinuti)
+        {
+            var minutiDaGiorno = value.Hour * 60 + value.Minute;
+            var minutiArrotondati = (int)Math.Floor(minutiDaGiorno / (double)bloccoMinuti) * bloccoMinuti;
+            return value.Date.AddMinutes(minutiArrotondati);
         }
 
         private double OreDentro(TimeSpan start, TimeSpan end, TimeSpan from, TimeSpan to)
