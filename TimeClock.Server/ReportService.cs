@@ -52,8 +52,8 @@ namespace TimeClock.Server
                 }));
             }
 
-            File.WriteAllLines(Path.Combine(outputFolder, $"report_commercialista_{year}{monthStr}.csv"), reportCommLines);
-            File.WriteAllLines(Path.Combine(outputFolder, $"report_paghe_{year}{monthStr}.csv"), reportPagheLines);
+            SafeFileWriter.WriteAllLinesAtomic(Path.Combine(outputFolder, $"report_commercialista_{year}{monthStr}.csv"), reportCommLines);
+            SafeFileWriter.WriteAllLinesAtomic(Path.Combine(outputFolder, $"report_paghe_{year}{monthStr}.csv"), reportPagheLines);
         }
 
         private bool ÈFestivo(DateTime data)

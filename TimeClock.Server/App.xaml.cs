@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using TimeClock.Core.Models;
+using TimeClock.Core.Services;
 
 namespace TimeClock.Server
 {
@@ -24,7 +25,7 @@ namespace TimeClock.Server
             else
             {
                 ParametriGlobali = new ParametriStraordinari();
-                File.WriteAllText(file,
+                SafeFileWriter.WriteAllTextAtomic(file,
                     JsonSerializer.Serialize(ParametriGlobali, new JsonSerializerOptions { WriteIndented = true }));
             }
 
@@ -33,7 +34,7 @@ namespace TimeClock.Server
 
         public static void SalvaParametriGlobali()
         {
-            File.WriteAllText("parametri_straordinari.json",
+            SafeFileWriter.WriteAllTextAtomic("parametri_straordinari.json",
                 JsonSerializer.Serialize(ParametriGlobali, new JsonSerializerOptions { WriteIndented = true }));
         }
 

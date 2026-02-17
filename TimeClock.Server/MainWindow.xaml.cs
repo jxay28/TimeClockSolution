@@ -189,7 +189,7 @@ namespace TimeClock.Server
                     WriteIndented = true
                 };
                 string json = JsonSerializer.Serialize(_users, options);
-                File.WriteAllText(jsonPath, json);
+                SafeFileWriter.WriteAllTextAtomic(jsonPath, json);
             }
             catch (Exception ex)
             {
@@ -216,7 +216,7 @@ namespace TimeClock.Server
             u.OrarioUscita2 ?? string.Empty
         }));
 
-                File.WriteAllLines(csvPath, lines);
+                SafeFileWriter.WriteAllLinesAtomic(csvPath, lines);
             }
             catch (Exception ex)
             {

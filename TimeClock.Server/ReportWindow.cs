@@ -352,7 +352,7 @@ namespace TimeClock.Server
                 }));
             }
 
-            File.WriteAllLines(dlg.FileName, lines);
+            SafeFileWriter.WriteAllLinesAtomic(dlg.FileName, lines);
             MessageBox.Show("Esportazione TXT completata.");
         }
 
@@ -981,7 +981,7 @@ namespace TimeClock.Server
                 .ToList();
 
             // 6. Scriviamo il file completo
-            File.WriteAllLines(filePath, allLines);
+            SafeFileWriter.WriteAllLinesAtomic(filePath, allLines);
             AuditLogger.Log(_csvFolder, "save_report_edits", $"user={user.Id}; year={year}; month={month}; righe={righeReport.Count}");
 
             MessageBox.Show("Modifiche salvate correttamente!");
