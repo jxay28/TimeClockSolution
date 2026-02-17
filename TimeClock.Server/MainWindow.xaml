@@ -127,12 +127,18 @@
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
 
-                                    <Button Content="Aggiungi utente"
-                                            Style="{StaticResource AddButton}"
-                                            Width="170"
-                                            HorizontalAlignment="Left"
-                                            Margin="0,0,0,15"
-                                            Click="AddUser_Click"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                        <Button Content="Aggiungi utente"
+                                                Style="{StaticResource AddButton}"
+                                                Width="170"
+                                                HorizontalAlignment="Left"
+                                                Click="AddUser_Click"/>
+                                        <Button Content="Salva modifiche"
+                                                Style="{StaticResource GlassButton}"
+                                                Width="170"
+                                                Margin="10,0,0,0"
+                                                Click="SaveUsersGrid_Click"/>
+                                    </StackPanel>
 
                                     <DataGrid x:Name="UsersGrid"
                                               Grid.Row="1"

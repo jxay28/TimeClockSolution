@@ -514,38 +514,11 @@ namespace TimeClock.Server
 
             if (minutiLavorati >= minutiPrevisti)
             {
-                // Oltre il previsto: ordinarie al monte ore giornaliero.
-                // Straordinario calcolato per singolo scostamento di fascia (entrata anticipata / uscita posticipata),
-                // così i piccoli anticipi/posticipi non si sommano tra loro per superare la soglia.
+                // Oltre il previsto giornaliero: ordinarie al massimo giornaliero,
+                // straordinario sul totale eccedente.
                 minutiOrdinari = minutiPrevisti;
-
-                TimeSpan previstoIn1 = ParseOrario(user.OrarioIngresso1);
-                TimeSpan previstoOut1 = ParseOrario(user.OrarioUscita1);
-                TimeSpan previstoIn2 = ParseOrario(user.OrarioIngresso2);
-                TimeSpan previstoOut2 = ParseOrario(user.OrarioUscita2);
-
-                bool fascia1Valida = previstoOut1 > previstoIn1;
-                bool fascia2Valida = previstoOut2 > previstoIn2;
-                bool almenoUnaFasciaValida = fascia1Valida || fascia2Valida;
-
-                if (almenoUnaFasciaValida)
-                {
-                    minutiStraordinari = 0;
-
-                    // Applica la soglia solo alle fasce realmente configurate.
-                    // Se una fascia manca in anagrafica, non sommiamo fallback sul totale
-                    // per evitare falsi straordinari.
-                    if (fascia1Valida)
-                        minutiStraordinari += CalcolaStraordinarioFascia(c1, previstoIn1, previstoOut1, sogliaMinuti);
-                    if (fascia2Valida)
-                        minutiStraordinari += CalcolaStraordinarioFascia(c2, previstoIn2, previstoOut2, sogliaMinuti);
-                }
-                else
-                {
-                    // Nessuna fascia configurata: fallback su totale giornaliero.
-                    int extraTotale = Math.Max(0, minutiLavorati - minutiPrevisti);
-                    minutiStraordinari = CalcolaStraordinarioBlocchi(extraTotale, sogliaMinuti);
-                }
+                int extraTotale = Math.Max(0, minutiLavorati - minutiPrevisti);
+                minutiStraordinari = CalcolaStraordinarioBlocchi(extraTotale, sogliaMinuti);
             }
             else
             {
@@ -782,9 +755,12 @@ namespace TimeClock.Server
 
         private int CalcolaMinutiPrevisti(UserProfile user)
         {
-            int minuti = CalcolaMinutiPrevistiFascia(user, 1) + CalcolaMinutiPrevistiFascia(user, 2);
+            // Regola business: ore giornaliere = ore settimanali / 5 (lun-ven).
+            int minuti = 0;
+            if (user != null && user.OreContrattoSettimanali > 0)
+                minuti = (int)Math.Round((user.OreContrattoSettimanali / 5.0) * 60.0, MidpointRounding.AwayFromZero);
 
-            // fallback: 8 ore
+            // fallback: 8 ore/giorno
             if (minuti <= 0)
                 minuti = 8 * 60;
 
@@ -822,9 +798,9 @@ namespace TimeClock.Server
             if (soglia <= 0)
                 return minutiExtra;
 
-            // Straordinario: deve superare la soglia (non basta raggiungerla)
-            // E poi conteggia blocchi completi.
-            if (minutiExtra <= soglia)
+            // Straordinario: parte al raggiungimento della soglia
+            // e poi conteggia blocchi completi.
+            if (minutiExtra < soglia)
                 return 0;
 
             return (minutiExtra / soglia) * soglia;

@@ -392,6 +392,26 @@ namespace TimeClock.Server
             }
         }
 
+        private void SaveUsersGrid_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+            {
+                MessageBox.Show("Seleziona prima la cartella dati (CSV/JSON).");
+                return;
+            }
+
+            var grid = this.FindName("UsersGrid") as DataGrid;
+            if (grid != null)
+            {
+                grid.CommitEdit(DataGridEditingUnit.Cell, true);
+                grid.CommitEdit(DataGridEditingUnit.Row, true);
+            }
+
+            SaveUsers();
+            AuditLogger.Log(_csvFolder, "save_users_grid", $"utenti={_users.Count}");
+            MessageBox.Show("Modifiche anagrafica salvate.");
+        }
+
 
         /// <summary>
         /// Aggiorna solo l'etichetta della soglia nella UI.
