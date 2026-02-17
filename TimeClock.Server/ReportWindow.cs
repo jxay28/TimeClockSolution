@@ -431,6 +431,9 @@ namespace TimeClock.Server
                        (DateTime In, DateTime Out)? c1,
                        (DateTime In, DateTime Out)? c2)
         {
+            // La nota di calcolo va rigenerata ad ogni passaggio.
+            row.Note = null;
+
             // Recupera parametri globali (default 15 minuti se null)
             int sogliaMinuti = App.ParametriGlobali != null ? App.ParametriGlobali.SogliaMinutiStraordinario : 15;
 
@@ -514,19 +517,25 @@ namespace TimeClock.Server
                 TimeSpan previstoIn2 = ParseOrario(user.OrarioIngresso2);
                 TimeSpan previstoOut2 = ParseOrario(user.OrarioUscita2);
 
-                bool coperturaCompletaFasce =
-                    (!c1.HasValue || previstoOut1 > previstoIn1) &&
-                    (!c2.HasValue || previstoOut2 > previstoIn2);
+                bool fascia1Valida = previstoOut1 > previstoIn1;
+                bool fascia2Valida = previstoOut2 > previstoIn2;
+                bool almenoUnaFasciaValida = fascia1Valida || fascia2Valida;
 
-                if (coperturaCompletaFasce && (previstoOut1 > previstoIn1 || previstoOut2 > previstoIn2))
+                if (almenoUnaFasciaValida)
                 {
                     minutiStraordinari = 0;
-                    minutiStraordinari += CalcolaStraordinarioFascia(c1, previstoIn1, previstoOut1, sogliaMinuti);
-                    minutiStraordinari += CalcolaStraordinarioFascia(c2, previstoIn2, previstoOut2, sogliaMinuti);
+
+                    // Applica la soglia solo alle fasce realmente configurate.
+                    // Se una fascia manca in anagrafica, non sommiamo fallback sul totale
+                    // per evitare falsi straordinari.
+                    if (fascia1Valida)
+                        minutiStraordinari += CalcolaStraordinarioFascia(c1, previstoIn1, previstoOut1, sogliaMinuti);
+                    if (fascia2Valida)
+                        minutiStraordinari += CalcolaStraordinarioFascia(c2, previstoIn2, previstoOut2, sogliaMinuti);
                 }
                 else
                 {
-                    // Fallback: se l'anagrafica non copre le fasce usate, usa il totale giornaliero.
+                    // Nessuna fascia configurata: fallback su totale giornaliero.
                     int extraTotale = Math.Max(0, minutiLavorati - minutiPrevisti);
                     minutiStraordinari = CalcolaStraordinarioBlocchi(extraTotale, sogliaMinuti);
                 }
