@@ -647,10 +647,6 @@ namespace TimeClock.Server
             if (App.ParametriGlobali.GiorniSempreFestivi.Contains(data.DayOfWeek))
                 return true;
 
-            // Festività nazionali predefinite (se abilitate)
-            if (App.ParametriGlobali.UsaFestivitaNazionali && IsFestivitaNazionale(data))
-                return true;
-
             // Festività ricorrenti custom
             if (App.ParametriGlobali.FestivitaRicorrenti.Any(f => f.Mese == data.Month && f.Giorno == data.Day))
                 return true;
@@ -660,25 +656,6 @@ namespace TimeClock.Server
                 return true;
 
             return false;
-        }
-
-        private bool IsFestivitaNazionale(DateTime data)
-        {
-            var fixedDates = new HashSet<(int Mese, int Giorno)>
-            {
-                (1, 1),   // Capodanno
-                (1, 6),   // Epifania
-                (4, 25),  // Liberazione
-                (5, 1),   // Festa del lavoro
-                (6, 2),   // Festa della Repubblica
-                (8, 15),  // Ferragosto
-                (11, 1),  // Ognissanti
-                (12, 8),  // Immacolata
-                (12, 25), // Natale
-                (12, 26)  // Santo Stefano
-            };
-
-            return fixedDates.Contains((data.Month, data.Day));
         }
 
         /// <summary>

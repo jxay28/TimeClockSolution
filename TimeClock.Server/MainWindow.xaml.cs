@@ -15,6 +15,20 @@ namespace TimeClock.Server
 {
     public partial class MainWindow : Window
     {
+        private static readonly (int Mese, int Giorno, string Nome)[] FestivitaNazionaliFisse =
+        {
+            (1, 1, "01/01 - Capodanno"),
+            (1, 6, "06/01 - Epifania"),
+            (4, 25, "25/04 - Festa della Liberazione"),
+            (5, 1, "01/05 - Festa del Lavoro"),
+            (6, 2, "02/06 - Festa della Repubblica"),
+            (8, 15, "15/08 - Ferragosto"),
+            (11, 1, "01/11 - Ognissanti"),
+            (12, 8, "08/12 - Immacolata Concezione"),
+            (12, 25, "25/12 - Natale"),
+            (12, 26, "26/12 - Santo Stefano")
+        };
+
         // percorso della cartella condivisa con i CSV
         private string _csvFolder;
 
@@ -218,23 +232,63 @@ namespace TimeClock.Server
         {
             var p = App.ParametriGlobali ?? new ParametriStraordinari();
             App.ParametriGlobali = p;
+            EnsureFixedNationalHolidays(p);
 
             p.SogliaMinutiStraordinario = NormalizzaSoglia(p.SogliaMinutiStraordinario);
             OvertimeSlider.Value = p.SogliaMinutiStraordinario;
             OvertimeValue.Text = $"{p.SogliaMinutiStraordinario} minuti";
 
-            EnableNationalHolidaysCheck.IsChecked = p.UsaFestivitaNazionali;
             SaturdayCheck.IsChecked = p.GiorniSempreFestivi.Contains(DayOfWeek.Saturday);
             SundayCheck.IsChecked = p.GiorniSempreFestivi.Contains(DayOfWeek.Sunday);
 
+            RefreshNationalHolidayCheckboxes(p);
             RefreshCustomHolidayList();
+        }
+
+        private void EnsureFixedNationalHolidays(ParametriStraordinari p)
+        {
+            var allowed = new HashSet<(int Mese, int Giorno)>(FestivitaNazionaliFisse.Select(f => (f.Mese, f.Giorno)));
+            p.FestivitaRicorrenti ??= new List<(int Mese, int Giorno)>();
+            p.FestivitaRicorrenti = p.FestivitaRicorrenti
+                .Where(f => allowed.Contains((f.Mese, f.Giorno)))
+                .Distinct()
+                .OrderBy(f => f.Mese)
+                .ThenBy(f => f.Giorno)
+                .ToList();
+        }
+
+        private void RefreshNationalHolidayCheckboxes(ParametriStraordinari p)
+        {
+            var selected = new HashSet<(int Mese, int Giorno)>(p.FestivitaRicorrenti.Select(f => (f.Mese, f.Giorno)));
+
+            NationalHolidayPanel.Children.Clear();
+            foreach (var f in FestivitaNazionaliFisse)
+            {
+                NationalHolidayPanel.Children.Add(new CheckBox
+                {
+                    Content = f.Nome,
+                    Foreground = SaturdayCheck.Foreground,
+                    Margin = new Thickness(0, 2, 0, 2),
+                    IsChecked = selected.Contains((f.Mese, f.Giorno)),
+                    Tag = (f.Mese, f.Giorno)
+                });
+            }
         }
 
         private void RefreshCustomHolidayList()
         {
             var p = App.ParametriGlobali ?? new ParametriStraordinari();
+            p.NomiFestivitaAggiuntive ??= new Dictionary<string, string>();
+
             var items = p.FestivitaAggiuntive
-                .Select(d => d.ToString("dd/MM/yyyy"))
+                .Select(d =>
+                {
+                    string key = d.ToString("yyyy-MM-dd");
+                    string nome = p.NomiFestivitaAggiuntive.TryGetValue(key, out var n) && !string.IsNullOrWhiteSpace(n)
+                        ? n
+                        : "Festivita personalizzata";
+                    return $"{d:dd/MM/yyyy} - {nome}";
+                })
                 .Distinct()
                 .OrderBy(x => x)
                 .ToList();
@@ -362,13 +416,23 @@ namespace TimeClock.Server
 
             var p = App.ParametriGlobali ?? new ParametriStraordinari();
             App.ParametriGlobali = p;
+            p.NomiFestivitaAggiuntive ??= new Dictionary<string, string>();
 
             var data = CustomHolidayPicker.SelectedDate.Value.Date;
+            string nomeFestivita = string.IsNullOrWhiteSpace(CustomHolidayNameBox.Text)
+                ? "Festivita personalizzata"
+                : CustomHolidayNameBox.Text.Trim();
+            string key = data.ToString("yyyy-MM-dd");
+
             if (!p.FestivitaAggiuntive.Contains(data))
             {
                 p.FestivitaAggiuntive.Add(data);
-                RefreshCustomHolidayList();
             }
+
+            // Se la data esiste gia, aggiorniamo comunque il nome.
+            p.NomiFestivitaAggiuntive[key] = nomeFestivita;
+            RefreshCustomHolidayList();
+            CustomHolidayNameBox.Text = string.Empty;
         }
 
         private void SaveOvertimeParamsButton_Click(object sender, RoutedEventArgs e)
@@ -377,7 +441,19 @@ namespace TimeClock.Server
             App.ParametriGlobali = p;
 
             p.SogliaMinutiStraordinario = NormalizzaSoglia((int)OvertimeSlider.Value);
-            p.UsaFestivitaNazionali = EnableNationalHolidaysCheck.IsChecked == true;
+            p.FestivitaRicorrenti = NationalHolidayPanel.Children
+                .OfType<CheckBox>()
+                .Where(cb => cb.IsChecked == true && cb.Tag is ValueTuple<int, int>)
+                .Select(cb =>
+                {
+                    var t = (ValueTuple<int, int>)cb.Tag;
+                    return (Mese: t.Item1, Giorno: t.Item2);
+                })
+                .Distinct()
+                .OrderBy(f => f.Mese)
+                .ThenBy(f => f.Giorno)
+                .ToList();
+            EnsureFixedNationalHolidays(p);
 
             p.GiorniSempreFestivi = new List<DayOfWeek>();
             if (SaturdayCheck.IsChecked == true)
@@ -386,7 +462,7 @@ namespace TimeClock.Server
                 p.GiorniSempreFestivi.Add(DayOfWeek.Sunday);
 
             App.SalvaParametriGlobali();
-            AuditLogger.Log(_csvFolder, "save_overtime_params", $"soglia={p.SogliaMinutiStraordinario}; nazionali={p.UsaFestivitaNazionali}; sabato={SaturdayCheck.IsChecked == true}; domenica={SundayCheck.IsChecked == true}; festiviCustom={p.FestivitaAggiuntive.Count}");
+            AuditLogger.Log(_csvFolder, "save_overtime_params", $"soglia={p.SogliaMinutiStraordinario}; nazionaliFisse={p.FestivitaRicorrenti.Count}; sabato={SaturdayCheck.IsChecked == true}; domenica={SundayCheck.IsChecked == true}; festiviCustom={p.FestivitaAggiuntive.Count}");
 
             MessageBox.Show("Parametri salvati.");
         }

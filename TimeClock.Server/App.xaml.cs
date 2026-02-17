@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using TimeClock.Core.Models;
@@ -26,12 +27,35 @@ namespace TimeClock.Server
                 File.WriteAllText(file,
                     JsonSerializer.Serialize(ParametriGlobali, new JsonSerializerOptions { WriteIndented = true }));
             }
+
+            NormalizzaFestivitaNazionaliFisse();
         }
 
         public static void SalvaParametriGlobali()
         {
             File.WriteAllText("parametri_straordinari.json",
                 JsonSerializer.Serialize(ParametriGlobali, new JsonSerializerOptions { WriteIndented = true }));
+        }
+
+        private static void NormalizzaFestivitaNazionaliFisse()
+        {
+            ParametriGlobali ??= new ParametriStraordinari();
+
+            var fixedList = new[]
+            {
+                (1, 1), (1, 6), (4, 25), (5, 1), (6, 2),
+                (8, 15), (11, 1), (12, 8), (12, 25), (12, 26)
+            };
+
+            var fixedSet = fixedList.ToHashSet();
+            ParametriGlobali.FestivitaRicorrenti ??= new();
+            ParametriGlobali.FestivitaRicorrenti = ParametriGlobali.FestivitaRicorrenti
+                .Where(f => fixedSet.Contains((f.Mese, f.Giorno)))
+                .Select(f => (f.Mese, f.Giorno))
+                .Distinct()
+                .ToList();
+
+            SalvaParametriGlobali();
         }
     }
 }
