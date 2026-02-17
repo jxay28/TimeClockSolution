@@ -1,23 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System;
 
-namespace TimeClock.Core.Models
+public class ParametriStraordinari
 {
-    public class ParametriStraordinari
-    {
-        // Abilita il conteggio delle festività nazionali predefinite
-        public bool UsaFestivitaNazionali { get; set; } = true;
-
-        // Soglia minuti per conteggiare straordinario
-        public int SogliaMinutiStraordinario { get; set; } = 15;
-
-        // Giorni della settimana considerati festivi
-        public List<DayOfWeek> GiorniSempreFestivi { get; set; } = new();
-
-        // Festività ricorrenti (ogni anno alla stessa data, es. 25 dicembre)
-        public List<(int Mese, int Giorno)> FestivitaRicorrenti { get; set; } = new();
-
-        // Festività specifiche per anno (Pasqua, ponti…)
-        public List<DateTime> FestivitaAggiuntive { get; set; } = new();
-    }
+    public bool UsaFestivitaNazionali { get; set; } = true;
+    public int SogliaMinutiStraordinario { get; set; } = 15;
+    public List<DayOfWeek> GiorniSempreFestivi { get; set; } = new();
+    public List<(int Mese, int Giorno)> FestivitaRicorrenti { get; set; } = new();
+    public List<DateTime> FestivitaAggiuntive { get; set; } = new();
 }
