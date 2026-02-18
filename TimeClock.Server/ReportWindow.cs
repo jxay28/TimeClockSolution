@@ -5,8 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using TimeClock.Core.Models;
 using TimeClock.Core.Services;
+using TimeClock.Server.Models;
 using TimeClock.Server.Services;
 
 namespace TimeClock.Server
@@ -184,6 +187,12 @@ namespace TimeClock.Server
                     {
                         ApplicaAssenzeAllaRiga(emptyRow, user, assenzeGiorno);
                     }
+                    else if (!IsGiornoFestivo(dataCorrente))
+                    {
+                        // Regola richiesta: giorno feriale senza timbrature => ferie automatiche.
+                        emptyRow.OreFerie = CalcolaOreDefaultGiornaliere(user);
+                        emptyRow.Note = "Ferie automatiche da mancata timbratura";
+                    }
 
                     righeReport.Add(emptyRow);
                 }
@@ -296,8 +305,32 @@ namespace TimeClock.Server
             var righeGiorno = righe.Where(x => x.Giorno == giorno).ToList();
             if (!righeGiorno.Any()) return;
 
+            foreach (var row in righeGiorno)
+                row.OreFerie = 0;
+
             var coppieGiorno = _reportDayCalculationService.ExtractPairsFromRows(righeGiorno, dataBase);
             _reportDayCalculationService.ApplyDailyCalculationToRows(righeGiorno, dataBase, user, coppieGiorno, App.ParametriGlobali);
+
+            var absenceRepo = new AbsenceRepository();
+            string assenzePath = Path.Combine(_csvFolder, "assenze.csv");
+            var assenzeGiorno = absenceRepo.Load(assenzePath)
+                .Where(a => a.UserId == user.Id && a.Data.Date == dataBase.Date)
+                .ToList();
+
+            if (assenzeGiorno.Any())
+            {
+                double oreDefault = CalcolaOreDefaultGiornaliere(user);
+                double oreFerie = assenzeGiorno
+                    .Where(a => a.Tipo == AbsenceType.Ferie)
+                    .Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
+
+                righeGiorno[0].OreFerie = Math.Round(oreFerie, 2);
+            }
+            else if (coppieGiorno.Count == 0 && !IsGiornoFestivo(dataBase))
+            {
+                righeGiorno[0].OreFerie = CalcolaOreDefaultGiornaliere(user);
+                righeGiorno[0].Note = "Ferie automatiche da mancata timbratura";
+            }
         }
 
         // ===========================
@@ -315,7 +348,8 @@ namespace TimeClock.Server
             var dlg = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "File di testo (*.txt)|*.txt",
-                FileName = "report_mensile.txt"
+                InitialDirectory = Directory.Exists(_csvFolder) ? _csvFolder : string.Empty,
+                FileName = BuildSuggestedExportFileName("txt")
             };
 
             if (dlg.ShowDialog() != true)
@@ -343,6 +377,14 @@ namespace TimeClock.Server
                 }));
             }
 
+            var footerLines = BuildCompanyFooterLines();
+            if (footerLines.Any())
+            {
+                lines.Add(string.Empty);
+                lines.Add("---- DATI AZIENDALI ----");
+                lines.AddRange(footerLines);
+            }
+
             SafeFileWriter.WriteAllLinesAtomic(dlg.FileName, lines);
             MessageBox.Show("Esportazione TXT completata.");
         }
@@ -361,17 +403,141 @@ namespace TimeClock.Server
 
             try
             {
+                var saveDlg = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "File PDF (*.pdf)|*.pdf",
+                    InitialDirectory = Directory.Exists(_csvFolder) ? _csvFolder : string.Empty,
+                    FileName = BuildSuggestedExportFileName("pdf")
+                };
+
+                if (saveDlg.ShowDialog() != true)
+                    return;
+
                 var pd = new PrintDialog();
                 if (pd.ShowDialog() == true)
                 {
-                    pd.PrintVisual(ReportGrid, "Report Mensile TimeClock");
-                    MessageBox.Show("Stampa avviata. Per salvare in PDF scegli la stampante 'Microsoft Print to PDF'.");
+                    var oldCurrentDir = Environment.CurrentDirectory;
+                    try
+                    {
+                        var targetDir = Path.GetDirectoryName(saveDlg.FileName);
+                        if (!string.IsNullOrWhiteSpace(targetDir) && Directory.Exists(targetDir))
+                            Environment.CurrentDirectory = targetDir;
+
+                        string docName = Path.GetFileNameWithoutExtension(saveDlg.FileName);
+                        pd.PrintVisual(BuildPrintableReportWithFooter(), docName);
+                    }
+                    finally
+                    {
+                        Environment.CurrentDirectory = oldCurrentDir;
+                    }
+
+                    MessageBox.Show(
+                        $"Stampa avviata. Nella finestra 'Microsoft Print to PDF' salva in:\n{saveDlg.FileName}");
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Errore durante l'esportazione PDF: {ex.Message}");
             }
+        }
+
+        private FrameworkElement BuildPrintableReportWithFooter()
+        {
+            var footerLines = BuildCompanyFooterLines();
+            string footerText = footerLines.Any()
+                ? string.Join(Environment.NewLine, footerLines)
+                : "Nessun dato aziendale configurato.";
+
+            var image = new Image
+            {
+                Source = CaptureVisualAsImage(ReportGrid),
+                Stretch = Stretch.Uniform,
+                Margin = new Thickness(20)
+            };
+
+            var footer = new TextBlock
+            {
+                Text = "Dati aziendali:" + Environment.NewLine + footerText,
+                Margin = new Thickness(20, 0, 20, 20),
+                Foreground = Brushes.Black,
+                FontSize = 11,
+                TextWrapping = TextWrapping.Wrap
+            };
+
+            var panel = new Grid
+            {
+                Background = Brushes.White,
+                Width = Math.Max(900, ReportGrid.ActualWidth + 40)
+            };
+            panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            Grid.SetRow(image, 0);
+            Grid.SetRow(footer, 1);
+            panel.Children.Add(image);
+            panel.Children.Add(footer);
+
+            panel.Measure(new Size(panel.Width, double.PositiveInfinity));
+            panel.Arrange(new Rect(0, 0, panel.Width, panel.DesiredSize.Height));
+            panel.UpdateLayout();
+
+            return panel;
+        }
+
+        private ImageSource CaptureVisualAsImage(FrameworkElement element)
+        {
+            element.UpdateLayout();
+            int width = Math.Max(1, (int)Math.Ceiling(element.ActualWidth));
+            int height = Math.Max(1, (int)Math.Ceiling(element.ActualHeight));
+
+            var rtb = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            rtb.Render(element);
+            return rtb;
+        }
+
+        private List<string> BuildCompanyFooterLines()
+        {
+            var c = App.DatiAzienda ?? new CompanyInfo();
+            var lines = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(c.RagioneSociale))
+                lines.Add(c.RagioneSociale);
+            if (!string.IsNullOrWhiteSpace(c.Indirizzo))
+                lines.Add(c.Indirizzo);
+            if (!string.IsNullOrWhiteSpace(c.Citta))
+                lines.Add(c.Citta);
+            if (!string.IsNullOrWhiteSpace(c.PartitaIva))
+                lines.Add($"P.IVA: {c.PartitaIva}");
+            if (!string.IsNullOrWhiteSpace(c.Telefono))
+                lines.Add($"Tel: {c.Telefono}");
+            if (!string.IsNullOrWhiteSpace(c.Email))
+                lines.Add($"Email: {c.Email}");
+
+            return lines;
+        }
+
+        private string BuildSuggestedExportFileName(string extension)
+        {
+            var user = UserCombo.SelectedItem as UserProfile;
+            string userName = user != null ? $"{user.Nome}_{user.Cognome}" : "Utente";
+            userName = SanitizeFileNamePart(userName);
+
+            int month = MonthCombo.SelectedIndex >= 0 ? MonthCombo.SelectedIndex + 1 : DateTime.Now.Month;
+            int year = YearCombo.SelectedItem is int y ? y : DateTime.Now.Year;
+            string monthName = CultureInfo.GetCultureInfo("it-IT").DateTimeFormat.GetMonthName(month);
+            monthName = SanitizeFileNamePart(monthName);
+
+            return $"{userName}_{monthName}_{year}.{extension.Trim('.')}";
+        }
+
+        private static string SanitizeFileNamePart(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "N_A";
+
+            var invalid = Path.GetInvalidFileNameChars().ToHashSet();
+            var chars = value.Trim().Select(ch => invalid.Contains(ch) ? '_' : ch).ToArray();
+            return new string(chars).Replace(' ', '_');
         }
 
         // ===========================
@@ -927,9 +1093,7 @@ namespace TimeClock.Server
             if (assenze == null || assenze.Count == 0)
                 return;
 
-            double oreDefault = user.OreContrattoSettimanali > 0
-                ? Math.Round(user.OreContrattoSettimanali / 5.0, 2)
-                : 8.0;
+            double oreDefault = CalcolaOreDefaultGiornaliere(user);
 
             double oreTotali = assenze.Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
             double oreFerie = assenze
@@ -945,6 +1109,13 @@ namespace TimeClock.Server
                 .ToList();
 
             row.Note = "Assenza: " + string.Join("; ", tags);
+        }
+
+        private double CalcolaOreDefaultGiornaliere(UserProfile user)
+        {
+            return user.OreContrattoSettimanali > 0
+                ? Math.Round(user.OreContrattoSettimanali / 5.0, 2)
+                : 8.0;
         }
 
         private void AggiornaTotali()

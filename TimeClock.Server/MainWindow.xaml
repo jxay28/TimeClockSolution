@@ -353,21 +353,76 @@
 
                             <!-- OPZIONI -->
                             <TabItem Header="Opzioni">
-                                <StackPanel Margin="20">
-                                    <TextBlock Text="Percorso cartella condivisa:"
-                                               Foreground="White"/>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel Margin="20">
+                                        <TextBlock Text="Percorso cartella condivisa:"
+                                                   Foreground="White"/>
 
-                                    <TextBox x:Name="CsvPathBox"
-                                             Margin="0,10"
-                                             Background="#10FFFFFF"
-                                             Foreground="White"
-                                             BorderBrush="#40FFFFFF"/>
+                                        <TextBox x:Name="CsvPathBox"
+                                                 Margin="0,10"
+                                                 Background="#10FFFFFF"
+                                                 Foreground="White"
+                                                 BorderBrush="#40FFFFFF"/>
 
-                                    <Button Content="Scegli cartella"
-                                            Style="{StaticResource GlassButton}"
-                                            Width="150"
-                                            Click="SelectCsvFolder_Click"/>
-                                </StackPanel>
+                                        <Button Content="Scegli cartella"
+                                                Style="{StaticResource GlassButton}"
+                                                Width="150"
+                                                Click="SelectCsvFolder_Click"/>
+
+                                        <Separator Margin="0,18,0,12"/>
+                                        <TextBlock Text="Dati aziendali (footer report)"
+                                                   Foreground="White"
+                                                   FontSize="16"
+                                                   Margin="0,0,0,8"/>
+
+                                        <TextBlock Text="Ragione sociale" Foreground="White"/>
+                                        <TextBox x:Name="AziendaRagioneSocialeBox"
+                                                 Margin="0,4,0,8"
+                                                 Background="#10FFFFFF"
+                                                 Foreground="White"
+                                                 BorderBrush="#40FFFFFF"/>
+
+                                        <TextBlock Text="Indirizzo" Foreground="White"/>
+                                        <TextBox x:Name="AziendaIndirizzoBox"
+                                                 Margin="0,4,0,8"
+                                                 Background="#10FFFFFF"
+                                                 Foreground="White"
+                                                 BorderBrush="#40FFFFFF"/>
+
+                                        <TextBlock Text="Citta" Foreground="White"/>
+                                        <TextBox x:Name="AziendaCittaBox"
+                                                 Margin="0,4,0,8"
+                                                 Background="#10FFFFFF"
+                                                 Foreground="White"
+                                                 BorderBrush="#40FFFFFF"/>
+
+                                        <TextBlock Text="Partita IVA" Foreground="White"/>
+                                        <TextBox x:Name="AziendaPivaBox"
+                                                 Margin="0,4,0,8"
+                                                 Background="#10FFFFFF"
+                                                 Foreground="White"
+                                                 BorderBrush="#40FFFFFF"/>
+
+                                        <TextBlock Text="Telefono" Foreground="White"/>
+                                        <TextBox x:Name="AziendaTelefonoBox"
+                                                 Margin="0,4,0,8"
+                                                 Background="#10FFFFFF"
+                                                 Foreground="White"
+                                                 BorderBrush="#40FFFFFF"/>
+
+                                        <TextBlock Text="Email" Foreground="White"/>
+                                        <TextBox x:Name="AziendaEmailBox"
+                                                 Margin="0,4,0,12"
+                                                 Background="#10FFFFFF"
+                                                 Foreground="White"
+                                                 BorderBrush="#40FFFFFF"/>
+
+                                        <Button Content="Salva dati aziendali"
+                                                Style="{StaticResource GlassButton}"
+                                                Width="180"
+                                                Click="SaveCompanyInfo_Click"/>
+                                    </StackPanel>
+                                </ScrollViewer>
                             </TabItem>
 
                         </TabControl>

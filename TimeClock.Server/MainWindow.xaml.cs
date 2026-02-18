@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using TimeClock.Server.Services;
+using TimeClock.Server.Models;
 
 
 namespace TimeClock.Server
@@ -69,12 +70,14 @@ namespace TimeClock.Server
                 // Carica subito i dati
                 LoadUsers();
                 LoadSettings();
+                LoadCompanyInfoUI();
             }
             else
             {
                 CsvPathBox.Text = "Nessuna cartella selezionata";
                 _csvFolder = string.Empty;
                 App.ConfigureDataFolder(null);
+                LoadCompanyInfoUI();
             }
 
             _dashboardTimer.Interval = TimeSpan.FromSeconds(1);
@@ -610,8 +613,37 @@ namespace TimeClock.Server
                     // ricarica i dati
                     LoadUsers();
                     LoadSettings();
+                    LoadCompanyInfoUI();
                 }
             }
+        }
+
+        private void LoadCompanyInfoUI()
+        {
+            var c = App.DatiAzienda ?? new CompanyInfo();
+            AziendaRagioneSocialeBox.Text = c.RagioneSociale ?? string.Empty;
+            AziendaIndirizzoBox.Text = c.Indirizzo ?? string.Empty;
+            AziendaCittaBox.Text = c.Citta ?? string.Empty;
+            AziendaPivaBox.Text = c.PartitaIva ?? string.Empty;
+            AziendaTelefonoBox.Text = c.Telefono ?? string.Empty;
+            AziendaEmailBox.Text = c.Email ?? string.Empty;
+        }
+
+        private void SaveCompanyInfo_Click(object sender, RoutedEventArgs e)
+        {
+            App.DatiAzienda = new CompanyInfo
+            {
+                RagioneSociale = AziendaRagioneSocialeBox.Text?.Trim() ?? string.Empty,
+                Indirizzo = AziendaIndirizzoBox.Text?.Trim() ?? string.Empty,
+                Citta = AziendaCittaBox.Text?.Trim() ?? string.Empty,
+                PartitaIva = AziendaPivaBox.Text?.Trim() ?? string.Empty,
+                Telefono = AziendaTelefonoBox.Text?.Trim() ?? string.Empty,
+                Email = AziendaEmailBox.Text?.Trim() ?? string.Empty
+            };
+
+            App.SalvaDatiAzienda();
+            AuditLogger.Log(_csvFolder, "save_company_info", $"ragione_sociale={App.DatiAzienda.RagioneSociale}");
+            MessageBox.Show("Dati aziendali salvati.");
         }
 
         /// <summary>
