@@ -48,6 +48,7 @@ namespace TimeClock.Server
     {
         private readonly string _csvFolder;
         private readonly List<UserProfile> _users;
+        private readonly WorkTimeCalculator _workTimeCalculator = new();
 
         public ReportWindow(string csvFolder, List<UserProfile> users)
         {
@@ -393,151 +394,66 @@ namespace TimeClock.Server
         /// </summary>
         private List<(DateTime Ingresso, DateTime Uscita)> CostruisciCoppieGlobali(List<TimeCardEntry> entries)
         {
-            var result = new List<(DateTime Ingresso, DateTime Uscita)>();
-
-            // Stack o variabile temporanea per l'ultima entrata aperta
-            DateTime? lastIngresso = null;
-
-            foreach (var e in entries)
-            {
-                if (e.Tipo == PunchType.Entrata)
-                {
-                    // Se avevamo già un ingresso aperto senza uscita (es. dimenticanza timbratura), 
-                    // cosa facciamo? Per ora sovrascriviamo (nuovo inizio turno) o ignoriamo il precedente.
-                    // Politica standard: l'ultimo IN vince.
-                    lastIngresso = e.DataOra;
-                }
-                else if (e.Tipo == PunchType.Uscita)
-                {
-                    if (lastIngresso.HasValue)
-                    {
-                        // Abbiamo una coppia valida!
-                        // Verifica di sanità: l'uscita deve essere dopo l'entrata
-                        if (e.DataOra > lastIngresso.Value)
-                        {
-                            result.Add((lastIngresso.Value, e.DataOra));
-                        }
-
-                        // Chiudiamo il turno
-                        lastIngresso = null;
-                    }
-                    // Se lastIngresso è null, è un'uscita orfana (timbrata per sbaglio o inizio perso). La ignoriamo.
-                }
-            }
-
-            return result;
+            // Pairing formalizzato nel Core (gestione cross-day e regole edge-case in un unico punto).
+            return _workTimeCalculator
+                .BuildPairsCrossDay(entries)
+                .Select(p => (Ingresso: p.In, Uscita: p.Out))
+                .ToList();
         }
         private void CalcolaTotaliRiga(ReportRow row, DateTime dataRiferimento, UserProfile user,
                        (DateTime In, DateTime Out)? c1,
                        (DateTime In, DateTime Out)? c2)
         {
-            // La nota di calcolo va rigenerata ad ogni passaggio.
-            row.Note = null;
+            var policy = BuildWorkTimePolicy();
 
-            // Recupera parametri globali (default 15 minuti se null)
-            int sogliaMinuti = App.ParametriGlobali != null ? App.ParametriGlobali.SogliaMinutiStraordinario : 15;
-            int bloccoMinuti = sogliaMinuti > 0 ? sogliaMinuti : 15;
+            var pairs = new List<(DateTime In, DateTime Out)>();
+            if (c1.HasValue) pairs.Add(c1.Value);
+            if (c2.HasValue) pairs.Add(c2.Value);
 
-            // Regola richiesta:
-            // - Entrata: arrotondamento sempre in su al blocco
-            // - Uscita: arrotondamento sempre in giù al blocco
-            var c1Arrotondata = ArrotondaCoppia(c1, bloccoMinuti);
-            var c2Arrotondata = ArrotondaCoppia(c2, bloccoMinuti);
+            var result = _workTimeCalculator.CalculateDay(user, dataRiferimento, pairs, policy);
 
-            // Determina se festivo
-            bool isFestivo = IsGiornoFestivo(dataRiferimento);
-            row.IsFestivo = isFestivo;
+            row.IsFestivo = result.IsHoliday;
+            row.OreOrdinarie = Math.Round(result.OrdinaryMinutes / 60.0, 2);
+            row.OreStraordinarie = Math.Round(result.OvertimeMinutes / 60.0, 2);
 
-            // =========================================================
-            // 1. CALCOLO VISUALE DURATE (Nuova implementazione)
-            // =========================================================
+            row.Durata1Visual = result.Pairs.ElementAtOrDefault(0)?.DurationVisual ?? string.Empty;
+            row.Durata2Visual = result.Pairs.ElementAtOrDefault(1)?.DurationVisual ?? string.Empty;
 
-            // Gestione Durata 1
-            if (c1Arrotondata.HasValue)
+            row.Note = result.Notes.Any()
+                ? string.Join(" | ", result.Notes)
+                : null;
+        }
+
+        private WorkTimePolicy BuildWorkTimePolicy()
+        {
+            var p = App.ParametriGlobali;
+
+            int soglia = p?.SogliaMinutiStraordinario > 0
+                ? p.SogliaMinutiStraordinario
+                : 15;
+
+            return new WorkTimePolicy
             {
-                TimeSpan durata1 = c1Arrotondata.Value.Out - c1Arrotondata.Value.In;
-                // Formattazione HH:mm (es. 04:00)
-                row.Durata1Visual = $"{(int)durata1.TotalHours:00}:{durata1.Minutes:00}";
-            }
-            else
-            {
-                row.Durata1Visual = ""; // Pulisce se non c'è coppia
-            }
-
-            // Gestione Durata 2
-            if (c2Arrotondata.HasValue)
-            {
-                TimeSpan durata2 = c2Arrotondata.Value.Out - c2Arrotondata.Value.In;
-                row.Durata2Visual = $"{(int)durata2.TotalHours:00}:{durata2.Minutes:00}";
-            }
-            else
-            {
-                row.Durata2Visual = ""; // Pulisce se non c'è coppia
-            }
-
-            // =========================================================
-            // 2. CALCOLO MATEMATICO ORE ORDINARIE / STRAORDINARIE
-            // =========================================================
-
-            // Se non ci sono timbrature, resetta e esci
-            if (c1Arrotondata == null && c2Arrotondata == null)
-            {
-                row.OreOrdinarie = 0;
-                row.OreStraordinarie = 0;
-                return;
-            }
-
-            double oreLavorateTotali = 0;
-
-            // Durata C1
-            if (c1Arrotondata.HasValue)
-                oreLavorateTotali += (c1Arrotondata.Value.Out - c1Arrotondata.Value.In).TotalHours;
-
-            // Durata C2
-            if (c2Arrotondata.HasValue)
-                oreLavorateTotali += (c2Arrotondata.Value.Out - c2Arrotondata.Value.In).TotalHours;
-
-            // SE FESTIVO -> TUTTO STRAORDINARIO
-            if (isFestivo)
-            {
-                row.OreOrdinarie = 0;
-                row.OreStraordinarie = Math.Round(oreLavorateTotali, 2);
-                return;
-            }
-
-            // SE FERIALE -> calcolo su ore previste + soglia blocchi (0/15/30)
-            int minutiLavorati = (int)Math.Round(oreLavorateTotali * 60);
-            int minutiPrevisti = CalcolaMinutiPrevisti(user);
-
-            int minutiOrdinari;
-            int minutiStraordinari;
-
-            if (minutiLavorati >= minutiPrevisti)
-            {
-                // Oltre il previsto giornaliero: ordinarie al massimo giornaliero,
-                // straordinario sul totale eccedente.
-                minutiOrdinari = minutiPrevisti;
-                int extraTotale = Math.Max(0, minutiLavorati - minutiPrevisti);
-                minutiStraordinari = CalcolaStraordinarioBlocchi(extraTotale, sogliaMinuti);
-            }
-            else
-            {
-                // Sotto il previsto: applica recupero a blocchi (es. ritardo 5' con soglia 15 => penalità 15')
-                int deficit = minutiPrevisti - minutiLavorati;
-                int recuperoRichiesto = ApplicaRecuperoBlocchi(deficit, sogliaMinuti);
-                minutiOrdinari = Math.Max(0, minutiLavorati - recuperoRichiesto);
-                minutiStraordinari = 0;
-
-                if (recuperoRichiesto > 0)
+                RoundEntryUp = true,
+                RoundExitDown = true,
+                RoundingBlockMinutes = soglia,
+                OvertimeThresholdMinutes = soglia,
+                OvertimeBlockMinutes = soglia,
+                DeficitRecoveryBlockMinutes = soglia,
+                AlwaysHolidayDays = p?.GiorniSempreFestivi?.ToList() ?? new List<DayOfWeek>
                 {
-                    row.Note = string.IsNullOrWhiteSpace(row.Note)
-                        ? $"Recupero minimo applicato: {recuperoRichiesto} min"
-                        : row.Note + $" | Recupero minimo applicato: {recuperoRichiesto} min";
-                }
-            }
-
-            row.OreOrdinarie = Math.Round(minutiOrdinari / 60.0, 2);
-            row.OreStraordinarie = Math.Round(minutiStraordinari / 60.0, 2);
+                    DayOfWeek.Saturday,
+                    DayOfWeek.Sunday
+                },
+                RecurringHolidays = p?.FestivitaRicorrenti?
+                    .Select(f => (Month: f.Mese, Day: f.Giorno))
+                    .ToList()
+                    ?? new List<(int Month, int Day)>(),
+                AdditionalHolidayDates = p?.FestivitaAggiuntive?
+                    .Select(d => d.Date)
+                    .ToHashSet()
+                    ?? new HashSet<DateTime>()
+            };
         }
 
         // Funzione helper per confrontare orari reali con previsti
