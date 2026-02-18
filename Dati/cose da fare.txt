@@ -1,0 +1,39 @@
+1. Affidabilità dati (priorità massima)
+
+Passare da solo CSV a SQLite come fonte primaria, mantenendo export CSV.
+Lock robusto multi-processo su timbrature e report.
+Backup automatico versionato + ripristino “1 click”.
+Log audit anti-manomissione (hash chain delle operazioni critiche).
+
+2. Controllo operativo
+
+Workflow approvazione modifiche manuali (chi ha cambiato cosa, prima/dopo, approvato da).
+Dashboard KPI: presenti, assenti, ritardi, straordinari, ferie usate, anomalie.
+Motore anomalie: doppie entrate, uscite orfane, turni eccessivi, buchi sospetti.
+
+3. Esperienza utente “enterprise”
+
+Wizard guidati per fine mese (validazione -> correzioni -> export -> firma).
+Ricerca globale utenti/report e filtri salvabili.
+Undo/redo nelle modifiche report.
+Tema responsive e accessibilità tastiera completa.
+
+4. Sicurezza
+
+Ruoli e permessi (Admin, HR, Supervisore, sola lettura).
+Login con PIN/badge per client timbratura.
+Cifratura file sensibili in cartella dati.
+
+5. Reporting professionale
+
+Template PDF veri (logo, footer aziendale, impaginazione multipagina, numerazione, firma).
+Export multipli standard (paghe, commercialista, consulente).
+Versionamento report mensili (v1, v2 con storico modifiche).
+
+6. Qualità ingegneristica
+
+Test automatici su ReportWindow e flussi assenze/ferie.
+CI pipeline con build+test+lint a ogni commit.
+Telemetria errori e performance (diagnostica reale in produzione).
+
+Se vuoi, ti preparo un piano esecutivo 30-60-90 giorni con effort stimato e ti dico da dove partire per massimo impatto subito.
