@@ -14,8 +14,10 @@ namespace TimeClock.Client
     public partial class MainWindow : Window
     {
         private List<UserProfile> _users = new();
+        private List<UserProfile> _filteredUsers = new();
         private readonly CsvRepository _repo = new();
         private readonly ClientStatusViewModel _statusVm = new();
+        private string _numericFilter = string.Empty;
 
         private string _csvFolder = string.Empty;   // ? variabile definitiva per la cartella
 
@@ -29,15 +31,12 @@ namespace TimeClock.Client
 
             if (!string.IsNullOrWhiteSpace(_csvFolder) && Directory.Exists(_csvFolder))
             {
-                SharedFolderTextBox.Text = _csvFolder;
                 LoadUsers();
-                SetStatus("Cartella condivisa caricata.");
             }
             else
             {
-                SharedFolderTextBox.Text = "Nessuna cartella selezionata";
                 _csvFolder = string.Empty;
-                SetStatus("Seleziona la cartella condivisa per iniziare.");
+                _statusVm.LastActionText = "Seleziona la cartella con l'ingranaggio.";
             }
         }
 
@@ -49,14 +48,13 @@ namespace TimeClock.Client
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     _csvFolder = dialog.SelectedPath;
-                    SharedFolderTextBox.Text = _csvFolder;
 
                     // ?? Salvataggio preferenza
                     Properties.Settings.Default.CsvFolderPath = _csvFolder;
                     Properties.Settings.Default.Save();
 
                     LoadUsers();
-                    SetStatus("Cartella condivisa aggiornata.");
+                    SetLastAction($"Cartella aggiornata: {_csvFolder}");
                 }
             }
         }
@@ -70,14 +68,14 @@ namespace TimeClock.Client
 
             if (string.IsNullOrWhiteSpace(_csvFolder))
             {
-                SetStatus("Cartella non impostata.");
+                NumericFilterTextBlock.Text = "Filtro numerico: -";
                 return;
             }
 
             var path = Path.Combine(_csvFolder, "utenti.csv");
             if (!File.Exists(path))
             {
-                SetStatus("File utenti.csv non trovato.");
+                NumericFilterTextBlock.Text = "Filtro numerico: -";
                 return;
             }
 
@@ -123,11 +121,10 @@ namespace TimeClock.Client
             }
 
             _users = list;
-            UserComboBox.ItemsSource = _users;
-            UserComboBox.DisplayMemberPath = "FullName";
-            SetStatus(_users.Count > 0
-                ? $"Utenti caricati: {_users.Count}."
-                : "Nessun utente disponibile.");
+            ApplyNumericFilter();
+            SetLastAction(_users.Count > 0
+                ? $"Utenti caricati: {_users.Count}"
+                : "Nessun utente disponibile");
         }
 
 
@@ -160,19 +157,16 @@ namespace TimeClock.Client
                 if (string.Equals(lastType, "Entrata", StringComparison.OrdinalIgnoreCase))
                 {
                     UscitaButton.IsEnabled = true;
-                    SetStatus($"{user.FullName}: dentro (attesa uscita).");
                 }
                 else
                 {
                     EntrataButton.IsEnabled = true;
-                    SetStatus($"{user.FullName}: fuori (attesa entrata).");
                 }
 
                 _statusVm.LastActionText = GetLastActionForUser(userFile);
             }
             else
             {
-                SetStatus("Seleziona un utente.");
                 _statusVm.LastActionText = "N/A";
             }
         }
@@ -228,15 +222,121 @@ namespace TimeClock.Client
             }
         }
 
-        private void SetStatus(string message)
+        private void ApplyNumericFilter()
         {
-            _statusVm.StatusText = message;
-            _statusVm.RefreshStatusCommand.Execute(null);
+            string selectedId = (UserComboBox.SelectedItem as UserProfile)?.Id ?? string.Empty;
+
+            _filteredUsers = _users
+                .Where(u => MatchesNumericFilter(u, _numericFilter))
+                .ToList();
+
+            UserComboBox.ItemsSource = null;
+            UserComboBox.ItemsSource = _filteredUsers;
+            UserComboBox.DisplayMemberPath = "FullName";
+
+            var selected = _filteredUsers.FirstOrDefault(u => u.Id == selectedId);
+            if (selected != null)
+                UserComboBox.SelectedItem = selected;
+            else if (_filteredUsers.Count == 1)
+                UserComboBox.SelectedIndex = 0;
+
+            NumericFilterTextBlock.Text = string.IsNullOrEmpty(_numericFilter)
+                ? "Filtro numerico: -"
+                : $"Filtro numerico: {_numericFilter}";
         }
 
         private void SetLastAction(string message)
         {
-            _statusVm.LastActionText = $"{DateTime.Now:HH:mm:ss} - {message}";
+            _statusVm.LastActionText = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss} - {message}";
+        }
+
+        private bool MatchesNumericFilter(UserProfile user, string filter)
+        {
+            if (string.IsNullOrWhiteSpace(filter))
+                return true;
+
+            string sequenceDigits = $"{Math.Max(0, user.SequenceNumber):D3}";
+            return sequenceDigits.Contains(filter, StringComparison.Ordinal);
+        }
+
+        private void NumericKey_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button || button.Tag is not string digit || digit.Length != 1)
+                return;
+
+            AppendNumericFilterDigit(digit[0]);
+        }
+
+        private void NumericBackspace_Click(object sender, RoutedEventArgs e)
+        {
+            if (_numericFilter.Length == 0)
+                return;
+
+            _numericFilter = _numericFilter[..^1];
+            ApplyNumericFilter();
+            UpdateButtonsState();
+        }
+
+        private void NumericClear_Click(object sender, RoutedEventArgs e)
+        {
+            if (_numericFilter.Length == 0)
+                return;
+
+            _numericFilter = string.Empty;
+            ApplyNumericFilter();
+            UpdateButtonsState();
+        }
+
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (TryGetDigitFromKey(e.Key, out var digit))
+            {
+                AppendNumericFilterDigit(digit);
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Back)
+            {
+                NumericBackspace_Click(sender, new RoutedEventArgs());
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Delete || e.Key == Key.Escape)
+            {
+                NumericClear_Click(sender, new RoutedEventArgs());
+                e.Handled = true;
+            }
+        }
+
+        private void AppendNumericFilterDigit(char digit)
+        {
+            if (!char.IsDigit(digit))
+                return;
+
+            _numericFilter += digit;
+            ApplyNumericFilter();
+            UpdateButtonsState();
+        }
+
+        private static bool TryGetDigitFromKey(Key key, out char digit)
+        {
+            digit = '\0';
+
+            if (key >= Key.D0 && key <= Key.D9)
+            {
+                digit = (char)('0' + (key - Key.D0));
+                return true;
+            }
+
+            if (key >= Key.NumPad0 && key <= Key.NumPad9)
+            {
+                digit = (char)('0' + (key - Key.NumPad0));
+                return true;
+            }
+
+            return false;
         }
 
         private string GetLastActionForUser(string userFile)
@@ -254,7 +354,7 @@ namespace TimeClock.Client
 
             var tipo = last[1];
             var when = DateTime.TryParse(last[0], out var dt)
-                ? dt.ToString("dd/MM HH:mm")
+                ? dt.ToString("dd/MM/yyyy HH:mm")
                 : last[0];
 
             return $"Ultima: {tipo} ({when})";
