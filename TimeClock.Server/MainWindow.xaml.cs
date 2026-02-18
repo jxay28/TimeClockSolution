@@ -9,11 +9,25 @@ using TimeClock.Core.Models;
 using TimeClock.Core.Services;
 using System.Text.Json;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 using TimeClock.Server.Services;
 
 
 namespace TimeClock.Server
 {
+    public class DashboardRow
+    {
+        public string Matricola { get; set; } = "000";
+        public string Nome { get; set; } = string.Empty;
+        public string Stato { get; set; } = "Fuori";
+        public Brush StatoBrush { get; set; } = Brushes.IndianRed;
+        public string UltimaTimbrata { get; set; } = "-";
+        public DateTime? InizioDentro { get; set; }
+        public string TempoDentro { get; set; } = "-";
+    }
+
     public partial class MainWindow : Window
     {
         private static readonly (int Mese, int Giorno, string Nome)[] FestivitaNazionaliFisse =
@@ -36,6 +50,7 @@ namespace TimeClock.Server
         // elenco utenti caricati
         private List<UserProfile> _users = new List<UserProfile>();
         private readonly UserDataMigrationService _migrationService = new();
+        private readonly DispatcherTimer _dashboardTimer = new DispatcherTimer();
 
         // i parametri globali sono gestiti in App.ParametriGlobali
 
@@ -61,6 +76,10 @@ namespace TimeClock.Server
                 _csvFolder = string.Empty;
                 App.ConfigureDataFolder(null);
             }
+
+            _dashboardTimer.Interval = TimeSpan.FromSeconds(1);
+            _dashboardTimer.Tick += DashboardTimer_Tick;
+            _dashboardTimer.Start();
         }
 
         /// <summary>
@@ -135,6 +154,8 @@ namespace TimeClock.Server
                 combo.ItemsSource = null;
                 combo.ItemsSource = _users;
             }
+
+            RefreshDashboard();
         }
         /// <summary>
         /// Salva gli utenti su utenti.json (master) e genera anche utenti.csv per compatibilità.
@@ -273,7 +294,7 @@ namespace TimeClock.Server
                 if (int.TryParse(btn.Tag.ToString(), out int index))
                 {
                     // Accesso rapido: dal menu "Report" apre direttamente la finestra report.
-                    if (index == 2)
+                    if (index == 3)
                     {
                         GenerateReport_Click(sender, e);
                         return;
@@ -302,6 +323,106 @@ namespace TimeClock.Server
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Drag solo da header: evita effetti collaterali sui controlli del contenuto.
+            if (e.LeftButton == MouseButtonState.Pressed)
+                this.DragMove();
+        }
+
+        private void RefreshDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshDashboard();
+        }
+
+        private void RefreshDashboard()
+        {
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+            {
+                DashboardGrid.ItemsSource = new List<DashboardRow>();
+                return;
+            }
+
+            var repo = new CsvRepository();
+            var rows = new List<DashboardRow>();
+
+            foreach (var user in _users.OrderBy(u => u.SequenceNumber))
+            {
+                string userFile = Path.Combine(_csvFolder, $"{user.Id}.csv");
+                string stato = "Fuori";
+                Brush color = Brushes.IndianRed;
+                string ultimaTimbrata = "-";
+
+                DateTime? lastPunchTime = null;
+
+                if (File.Exists(userFile))
+                {
+                    var punches = repo.Load(userFile).ToList();
+                    if (punches.Any())
+                    {
+                        var last = punches.Last();
+                        string tipo = last.ElementAtOrDefault(1) ?? string.Empty;
+                        string tsRaw = last.ElementAtOrDefault(0) ?? string.Empty;
+
+                        if (DateTime.TryParse(tsRaw, out var ts))
+                        {
+                            lastPunchTime = ts;
+                            ultimaTimbrata = ts.ToString("dd/MM/yyyy HH:mm");
+                        }
+                        else if (!string.IsNullOrWhiteSpace(tsRaw))
+                            ultimaTimbrata = tsRaw;
+
+                        if (string.Equals(tipo, "Entrata", StringComparison.OrdinalIgnoreCase))
+                        {
+                            stato = "Dentro";
+                            color = Brushes.MediumSeaGreen;
+                        }
+                    }
+                }
+
+                rows.Add(new DashboardRow
+                {
+                    Matricola = $"{Math.Max(0, user.SequenceNumber):D3}",
+                    Nome = $"{user.Nome} {user.Cognome}".Trim(),
+                    Stato = stato,
+                    StatoBrush = color,
+                    UltimaTimbrata = ultimaTimbrata,
+                    InizioDentro = stato == "Dentro" ? lastPunchTime : null,
+                    TempoDentro = stato == "Dentro" ? FormattaTempoDentro(lastPunchTime) : "-"
+                });
+            }
+
+            DashboardGrid.ItemsSource = rows;
+            DashboardGrid.Items.Refresh();
+        }
+
+        private void DashboardTimer_Tick(object? sender, EventArgs e)
+        {
+            if (DashboardGrid.ItemsSource is not IEnumerable<DashboardRow> rows)
+                return;
+
+            foreach (var row in rows)
+            {
+                row.TempoDentro = row.Stato == "Dentro"
+                    ? FormattaTempoDentro(row.InizioDentro)
+                    : "-";
+            }
+
+            DashboardGrid.Items.Refresh();
+        }
+
+        private string FormattaTempoDentro(DateTime? inizioDentro)
+        {
+            if (!inizioDentro.HasValue)
+                return "-";
+
+            var span = DateTime.Now - inizioDentro.Value;
+            if (span.TotalSeconds < 0)
+                span = TimeSpan.Zero;
+
+            return $"{(int)span.TotalHours:00}:{span.Minutes:00}:{span.Seconds:00}";
         }
 
         /// <summary>
@@ -348,6 +469,8 @@ namespace TimeClock.Server
                         combo.ItemsSource = _users;
                     }
 
+                    RefreshDashboard();
+
                     AuditLogger.Log(_csvFolder, "add_user", $"id={dlg.User.Id}; nome={dlg.User.Nome} {dlg.User.Cognome}; seq={dlg.User.SequenceNumber}");
                     MessageBox.Show("Utente aggiunto con successo");
                 }
@@ -374,6 +497,7 @@ namespace TimeClock.Server
             }
 
             SaveUsers();
+            RefreshDashboard();
             AuditLogger.Log(_csvFolder, "save_users_grid", $"utenti={_users.Count}");
             MessageBox.Show("Modifiche anagrafica salvate.");
         }

@@ -47,7 +47,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- HEADER SUPERIORE -->
-                <DockPanel Grid.Row="0">
+                <DockPanel Grid.Row="0" MouseLeftButtonDown="Header_MouseLeftButtonDown">
                     <TextBlock Text="TimeClock Server"
                                FontSize="28"
                                FontWeight="Bold"
@@ -91,21 +91,25 @@
                                    Foreground="White"
                                    Margin="0,0,0,10"/>
 
-                        <Button Content="Anagrafica utenti"
+                        <Button Content="Dashboard"
                                 Style="{StaticResource GlassButton}"
                                 Tag="0"
                                 Click="Menu_Click"/>
-                        <Button Content="Parametri"
+                        <Button Content="Anagrafica utenti"
                                 Style="{StaticResource GlassButton}"
                                 Tag="1"
                                 Click="Menu_Click"/>
-                        <Button Content="Report"
+                        <Button Content="Parametri"
                                 Style="{StaticResource GlassButton}"
                                 Tag="2"
                                 Click="Menu_Click"/>
-                        <Button Content="Cartella CSV"
+                        <Button Content="Report"
                                 Style="{StaticResource GlassButton}"
                                 Tag="3"
+                                Click="Menu_Click"/>
+                        <Button Content="Opzioni"
+                                Style="{StaticResource GlassButton}"
+                                Tag="4"
                                 Click="Menu_Click"/>
 
                     </StackPanel>
@@ -119,8 +123,61 @@
                                     Background="Transparent"
                                     BorderThickness="0" Cursor="">
 
+                            <!-- DASHBOARD -->
+                            <TabItem Header="Dashboard" IsSelected="True" VerticalAlignment="Bottom">
+                                <Grid Margin="20">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <DockPanel Margin="0,0,0,12">
+                                        <TextBlock Text="Stato matricole"
+                                                   FontSize="18"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White"
+                                                   DockPanel.Dock="Left"/>
+                                        <Button Content="Aggiorna"
+                                                Width="120"
+                                                Style="{StaticResource GlassButton}"
+                                                HorizontalAlignment="Right"
+                                                Click="RefreshDashboard_Click"/>
+                                    </DockPanel>
+
+                                    <DataGrid x:Name="DashboardGrid"
+                                              Grid.Row="1"
+                                              AutoGenerateColumns="False"
+                                              Background="#15FFFFFF"
+                                              Foreground="Black"
+                                              HeadersVisibility="Column"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              IsReadOnly="True"
+                                              BorderBrush="#40FFFFFF"
+                                              BorderThickness="1"
+                                              RowHeight="34">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Matricola" Binding="{Binding Matricola}" Width="100"/>
+                                            <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*"/>
+                                            <DataGridTemplateColumn Header="Stato" Width="120">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <Ellipse Width="10" Height="10" Fill="{Binding StatoBrush}" Margin="0,0,8,0"/>
+                                                            <TextBlock Text="{Binding Stato}" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                            <DataGridTextColumn Header="Ultima timbrata" Binding="{Binding UltimaTimbrata}" Width="180"/>
+                                            <DataGridTextColumn Header="Tempo dentro" Binding="{Binding TempoDentro}" Width="130"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </TabItem>
+
                             <!-- ANAGRAFICA -->
-                            <TabItem Header="Anagrafica utenti" IsSelected="True" VerticalAlignment="Bottom">
+                            <TabItem Header="Anagrafica utenti" VerticalAlignment="Bottom">
                                 <Grid Margin="20">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -294,8 +351,8 @@
                                 </StackPanel>
                             </TabItem>
 
-                            <!-- CARTELLA -->
-                            <TabItem Header="Cartella CSV">
+                            <!-- OPZIONI -->
+                            <TabItem Header="Opzioni">
                                 <StackPanel Margin="20">
                                     <TextBlock Text="Percorso cartella condivisa:"
                                                Foreground="White"/>
