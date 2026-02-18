@@ -1007,8 +1007,8 @@ namespace TimeClock.Server
                 currentRow.Entrata1 = "08:00";
                 currentRow.Uscita1 = "12:00";
 
-                // Ricalcoliamo la riga corrente
-                RicalcolaLogicaRiga(currentRow);
+                // Ricalcoliamo tutto il giorno
+                RicalcolaLogicaGiorno(currentRow.Giorno);
             }
             else if (string.IsNullOrWhiteSpace(currentRow.Entrata2))
             {
@@ -1016,8 +1016,8 @@ namespace TimeClock.Server
                 currentRow.Entrata2 = "13:00";
                 currentRow.Uscita2 = "17:00";
 
-                // Ricalcoliamo la riga corrente
-                RicalcolaLogicaRiga(currentRow);
+                // Ricalcoliamo tutto il giorno
+                RicalcolaLogicaGiorno(currentRow.Giorno);
             }
             else
             {
@@ -1036,8 +1036,8 @@ namespace TimeClock.Server
                     listaRighe.Insert(index + 1, newRow);
                     nuovaRigaCreata = true;
 
-                    // Ricalcoliamo la nuova riga
-                    RicalcolaLogicaRiga(newRow);
+                    // Ricalcoliamo tutto il giorno
+                    RicalcolaLogicaGiorno(newRow.Giorno);
                 }
             }
 
