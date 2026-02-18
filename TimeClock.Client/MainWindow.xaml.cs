@@ -167,10 +167,13 @@ namespace TimeClock.Client
                     EntrataButton.IsEnabled = true;
                     SetStatus($"{user.FullName}: fuori (attesa entrata).");
                 }
+
+                _statusVm.LastActionText = GetLastActionForUser(userFile);
             }
             else
             {
                 SetStatus("Seleziona un utente.");
+                _statusVm.LastActionText = "N/A";
             }
         }
 
@@ -234,6 +237,27 @@ namespace TimeClock.Client
         private void SetLastAction(string message)
         {
             _statusVm.LastActionText = $"{DateTime.Now:HH:mm:ss} - {message}";
+        }
+
+        private string GetLastActionForUser(string userFile)
+        {
+            if (!File.Exists(userFile))
+                return "Nessuna timbratura registrata";
+
+            var lines = _repo.Load(userFile).ToList();
+            if (!lines.Any())
+                return "Nessuna timbratura registrata";
+
+            var last = lines.Last();
+            if (last.Length < 2)
+                return "Ultima timbratura non valida";
+
+            var tipo = last[1];
+            var when = DateTime.TryParse(last[0], out var dt)
+                ? dt.ToString("dd/MM HH:mm")
+                : last[0];
+
+            return $"Ultima: {tipo} ({when})";
         }
 
 
