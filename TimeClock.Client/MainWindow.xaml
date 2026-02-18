@@ -117,7 +117,7 @@
                                                FontWeight="SemiBold"
                                                Foreground="#DD111827"/>
                                     <TextBlock x:Name="StatusTextBlock"
-                                               Text="Nessun utente selezionato"
+                                               Text="{Binding StatusText}"
                                                Margin="0,4,0,0"
                                                FontSize="12"
                                                Foreground="#BB111827"/>
@@ -184,7 +184,7 @@
                                            FontSize="11"
                                            Foreground="#AA111827"/>
                                 <TextBlock x:Name="LastActionTextBlock"
-                                           Text="N/A"
+                                           Text="{Binding LastActionText}"
                                            FontSize="11"
                                            Foreground="#DD111827"/>
                             </StackPanel>

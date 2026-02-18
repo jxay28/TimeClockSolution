@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using TimeClock.Core.Models;
 using TimeClock.Core.Services;
 using System.Windows.Input;
+using TimeClock.Client.ViewModels;
 
 namespace TimeClock.Client
 {
@@ -14,12 +15,14 @@ namespace TimeClock.Client
     {
         private List<UserProfile> _users = new();
         private readonly CsvRepository _repo = new();
+        private readonly ClientStatusViewModel _statusVm = new();
 
         private string _csvFolder = string.Empty;   // ? variabile definitiva per la cartella
 
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = _statusVm;
 
             // ?? Carica la cartella salvata nelle impostazioni
             _csvFolder = Properties.Settings.Default.CsvFolderPath;
@@ -28,11 +31,13 @@ namespace TimeClock.Client
             {
                 SharedFolderTextBox.Text = _csvFolder;
                 LoadUsers();
+                SetStatus("Cartella condivisa caricata.");
             }
             else
             {
                 SharedFolderTextBox.Text = "Nessuna cartella selezionata";
                 _csvFolder = string.Empty;
+                SetStatus("Seleziona la cartella condivisa per iniziare.");
             }
         }
 
@@ -51,6 +56,7 @@ namespace TimeClock.Client
                     Properties.Settings.Default.Save();
 
                     LoadUsers();
+                    SetStatus("Cartella condivisa aggiornata.");
                 }
             }
         }
@@ -63,11 +69,17 @@ namespace TimeClock.Client
             _users.Clear();
 
             if (string.IsNullOrWhiteSpace(_csvFolder))
+            {
+                SetStatus("Cartella non impostata.");
                 return;
+            }
 
             var path = Path.Combine(_csvFolder, "utenti.csv");
             if (!File.Exists(path))
+            {
+                SetStatus("File utenti.csv non trovato.");
                 return;
+            }
 
             var list = new List<UserProfile>();
 
@@ -113,6 +125,9 @@ namespace TimeClock.Client
             _users = list;
             UserComboBox.ItemsSource = _users;
             UserComboBox.DisplayMemberPath = "FullName";
+            SetStatus(_users.Count > 0
+                ? $"Utenti caricati: {_users.Count}."
+                : "Nessun utente disponibile.");
         }
 
 
@@ -143,9 +158,19 @@ namespace TimeClock.Client
                 }
 
                 if (string.Equals(lastType, "Entrata", StringComparison.OrdinalIgnoreCase))
+                {
                     UscitaButton.IsEnabled = true;
+                    SetStatus($"{user.FullName}: dentro (attesa uscita).");
+                }
                 else
+                {
                     EntrataButton.IsEnabled = true;
+                    SetStatus($"{user.FullName}: fuori (attesa entrata).");
+                }
+            }
+            else
+            {
+                SetStatus("Seleziona un utente.");
             }
         }
 
@@ -166,10 +191,12 @@ namespace TimeClock.Client
                 _repo.AppendLine(path, line);
                 AuditLogger.Log(_csvFolder, "punch_in", $"user={user.Id}; at={DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
                 UpdateButtonsState();
+                SetLastAction($"Entrata registrata per {user.FullName}");
             }
             catch (IOException ex)
             {
                 MessageBox.Show($"Errore scrittura: {ex.Message}");
+                SetLastAction("Errore durante registrazione entrata");
             }
         }
 
@@ -189,11 +216,24 @@ namespace TimeClock.Client
                 _repo.AppendLine(path, line);
                 AuditLogger.Log(_csvFolder, "punch_out", $"user={user.Id}; at={DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
                 UpdateButtonsState();
+                SetLastAction($"Uscita registrata per {user.FullName}");
             }
             catch (IOException ex)
             {
                 MessageBox.Show($"Errore scrittura: {ex.Message}");
+                SetLastAction("Errore durante registrazione uscita");
             }
+        }
+
+        private void SetStatus(string message)
+        {
+            _statusVm.StatusText = message;
+            _statusVm.RefreshStatusCommand.Execute(null);
+        }
+
+        private void SetLastAction(string message)
+        {
+            _statusVm.LastActionText = $"{DateTime.Now:HH:mm:ss} - {message}";
         }
 
 
