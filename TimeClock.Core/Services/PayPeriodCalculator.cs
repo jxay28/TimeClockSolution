@@ -36,21 +36,7 @@ namespace TimeClock.Core.Services
                 .GroupBy(p => p.In.Date)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            var policy = new WorkTimePolicy
-            {
-                RoundEntryUp = true,
-                RoundExitDown = true,
-                RoundingBlockMinutes = _settings.UnitaArrotondamentoMinuti > 0 ? _settings.UnitaArrotondamentoMinuti : 15,
-                OvertimeThresholdMinutes = _settings.SogliaMinuti > 0 ? _settings.SogliaMinuti : 15,
-                OvertimeBlockMinutes = _settings.UnitaArrotondamentoMinuti > 0 ? _settings.UnitaArrotondamentoMinuti : 15,
-                DeficitRecoveryBlockMinutes = _settings.SogliaMinuti > 0 ? _settings.SogliaMinuti : 15,
-                AlwaysHolidayDays = new List<DayOfWeek>(),
-                RecurringHolidays = _holidays
-                    .Select(h => (Month: h.Data.Month, Day: h.Data.Day))
-                    .Distinct()
-                    .ToList(),
-                AdditionalHolidayDates = _holidays.Select(h => h.Data.Date).ToHashSet()
-            };
+            var policy = WorkTimePolicyFactory.FromOvertimeSettings(_settings, _holidays);
 
             int ordinaryMinutes = 0;
             int overtimeMinutes = 0;

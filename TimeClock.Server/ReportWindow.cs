@@ -507,34 +507,7 @@ namespace TimeClock.Server
 
         private WorkTimePolicy BuildWorkTimePolicy()
         {
-            var p = App.ParametriGlobali;
-
-            int soglia = p?.SogliaMinutiStraordinario > 0
-                ? p.SogliaMinutiStraordinario
-                : 15;
-
-            return new WorkTimePolicy
-            {
-                RoundEntryUp = true,
-                RoundExitDown = true,
-                RoundingBlockMinutes = soglia,
-                OvertimeThresholdMinutes = soglia,
-                OvertimeBlockMinutes = soglia,
-                DeficitRecoveryBlockMinutes = soglia,
-                AlwaysHolidayDays = p?.GiorniSempreFestivi?.ToList() ?? new List<DayOfWeek>
-                {
-                    DayOfWeek.Saturday,
-                    DayOfWeek.Sunday
-                },
-                RecurringHolidays = p?.FestivitaRicorrenti?
-                    .Select(f => (Month: f.Mese, Day: f.Giorno))
-                    .ToList()
-                    ?? new List<(int Month, int Day)>(),
-                AdditionalHolidayDates = p?.FestivitaAggiuntive?
-                    .Select(d => d.Date)
-                    .ToHashSet()
-                    ?? new HashSet<DateTime>()
-            };
+            return WorkTimePolicyFactory.FromGlobalParameters(App.ParametriGlobali);
         }
 
         // Funzione helper per confrontare orari reali con previsti
