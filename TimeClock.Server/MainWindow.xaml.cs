@@ -9,6 +9,7 @@ using TimeClock.Core.Models;
 using TimeClock.Core.Services;
 using System.Text.Json;
 using System.Windows.Controls;
+using TimeClock.Server.Services;
 
 
 namespace TimeClock.Server
@@ -34,6 +35,7 @@ namespace TimeClock.Server
 
         // elenco utenti caricati
         private List<UserProfile> _users = new List<UserProfile>();
+        private readonly UserDataMigrationService _migrationService = new();
 
         // i parametri globali sono gestiti in App.ParametriGlobali
 
@@ -100,55 +102,17 @@ namespace TimeClock.Server
             {
                 try
                 {
-                    var repo = new CsvRepository();
-
-                    foreach (var fields in repo.Load(csvPath))
+                    if (_migrationService.TryMigrateCsvToJsonWithBackup(csvPath, jsonPath, out var migratedUsers, out var backupPath))
                     {
-                        try
-                        {
-                            var user = new UserProfile
-                            {
-                                Id = fields.ElementAtOrDefault(0) ?? string.Empty,
-                                SequenceNumber = int.TryParse(fields.ElementAtOrDefault(1), out var seq) ? seq : 0,
-                                Nome = fields.ElementAtOrDefault(2) ?? string.Empty,
-                                Cognome = fields.ElementAtOrDefault(3) ?? string.Empty,
-                                Ruolo = fields.ElementAtOrDefault(4) ?? string.Empty,
-                                DataAssunzione = DateTime.TryParse(fields.ElementAtOrDefault(5), out var d) ? d : DateTime.MinValue,
-                                OreContrattoSettimanali = double.TryParse(fields.ElementAtOrDefault(6),
-                                    System.Globalization.NumberStyles.Any,
-                                    System.Globalization.CultureInfo.InvariantCulture,
-                                    out var ore)
-                                    ? ore
-                                    : 0,
-                                CompensoOrarioBase = decimal.TryParse(fields.ElementAtOrDefault(7),
-                                    System.Globalization.NumberStyles.Any,
-                                    System.Globalization.CultureInfo.InvariantCulture,
-                                    out var cb)
-                                    ? cb
-                                    : 0,
-                                CompensoOrarioExtra = decimal.TryParse(fields.ElementAtOrDefault(8),
-                                    System.Globalization.NumberStyles.Any,
-                                    System.Globalization.CultureInfo.InvariantCulture,
-                                    out var ce)
-                                    ? ce
-                                    : 0,
-                                // Campi extra orari (se non ci sono nel CSV restano vuoti)
-                                OrarioIngresso1 = fields.ElementAtOrDefault(9),
-                                OrarioUscita1 = fields.ElementAtOrDefault(10),
-                                OrarioIngresso2 = fields.ElementAtOrDefault(11),
-                                OrarioUscita2 = fields.ElementAtOrDefault(12)
-                            };
-
-                            _users.Add(user);
-                        }
-                        catch
-                        {
-                            // ignora la riga malformata
-                        }
+                        _users = migratedUsers;
+                        SaveUsers();
+                        AuditLogger.Log(_csvFolder, "users_migration", $"source=csv; backup={backupPath}; users={_users.Count}");
                     }
-
-                    // una volta caricati dal CSV, salviamo subito in JSON+CSV pulito
-                    SaveUsers();
+                    else
+                    {
+                        // fallback sicuro: carica comunque gli utenti legacy senza toccare i file
+                        _users = _migrationService.LoadUsersLegacyCsv(csvPath);
+                    }
                 }
                 catch (Exception ex)
                 {
