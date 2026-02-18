@@ -195,6 +195,11 @@
                         Width="90"
                         IsReadOnly="True"/>
 
+                        <DataGridTextColumn Header="Ferie"
+                        Binding="{Binding OreFerieVisual}"
+                        Width="90"
+                        IsReadOnly="True"/>
+
                         <DataGridTextColumn Header="Note"
                         Binding="{Binding Note}"
                         Width="*"/>
@@ -220,6 +225,13 @@
                         <StackPanel>
                             <TextBlock Text="Totale ore straordinarie:" Foreground="White" FontSize="16"/>
                             <TextBlock x:Name="TotStraordinarieText" Foreground="Beige" FontSize="20" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="#30FFFFFF" Padding="1" CornerRadius="10" Margin="10">
+                        <StackPanel>
+                            <TextBlock Text="Totale ferie usate:" Foreground="White" FontSize="16"/>
+                            <TextBlock x:Name="TotFerieText" Foreground="Beige" FontSize="20" FontWeight="Bold"/>
                         </StackPanel>
                     </Border>
 

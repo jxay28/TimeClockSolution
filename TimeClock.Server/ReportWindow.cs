@@ -28,6 +28,7 @@ namespace TimeClock.Server
         // Totali matematici
         public double OreOrdinarie { get; set; }
         public double OreStraordinarie { get; set; }
+        public double OreFerie { get; set; }
 
         public bool IsFestivo { get; set; }
         public string? Note { get; set; }
@@ -35,6 +36,7 @@ namespace TimeClock.Server
         // Proprietà visuali per la griglia (Ore totali)
         public string OreOrdinarieVisual => ConvertiDecimaliInOre(OreOrdinarie);
         public string OreStraordinarieVisual => ConvertiDecimaliInOre(OreStraordinarie);
+        public string OreFerieVisual => ConvertiDecimaliInOre(OreFerie);
 
         private string ConvertiDecimaliInOre(double oreDecimali)
         {
@@ -219,6 +221,16 @@ namespace TimeClock.Server
                     if (assenzePerGiorno.TryGetValue(day, out var assenzeGiorno) && assenzeGiorno.Any())
                     {
                         const string warning = "ATTENZIONE: presenti assenze registrate e timbrature nello stesso giorno";
+                        double oreDefault = user.OreContrattoSettimanali > 0
+                            ? Math.Round(user.OreContrattoSettimanali / 5.0, 2)
+                            : 8.0;
+                        double oreFerie = assenzeGiorno
+                            .Where(a => a.Tipo == AbsenceType.Ferie)
+                            .Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
+
+                        if (righeGiorno.Count > 0)
+                            righeGiorno[0].OreFerie = Math.Round(oreFerie, 2);
+
                         foreach (var row in righeGiorno)
                         {
                             row.Note = string.IsNullOrWhiteSpace(row.Note)
@@ -311,7 +323,7 @@ namespace TimeClock.Server
 
             var lines = new List<string>
             {
-                "Giorno\tEntrata1\tUscita1\tEntrata2\tUscita2\tOreOrdinarie\tOreStraordinarie\tFestivo\tNote"
+                "Giorno\tEntrata1\tUscita1\tEntrata2\tUscita2\tOreOrdinarie\tOreStraordinarie\tOreFerie\tFestivo\tNote"
             };
 
             foreach (var r in righe)
@@ -325,6 +337,7 @@ namespace TimeClock.Server
                     r.Uscita2 ?? "",
                     r.OreOrdinarie.ToString("F2", CultureInfo.InvariantCulture),
                     r.OreStraordinarie.ToString("F2", CultureInfo.InvariantCulture),
+                    r.OreFerie.ToString("F2", CultureInfo.InvariantCulture),
                     r.IsFestivo ? "SI" : "NO",
                     r.Note ?? ""
                 }));
@@ -919,8 +932,13 @@ namespace TimeClock.Server
                 : 8.0;
 
             double oreTotali = assenze.Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
+            double oreFerie = assenze
+                .Where(a => a.Tipo == AbsenceType.Ferie)
+                .Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
+
             row.OreOrdinarie = Math.Round(oreTotali, 2);
             row.OreStraordinarie = 0;
+            row.OreFerie = Math.Round(oreFerie, 2);
 
             var tags = assenze
                 .Select(a => $"{a.Tipo} ({(a.Ore > 0 ? a.Ore.ToString("0.##", CultureInfo.InvariantCulture) : oreDefault.ToString("0.##", CultureInfo.InvariantCulture))}h)")
@@ -936,11 +954,13 @@ namespace TimeClock.Server
 
             double totOrd = 0;
             double totExtra = 0;
+            double totFerie = 0;
 
             foreach (var r in righe)
             {
                 totOrd += r.OreOrdinarie;
                 totExtra += r.OreStraordinarie;
+                totFerie += r.OreFerie;
             }
 
             // Funzione locale per convertire in stringa HH:mm
@@ -953,6 +973,7 @@ namespace TimeClock.Server
             // Aggiorniamo le etichette usando la formattazione oraria
             TotOrdinarieText.Text = $"{FormatHours(totOrd)} h";
             TotStraordinarieText.Text = $"{FormatHours(totExtra)} h";
+            TotFerieText.Text = $"{FormatHours(totFerie)} h";
         }
         private void Chiudi_Click(object sender, RoutedEventArgs e)
         {
