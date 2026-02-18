@@ -15,34 +15,11 @@ namespace TimeClock.Core.Services
     /// </summary>
     public sealed class WorkTimeCalculator
     {
+        private readonly PunchPairingService _pairingService = new();
+
         public IReadOnlyList<(DateTime In, DateTime Out)> BuildPairsCrossDay(IEnumerable<TimeCardEntry> entries)
         {
-            var ordered = entries
-                .OrderBy(e => e.DataOra)
-                .ToList();
-
-            var result = new List<(DateTime In, DateTime Out)>();
-            DateTime? openIn = null;
-
-            foreach (var punch in ordered)
-            {
-                if (punch.Tipo == PunchType.Entrata)
-                {
-                    // Se arriva una nuova ENTRATA senza uscita, manteniamo l'ultima ENTRATA come inizio valido.
-                    openIn = punch.DataOra;
-                    continue;
-                }
-
-                if (openIn.HasValue && punch.Tipo == PunchType.Uscita)
-                {
-                    if (punch.DataOra > openIn.Value)
-                        result.Add((openIn.Value, punch.DataOra));
-
-                    openIn = null;
-                }
-            }
-
-            return result;
+            return _pairingService.BuildPairs(entries).Pairs;
         }
 
         public WorkDayResult CalculateDay(
