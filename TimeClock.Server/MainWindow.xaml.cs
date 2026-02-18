@@ -47,6 +47,7 @@ namespace TimeClock.Server
             if (!string.IsNullOrWhiteSpace(_csvFolder) && Directory.Exists(_csvFolder))
             {
                 CsvPathBox.Text = _csvFolder;
+                App.ConfigureDataFolder(_csvFolder);
 
                 // Carica subito i dati
                 LoadUsers();
@@ -56,6 +57,7 @@ namespace TimeClock.Server
             {
                 CsvPathBox.Text = "Nessuna cartella selezionata";
                 _csvFolder = string.Empty;
+                App.ConfigureDataFolder(null);
             }
         }
 
@@ -511,6 +513,7 @@ namespace TimeClock.Server
                 {
                     _csvFolder = dialog.SelectedPath;
                     CsvPathBox.Text = _csvFolder;
+                    App.ConfigureDataFolder(_csvFolder);
 
                     // salva nelle impostazioni utente
                     Properties.Settings.Default.CsvFolderPath = _csvFolder;

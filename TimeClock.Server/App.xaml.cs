@@ -4,38 +4,58 @@ using System.Text.Json;
 using System.Windows;
 using TimeClock.Core.Models;
 using TimeClock.Core.Services;
+using TimeClock.Server.Properties;
 
 namespace TimeClock.Server
 {
     public partial class App : Application
     {
         public static ParametriStraordinari ParametriGlobali;
+        public static string ParametriFilePath { get; private set; } = string.Empty;
+
+        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
-            string file = "parametri_straordinari.json";
-
-            if (File.Exists(file))
-            {
-                ParametriGlobali = JsonSerializer.Deserialize<ParametriStraordinari>(
-                    File.ReadAllText(file));
-            }
-            else
-            {
-                ParametriGlobali = new ParametriStraordinari();
-                SafeFileWriter.WriteAllTextAtomic(file,
-                    JsonSerializer.Serialize(ParametriGlobali, new JsonSerializerOptions { WriteIndented = true }));
-            }
-
+            ConfigureDataFolder(Settings.Default.CsvFolderPath);
             NormalizzaFestivitaNazionaliFisse();
         }
 
         public static void SalvaParametriGlobali()
         {
-            SafeFileWriter.WriteAllTextAtomic("parametri_straordinari.json",
-                JsonSerializer.Serialize(ParametriGlobali, new JsonSerializerOptions { WriteIndented = true }));
+            ParametriGlobali ??= new ParametriStraordinari();
+            EnsureParametriPathInitialized();
+            SafeFileWriter.WriteAllTextAtomic(ParametriFilePath, JsonSerializer.Serialize(ParametriGlobali, JsonOptions));
+        }
+
+        public static void ConfigureDataFolder(string? csvFolderPath)
+        {
+            string previousPath = ParametriFilePath;
+            ParametriFilePath = ResolveParametriPath(csvFolderPath);
+            EnsureFolderExistsForFile(ParametriFilePath);
+
+            if (!string.IsNullOrWhiteSpace(previousPath) &&
+                !string.Equals(previousPath, ParametriFilePath, System.StringComparison.OrdinalIgnoreCase) &&
+                File.Exists(previousPath) &&
+                !File.Exists(ParametriFilePath))
+            {
+                File.Copy(previousPath, ParametriFilePath, overwrite: false);
+            }
+
+            if (File.Exists(ParametriFilePath))
+            {
+                ParametriGlobali = JsonSerializer.Deserialize<ParametriStraordinari>(File.ReadAllText(ParametriFilePath))
+                    ?? new ParametriStraordinari();
+            }
+            else
+            {
+                ParametriGlobali = new ParametriStraordinari();
+                SafeFileWriter.WriteAllTextAtomic(ParametriFilePath, JsonSerializer.Serialize(ParametriGlobali, JsonOptions));
+            }
         }
 
         private static void NormalizzaFestivitaNazionaliFisse()
@@ -57,6 +77,30 @@ namespace TimeClock.Server
                 .ToList();
 
             SalvaParametriGlobali();
+        }
+
+        private static void EnsureParametriPathInitialized()
+        {
+            if (!string.IsNullOrWhiteSpace(ParametriFilePath))
+                return;
+
+            ParametriFilePath = ResolveParametriPath(Settings.Default.CsvFolderPath);
+            EnsureFolderExistsForFile(ParametriFilePath);
+        }
+
+        private static string ResolveParametriPath(string? csvFolderPath)
+        {
+            if (!string.IsNullOrWhiteSpace(csvFolderPath) && Directory.Exists(csvFolderPath))
+                return Path.Combine(csvFolderPath, "parametri_straordinari.json");
+
+            return Path.Combine(AppContext.BaseDirectory, "parametri_straordinari.json");
+        }
+
+        private static void EnsureFolderExistsForFile(string filePath)
+        {
+            var folder = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
         }
     }
 }
