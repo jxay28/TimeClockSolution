@@ -187,6 +187,7 @@ namespace TimeClock.Server
                 {
                     var coppieGiorno = gruppiPerGiorno[day];
                     coppieGiorno = coppieGiorno.OrderBy(c => c.Ingresso).ToList();
+                    var righeGiorno = new List<ReportRow>();
 
                     int index = 0;
                     // CICLO WHILE per gestire più righe nello stesso giorno (> 4 timbrate)
@@ -200,33 +201,31 @@ namespace TimeClock.Server
                         row.Uscita1 = c1.Uscita.ToString("HH:mm");
                         index++;
 
-                        // Coppia 2 (opzionale)
-                        // Usiamo la sintassi corretta per il Nullable Tuple
-                        (DateTime, DateTime)? c2 = null;
-
                         if (index < coppieGiorno.Count)
                         {
                             var pair2 = coppieGiorno[index];
-                            c2 = pair2;
-
                             row.Entrata2 = pair2.Ingresso.ToString("HH:mm");
                             row.Uscita2 = pair2.Uscita.ToString("HH:mm");
                             index++;
                         }
 
-                        // Calcolo ore
-                        CalcolaTotaliRiga(row, dataCorrente, user, c1, c2);
+                        righeGiorno.Add(row);
+                    }
 
-                        if (assenzePerGiorno.TryGetValue(day, out var assenzeGiorno) && assenzeGiorno.Any())
+                    ApplicaCalcoloGiornalieroSuRighe(righeGiorno, dataCorrente, user, coppieGiorno);
+
+                    if (assenzePerGiorno.TryGetValue(day, out var assenzeGiorno) && assenzeGiorno.Any())
+                    {
+                        const string warning = "ATTENZIONE: presenti assenze registrate e timbrature nello stesso giorno";
+                        foreach (var row in righeGiorno)
                         {
                             row.Note = string.IsNullOrWhiteSpace(row.Note)
-                                ? "ATTENZIONE: presenti assenze registrate e timbrature nello stesso giorno"
-                                : row.Note + " | ATTENZIONE: presenti assenze registrate e timbrature nello stesso giorno";
+                                ? warning
+                                : row.Note + " | " + warning;
                         }
-
-                        // Aggiungiamo alla lista TEMPORANEA (non alla Grid!)
-                        righeReport.Add(row);
                     }
+
+                    righeReport.AddRange(righeGiorno);
                 }
             } // FINE CICLO FOR
 
@@ -251,8 +250,8 @@ namespace TimeClock.Server
                 var row = e.Row.Item as ReportRow;
                 if (row != null)
                 {
-                    // Ricalcoliamo solo questa riga
-                    RicalcolaLogicaRiga(row);
+                    // Ricalcoliamo l'intera giornata (se ci sono più righe con lo stesso giorno).
+                    RicalcolaLogicaGiorno(row.Giorno);
 
                     // Aggiorniamo la grafica della riga (necessario per forzare il refresh delle colonne Ordinarie/Extra)
 
@@ -271,44 +270,20 @@ namespace TimeClock.Server
 
         // 2. LOGICA: Questa funzione prende una riga, legge le stringhe (es "23:00") 
         // e rifà i calcoli matematici applicando le regole (notturno, 8 ore, ecc)
-        private void RicalcolaLogicaRiga(ReportRow r)
+        private void RicalcolaLogicaGiorno(int giorno)
         {
             var user = UserCombo.SelectedItem as UserProfile;
             if (user == null || MonthCombo.SelectedIndex < 0 || YearCombo.SelectedItem is not int year) return;
+            var righe = (ReportGrid.ItemsSource as IEnumerable<ReportRow>)?.ToList();
+            if (righe == null) return;
 
             int month = MonthCombo.SelectedIndex + 1;
-            DateTime dataBase = new DateTime(year, month, r.Giorno);
+            DateTime dataBase = new DateTime(year, month, giorno);
+            var righeGiorno = righe.Where(x => x.Giorno == giorno).ToList();
+            if (!righeGiorno.Any()) return;
 
-            // --- RICOSTRUZIONE COPPIA 1 ---
-            (DateTime, DateTime)? c1 = null;
-            if (!string.IsNullOrWhiteSpace(r.Entrata1) && !string.IsNullOrWhiteSpace(r.Uscita1))
-            {
-                if (TimeSpan.TryParse(r.Entrata1, out var tIn1) && TimeSpan.TryParse(r.Uscita1, out var tOut1))
-                {
-                    DateTime dtIn = dataBase.Add(tIn1);
-                    DateTime dtOut = dataBase.Add(tOut1);
-                    // Fix Notturno
-                    if (tOut1 < tIn1) dtOut = dtOut.AddDays(1);
-                    c1 = (dtIn, dtOut);
-                }
-            }
-
-            // --- RICOSTRUZIONE COPPIA 2 ---
-            (DateTime, DateTime)? c2 = null;
-            if (!string.IsNullOrWhiteSpace(r.Entrata2) && !string.IsNullOrWhiteSpace(r.Uscita2))
-            {
-                if (TimeSpan.TryParse(r.Entrata2, out var tIn2) && TimeSpan.TryParse(r.Uscita2, out var tOut2))
-                {
-                    DateTime dtIn = dataBase.Add(tIn2);
-                    DateTime dtOut = dataBase.Add(tOut2);
-                    // Fix Notturno
-                    if (tOut2 < tIn2) dtOut = dtOut.AddDays(1);
-                    c2 = (dtIn, dtOut);
-                }
-            }
-
-            // Chiamata al calcolatore centrale (quello con la regola delle 8 ore)
-            CalcolaTotaliRiga(r, dataBase, user, c1, c2);
+            var coppieGiorno = EstraiCoppieDaRighe(righeGiorno, dataBase);
+            ApplicaCalcoloGiornalieroSuRighe(righeGiorno, dataBase, user, coppieGiorno);
         }
 
         // ===========================
@@ -422,6 +397,112 @@ namespace TimeClock.Server
             row.Note = result.Notes.Any()
                 ? string.Join(" | ", result.Notes)
                 : null;
+        }
+
+        private List<(DateTime Ingresso, DateTime Uscita)> EstraiCoppieDaRighe(List<ReportRow> righeGiorno, DateTime dataBase)
+        {
+            var pairs = new List<(DateTime Ingresso, DateTime Uscita)>();
+
+            foreach (var row in righeGiorno)
+            {
+                if (TryBuildPair(dataBase, row.Entrata1, row.Uscita1, out var p1))
+                    pairs.Add(p1);
+                if (TryBuildPair(dataBase, row.Entrata2, row.Uscita2, out var p2))
+                    pairs.Add(p2);
+            }
+
+            return pairs
+                .OrderBy(p => p.Ingresso)
+                .ToList();
+        }
+
+        private static bool TryBuildPair(DateTime dataBase, string? entrata, string? uscita, out (DateTime Ingresso, DateTime Uscita) pair)
+        {
+            pair = default;
+
+            if (string.IsNullOrWhiteSpace(entrata) || string.IsNullOrWhiteSpace(uscita))
+                return false;
+
+            if (!TimeSpan.TryParse(entrata, out var tIn) || !TimeSpan.TryParse(uscita, out var tOut))
+                return false;
+
+            DateTime inDt = dataBase.Add(tIn);
+            DateTime outDt = dataBase.Add(tOut);
+            if (tOut < tIn)
+                outDt = outDt.AddDays(1);
+
+            if (outDt < inDt)
+                return false;
+
+            pair = (inDt, outDt);
+            return true;
+        }
+
+        private void ApplicaCalcoloGiornalieroSuRighe(
+            List<ReportRow> righeGiorno,
+            DateTime dataRiferimento,
+            UserProfile user,
+            List<(DateTime Ingresso, DateTime Uscita)> coppieGiorno)
+        {
+            if (righeGiorno == null || righeGiorno.Count == 0)
+                return;
+
+            var policy = BuildWorkTimePolicy();
+            var result = _workTimeCalculator.CalculateDay(
+                user,
+                dataRiferimento,
+                coppieGiorno.Select(c => (c.Ingresso, c.Uscita)),
+                policy);
+
+            var ordByRow = new int[righeGiorno.Count];
+            var extByRow = new int[righeGiorno.Count];
+
+            int ordinaryRemaining = Math.Max(0, result.OrdinaryMinutes);
+            int overtimeRemaining = Math.Max(0, result.OvertimeMinutes);
+
+            for (int i = 0; i < result.Pairs.Count; i++)
+            {
+                int rowIndex = i / 2;
+                if (rowIndex >= righeGiorno.Count)
+                    break;
+
+                int pairMinutes = Math.Max(0, result.Pairs[i].DurationMinutes);
+                int ord = Math.Min(pairMinutes, ordinaryRemaining);
+                ordinaryRemaining -= ord;
+
+                int extraPotential = Math.Max(0, pairMinutes - ord);
+                int ext = Math.Min(extraPotential, overtimeRemaining);
+                overtimeRemaining -= ext;
+
+                ordByRow[rowIndex] += ord;
+                extByRow[rowIndex] += ext;
+            }
+
+            for (int i = 0; i < righeGiorno.Count; i++)
+            {
+                var row = righeGiorno[i];
+                row.IsFestivo = result.IsHoliday;
+                row.OreOrdinarie = Math.Round(ordByRow[i] / 60.0, 2);
+                row.OreStraordinarie = Math.Round(extByRow[i] / 60.0, 2);
+                row.Durata1Visual = string.Empty;
+                row.Durata2Visual = string.Empty;
+                row.Note = null;
+            }
+
+            for (int i = 0; i < result.Pairs.Count; i++)
+            {
+                int rowIndex = i / 2;
+                if (rowIndex >= righeGiorno.Count)
+                    break;
+
+                if (i % 2 == 0)
+                    righeGiorno[rowIndex].Durata1Visual = result.Pairs[i].DurationVisual;
+                else
+                    righeGiorno[rowIndex].Durata2Visual = result.Pairs[i].DurationVisual;
+            }
+
+            if (result.Notes.Any())
+                righeGiorno[0].Note = string.Join(" | ", result.Notes);
         }
 
         private WorkTimePolicy BuildWorkTimePolicy()
