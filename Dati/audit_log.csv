@@ -83,3 +83,9 @@
 2026-03-01T22:52:30Z,add_manual_punch,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; day=11; month=3; year=2026
 2026-03-01T22:53:16Z,save_report_edits,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; year=2026; month=3; righe=31
 2026-03-01T22:54:01Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-02-25; tipo=Ferie; ore=4
+2026-03-01T23:00:14Z,save_report_edits,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; year=2026; month=3; righe=31
+2026-03-01T23:00:36Z,add_manual_punch,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; day=11; month=3; year=2026
+2026-03-01T23:01:10Z,save_report_edits,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; year=2026; month=3; righe=31
+2026-03-01T23:01:21Z,save_overtime_params,soglia=0; nazionaliFisse=0; sabato=True; domenica=True; festiviCustom=0
+2026-03-01T23:01:52Z,save_overtime_params,soglia=30; nazionaliFisse=0; sabato=True; domenica=True; festiviCustom=0
+2026-03-01T23:02:13Z,save_overtime_params,soglia=0; nazionaliFisse=0; sabato=True; domenica=True; festiviCustom=0
