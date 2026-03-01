@@ -156,11 +156,10 @@
                             Padding="15">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/> <!-- Pulsanti e Ultima azione -->
+                                <RowDefinition Height="Auto"/> <!-- Riepilogo mensile in basso -->
                             </Grid.RowDefinitions>
 
-                            <!-- Pulsanti Entrata/Uscita -->
                             <StackPanel Grid.Row="0"
                                         VerticalAlignment="Center"
                                         HorizontalAlignment="Center">
@@ -202,29 +201,25 @@
                                             MinWidth="120"
                                             MinHeight="50"/>
                                 </StackPanel>
-                            </StackPanel>
-
-                            <!-- Info in basso -->
-                            <Border Grid.Row="1"
-                                    CornerRadius="8"
-                                    Background="#20FFFFFF"
-                                    Padding="8"
-                                    Margin="0,15,0,0">
-                                <StackPanel Orientation="Vertical">
+                                
+                                <!-- Info Ultima Azione (Spostato qui, senza box grigio) -->
+                                <StackPanel Orientation="Vertical" Margin="0,15,0,0" HorizontalAlignment="Center">
                                     <TextBlock Text="Ultima azione:"
                                                FontSize="11"
-                                               Foreground="#AA111827"/>
+                                               Foreground="#AA111827"
+                                               HorizontalAlignment="Center"/>
                                     <TextBlock x:Name="LastActionTextBlock"
                                                Text="{Binding LastActionText}"
                                                FontSize="11"
                                                Foreground="#DD111827"
                                                TextWrapping="Wrap"
+                                               HorizontalAlignment="Center"
                                                MaxHeight="40"/>
                                 </StackPanel>
-                            </Border>
+                            </StackPanel>
 
-                            <!-- Riquadro Riepilogo Ore Mensili (nuova aggiunta) -->
-                            <Border Grid.Row="2"
+                            <!-- Riquadro Riepilogo Ore Mensili -->
+                            <Border Grid.Row="1"
                                     Margin="0,15,0,0"
                                     Background="#20111827"
                                     CornerRadius="8"
