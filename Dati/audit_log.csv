@@ -44,3 +44,28 @@
 2026-03-01T22:08:21Z,punch_in,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; at=2026-03-01T23:08:21
 2026-03-01T22:19:36Z,punch_in,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-03-01T23:19:36
 2026-03-01T22:19:45Z,punch_out,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-03-01T23:19:45
+2026-03-01T22:24:18Z,punch_in,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-03-01T23:24:18
+2026-03-01T22:24:19Z,punch_out,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-03-01T23:24:19
+2026-03-01T22:24:23Z,punch_in,user=3421c876-cc4a-461f-83c8-ec008f474bc2; at=2026-03-01T23:24:23
+2026-03-01T22:24:24Z,punch_out,user=3421c876-cc4a-461f-83c8-ec008f474bc2; at=2026-03-01T23:24:24
+2026-03-01T22:24:57Z,add_manual_punch,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; day=2; month=3; year=2026
+2026-03-01T22:24:59Z,add_manual_punch,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; day=2; month=3; year=2026
+2026-03-01T22:25:02Z,add_manual_punch,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; day=3; month=3; year=2026
+2026-03-01T22:25:05Z,add_manual_punch,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; day=3; month=3; year=2026
+2026-03-01T22:25:11Z,save_report_edits,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; year=2026; month=3; righe=31
+2026-03-01T22:25:22Z,save_users_grid,utenti=6
+2026-03-01T22:26:29Z,add_manual_punch,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; day=4; month=3; year=2026
+2026-03-01T22:26:58Z,add_manual_punch,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; day=5; month=3; year=2026
+2026-03-01T22:27:07Z,add_manual_punch,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; day=5; month=3; year=2026
+2026-03-01T22:27:25Z,save_report_edits,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; year=2026; month=3; righe=31
+2026-03-01T22:27:34Z,save_users_grid,utenti=6
+2026-03-01T22:27:57Z,punch_in,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; at=2026-03-01T23:27:57
+2026-03-01T22:27:59Z,punch_out,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; at=2026-03-01T23:27:59
+2026-03-01T22:32:32Z,punch_in,user=168b4039-c9ef-48a1-b713-e1ec4d552ebd; at=2026-03-01T23:32:32
+2026-03-01T22:32:38Z,punch_out,user=547bbded-24bb-4c92-8ff2-82fbb72d27f4; at=2026-03-01T23:32:38
+2026-03-01T22:32:39Z,punch_in,user=547bbded-24bb-4c92-8ff2-82fbb72d27f4; at=2026-03-01T23:32:39
+2026-03-01T22:32:42Z,punch_in,user=3421c876-cc4a-461f-83c8-ec008f474bc2; at=2026-03-01T23:32:42
+2026-03-01T22:32:44Z,punch_out,user=2795d340-0f40-4306-aaa5-0b79d4677f48; at=2026-03-01T23:32:44
+2026-03-01T22:32:45Z,punch_in,user=2795d340-0f40-4306-aaa5-0b79d4677f48; at=2026-03-01T23:32:45
+2026-03-01T22:32:47Z,punch_in,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; at=2026-03-01T23:32:47
+2026-03-01T22:32:51Z,punch_in,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-03-01T23:32:51

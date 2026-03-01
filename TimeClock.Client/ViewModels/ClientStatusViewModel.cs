@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace TimeClock.Client.ViewModels
 {
@@ -8,6 +9,35 @@ namespace TimeClock.Client.ViewModels
         private string _statusText = "Nessun utente selezionato";
         private string _lastActionText = "N/A";
         private ICommand? _refreshStatusCommand;
+
+        public ClientStatusViewModel()
+        {
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            timer.Tick += (s, e) => UpdateTime();
+            timer.Start();
+            UpdateTime();
+        }
+
+        private void UpdateTime()
+        {
+            var now = DateTime.Now;
+            CurrentTime = now.ToString("HH:mm:ss");
+            CurrentDate = now.ToString("dddd, dd MMMM yyyy");
+        }
+
+        private string _currentTime = string.Empty;
+        public string CurrentTime
+        {
+            get => _currentTime;
+            set => SetProperty(ref _currentTime, value);
+        }
+
+        private string _currentDate = string.Empty;
+        public string CurrentDate
+        {
+            get => _currentDate;
+            set => SetProperty(ref _currentDate, value);
+        }
 
         public string StatusText
         {

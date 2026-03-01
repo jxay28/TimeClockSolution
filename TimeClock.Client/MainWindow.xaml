@@ -39,7 +39,8 @@
                     <!-- Pulsanti finestra -->
                     <StackPanel DockPanel.Dock="Right"
                                 Orientation="Horizontal"
-                                HorizontalAlignment="Right">
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top">
                         <Button Content="_"
                                 Width="26" Height="22"
                                 Margin="3,0"
@@ -58,6 +59,23 @@
                                 Foreground="White"
                                 FontWeight="Bold"
                                 MinWidth="26"/>
+                    </StackPanel>
+
+                    <!-- Orologio e Data -->
+                    <StackPanel DockPanel.Dock="Right" 
+                                Orientation="Vertical" 
+                                Margin="0,0,20,0" 
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top">
+                        <TextBlock Text="{Binding CurrentTime}"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding CurrentDate}"
+                                   FontSize="11"
+                                   Foreground="#CCFFFFFF"
+                                   HorizontalAlignment="Right"/>
                     </StackPanel>
                 </DockPanel>
 
@@ -175,7 +193,7 @@
                                             HorizontalAlignment="Center">
                                     <Button x:Name="EntrataButton"
                                             Content="Entrata"
-                                            Width="160" Height="60"
+                                            Width="200" Height="100"
                                             Margin="5,0"
                                             Click="EntrataButton_Click"
                                             IsEnabled="False"
@@ -189,7 +207,7 @@
                                             
                                     <Button x:Name="UscitaButton"
                                             Content="Uscita"
-                                            Width="160" Height="60"
+                                            Width="200" Height="100"
                                             Margin="5,0"
                                             Click="UscitaButton_Click"
                                             IsEnabled="False"
