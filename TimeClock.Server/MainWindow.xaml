@@ -510,6 +510,36 @@
                                                 Style="{StaticResource GlassButton}"
                                                 Width="180"
                                                 Click="SaveCompanyInfo_Click"/>
+
+                                        <!-- SICUREZZA E PASSWORD -->
+                                        <Separator Margin="0,18,0,12"/>
+                                        <TextBlock Text="Sicurezza (Accesso al Server)"
+                                                   Foreground="White"
+                                                   FontSize="16"
+                                                   Margin="0,0,0,8"/>
+
+                                        <CheckBox x:Name="EnablePasswordCheck"
+                                                  Content="Richiedi password all'avvio del server"
+                                                  Foreground="White"
+                                                  Margin="0,4,0,8"
+                                                  Checked="EnablePasswordCheck_Changed"
+                                                  Unchecked="EnablePasswordCheck_Changed"/>
+
+                                        <StackPanel x:Name="PasswordPanel" IsEnabled="False" Margin="0,0,0,12">
+                                            <TextBlock Text="Nuova Password" Foreground="White" Margin="0,0,0,4"/>
+                                            <PasswordBox x:Name="ServerPasswordBox"
+                                                         Background="#10FFFFFF"
+                                                         Foreground="White"
+                                                         BorderBrush="#40FFFFFF"
+                                                         Height="26"
+                                                         Margin="0,0,0,8"/>
+                                        </StackPanel>
+
+                                        <Button Content="Salva Password"
+                                                Style="{StaticResource GlassButton}"
+                                                Width="180"
+                                                Click="SalvaPassword_Click"/>
+
                                     </StackPanel>
                                 </ScrollViewer>
                             </TabItem>

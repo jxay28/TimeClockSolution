@@ -80,6 +80,8 @@ namespace TimeClock.Server
                 LoadCompanyInfoUI();
             }
 
+            CheckPasswordOnStartup();
+
             _dashboardTimer.Interval = TimeSpan.FromSeconds(1);
             _dashboardTimer.Tick += DashboardTimer_Tick;
             _dashboardTimer.Start();
@@ -657,6 +659,105 @@ namespace TimeClock.Server
             App.SalvaDatiAzienda();
             AuditLogger.Log(_csvFolder, "save_company_info", $"ragione_sociale={App.DatiAzienda.RagioneSociale}");
             MessageBox.Show("Dati aziendali salvati.");
+        }
+
+        // ===========================
+        //   SICUREZZA E PASSWORD
+        // ===========================
+        private void EnablePasswordCheck_Changed(object sender, RoutedEventArgs e)
+        {
+            if (PasswordPanel != null)
+            {
+                PasswordPanel.IsEnabled = EnablePasswordCheck.IsChecked == true;
+            }
+        }
+
+        private void SalvaPassword_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+            {
+                MessageBox.Show("Seleziona prima la cartella dati.");
+                return;
+            }
+
+            string pwdFilePath = Path.Combine(_csvFolder, "password.csv");
+
+            if (EnablePasswordCheck.IsChecked == true)
+            {
+                var password = ServerPasswordBox.Password;
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    MessageBox.Show("Inserisci una password valida.");
+                    return;
+                }
+
+                try
+                {
+                    File.WriteAllText(pwdFilePath, $"Password,{password}");
+                    ServerPasswordBox.Password = string.Empty;
+                    MessageBox.Show("Password salvata e attivata con successo.");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Errore nel salvare la password: {ex.Message}");
+                }
+            }
+            else
+            {
+                if (File.Exists(pwdFilePath))
+                {
+                    try
+                    {
+                        File.Delete(pwdFilePath);
+                        MessageBox.Show("Protezione con password disattivata.");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Errore nel rimuovere la password: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Protezione con password disattivata.");
+                }
+            }
+        }
+
+        private void CheckPasswordOnStartup()
+        {
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+                return;
+
+            string pwdFilePath = Path.Combine(_csvFolder, "password.csv");
+            if (File.Exists(pwdFilePath))
+            {
+                try
+                {
+                    var lines = File.ReadAllLines(pwdFilePath);
+                    if (lines.Length > 0 && lines[0].StartsWith("Password,"))
+                    {
+                        var parts = lines[0].Split(',');
+                        if (parts.Length == 2)
+                        {
+                            string expectedPwd = parts[1];
+                            var pwdWindow = new PasswordWindow(expectedPwd);
+                            bool? result = pwdWindow.ShowDialog();
+
+                            if (result != true || !pwdWindow.IsAuthenticated)
+                            {
+                                Application.Current.Shutdown();
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Errore nella lettura della password (forse file corrotto). Evitiamo di bloccare o blocchiamo a prescindere? 
+                    // Per sicurezza, se c'è un file password e non possiamo leggerlo blocchiamo tutto.
+                    MessageBox.Show("Impossibile leggere il file delle password. Accesso negato.", "Errore di sicurezza", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Application.Current.Shutdown();
+                }
+            }
         }
 
         // ===========================
