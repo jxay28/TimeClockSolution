@@ -1,0 +1,14 @@
+﻿2026-02-17T21:33:17Z,save_users_grid,utenti=6
+2026-02-17T21:43:29Z,save_overtime_params,soglia=15; nazionaliFisse=0; sabato=True; domenica=True; festiviCustom=0
+2026-02-17T21:43:40Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=1; month=2; year=2026
+2026-02-17T21:43:42Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=1; month=2; year=2026
+2026-02-17T21:43:46Z,save_report_edits,user=2316491c-9976-4e33-92ea-d7229079538c; year=2026; month=2; righe=28
+2026-02-18T20:47:09Z,save_company_info,ragione_sociale=ciao
+2026-02-18T20:48:13Z,save_overtime_params,soglia=15; nazionaliFisse=0; sabato=True; domenica=True; festiviCustom=0
+2026-02-20T17:55:37Z,punch_in,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-02-20T18:55:37
+2026-02-20T17:55:39Z,punch_out,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-02-20T18:55:39
+2026-02-20T17:55:39Z,punch_in,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-02-20T18:55:39
+2026-02-20T17:55:41Z,punch_out,user=2795d340-0f40-4306-aaa5-0b79d4677f48; at=2026-02-20T18:55:41
+2026-02-20T17:55:41Z,punch_in,user=2795d340-0f40-4306-aaa5-0b79d4677f48; at=2026-02-20T18:55:41
+2026-02-20T17:56:13Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=15; month=2; year=2026
+2026-02-20T21:58:20Z,punch_out,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-02-20T22:58:20

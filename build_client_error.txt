@@ -1,0 +1,12 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  TimeClock.Core -> w:\VisualStudio\TimeClockSolution\TimeClock.Core\bin\Debug\net9.0\TimeClock.Core.dll
+w:\VisualStudio\TimeClockSolution\TimeClock.Client\MainWindow.xaml(240,11): error MC3000: 'There are multiple root elements. Line 240, position 11.' XML is not valid. [w:\VisualStudio\TimeClockSolution\TimeClock.Client\TimeClock.Client.csproj]
+
+Build FAILED.
+
+w:\VisualStudio\TimeClockSolution\TimeClock.Client\MainWindow.xaml(240,11): error MC3000: 'There are multiple root elements. Line 240, position 11.' XML is not valid. [w:\VisualStudio\TimeClockSolution\TimeClock.Client\TimeClock.Client.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.39

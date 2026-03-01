@@ -32,6 +32,8 @@ namespace TimeClock.Server
         public double OreOrdinarie { get; set; }
         public double OreStraordinarie { get; set; }
         public double OreFerie { get; set; }
+        public double OrePermesso { get; set; }
+        public double OreMalattia { get; set; }
 
         public bool IsFestivo { get; set; }
         public string? Note { get; set; }
@@ -40,11 +42,13 @@ namespace TimeClock.Server
         public string OreOrdinarieVisual => ConvertiDecimaliInOre(OreOrdinarie);
         public string OreStraordinarieVisual => ConvertiDecimaliInOre(OreStraordinarie);
         public string OreFerieVisual => ConvertiDecimaliInOre(OreFerie);
+        public string OrePermessoVisual => ConvertiDecimaliInOre(OrePermesso);
+        public string OreMalattiaVisual => ConvertiDecimaliInOre(OreMalattia);
 
         private string ConvertiDecimaliInOre(double oreDecimali)
         {
             var ts = TimeSpan.FromHours(oreDecimali);
-            return $"{(int)ts.TotalHours:00}:{ts.Minutes:00}";
+            return $"{(int)ts.TotalHours:00}:{Math.Abs(ts.Minutes):00}";
         }
     }
 
@@ -56,6 +60,9 @@ namespace TimeClock.Server
         private readonly List<UserProfile> _users;
         private readonly WorkTimeCalculator _workTimeCalculator = new();
         private readonly ReportDayCalculationService _reportDayCalculationService = new();
+        private string? _loadedUserId;
+        private int? _loadedMonth;
+        private int? _loadedYear;
 
         public ReportWindow(string csvFolder, List<UserProfile> users)
         {
@@ -85,40 +92,76 @@ namespace TimeClock.Server
         private void CaricaReport_Click(object sender, RoutedEventArgs e)
         {
             var user = UserCombo.SelectedItem as UserProfile;
-            // Controllo input
             if (user == null)
             {
                 MessageBox.Show("Seleziona un utente.");
                 return;
             }
 
-            if (MonthCombo.SelectedIndex < 0)
+            if (!TryGetSelectedMonthYear(out int month, out int year))
             {
-                MessageBox.Show("Seleziona un mese.");
                 return;
             }
 
-            int month = MonthCombo.SelectedIndex + 1;
-            if (YearCombo.SelectedItem is not int year)
-            {
-                MessageBox.Show("Seleziona un anno.");
-                return;
-            }
-
-            // Controllo cartella
             if (string.IsNullOrWhiteSpace(_csvFolder))
             {
                 MessageBox.Show("Cartella CSV non impostata.");
                 return;
             }
 
-            string userFile = System.IO.Path.Combine(_csvFolder, $"{user.Id}.csv");
-            if (!System.IO.File.Exists(userFile))
+            var righeReport = BuildReportRows(user, month, year, out bool hasPunchFile);
+            if (!hasPunchFile)
             {
                 MessageBox.Show($"Nessun file di timbrature trovato per l'utente {user.Nome} {user.Cognome}.");
                 ReportGrid.ItemsSource = new List<ReportRow>();
+                _loadedUserId = null;
+                _loadedMonth = null;
+                _loadedYear = null;
                 return;
             }
+
+            ReportGrid.ItemsSource = null;
+            ReportGrid.ItemsSource = righeReport;
+            _loadedUserId = user.Id;
+            _loadedMonth = month;
+            _loadedYear = year;
+            AggiornaTotali();
+        }
+
+        private bool TryGetSelectedMonthYear(out int month, out int year)
+        {
+            month = 0;
+            year = 0;
+
+            if (MonthCombo.SelectedIndex < 0)
+            {
+                MessageBox.Show("Seleziona un mese.");
+                return false;
+            }
+
+            if (YearCombo.SelectedItem is not int selectedYear)
+            {
+                MessageBox.Show("Seleziona un anno.");
+                return false;
+            }
+
+            month = MonthCombo.SelectedIndex + 1;
+            year = selectedYear;
+            return true;
+        }
+
+        private List<ReportRow> BuildReportRows(UserProfile user, int month, int year, out bool hasPunchFile)
+        {
+            hasPunchFile = false;
+
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+                return new List<ReportRow>();
+
+            string userFile = Path.Combine(_csvFolder, $"{user.Id}.csv");
+            if (!File.Exists(userFile))
+                return new List<ReportRow>();
+
+            hasPunchFile = true;
 
             // 1. CARICAMENTO DATI (Mese corrente + buffer inizio mese prossimo per turni notturni)
             var repo = new CsvRepository();
@@ -128,33 +171,25 @@ namespace TimeClock.Server
             {
                 if (row.Length < 2 || !DateTime.TryParse(row[0], out var dt)) continue;
 
-                // Carichiamo il mese target E i primi 2 giorni del mese successivo 
-                // per catturare eventuali uscite di turni notturni (es. 31/01 22:00 -> 01/02 06:00)
-                bool isTargetMonth = (dt.Year == year && dt.Month == month);
+                bool isTargetMonth = dt.Year == year && dt.Month == month;
                 DateTime firstNextMonth = new DateTime(year, month, 1).AddMonths(1);
-                bool isBufferNextMonth = (dt.Date >= firstNextMonth && dt.Date <= firstNextMonth.AddDays(2));
+                bool isBufferNextMonth = dt.Date >= firstNextMonth && dt.Date <= firstNextMonth.AddDays(2);
 
                 if (isTargetMonth || isBufferNextMonth)
                 {
-                    PunchType tipo;
-                    if (!Enum.TryParse(row[1], true, out tipo)) tipo = PunchType.Entrata;
+                    if (!Enum.TryParse(row[1], true, out PunchType tipo))
+                        tipo = PunchType.Entrata;
 
                     allEntries.Add(new TimeCardEntry { UserId = user.Id, DataOra = dt, Tipo = tipo });
                 }
             }
 
-            // Ordiniamo cronologicamente
             allEntries = allEntries.OrderBy(x => x.DataOra).ToList();
-
-            // 2. ACCOPPIAMENTO (PAIRING) INTELLIGENTE
             var tutteLeCoppie = CostruisciCoppieGlobali(allEntries);
-
-            // Filtriamo solo le coppie INIZIATE nel mese selezionato
             var coppieDelMese = tutteLeCoppie
                 .Where(c => c.Ingresso.Month == month && c.Ingresso.Year == year)
                 .ToList();
 
-            // Assenze (ferie/permesso/malattia)
             var absenceRepo = new AbsenceRepository();
             string assenzePath = Path.Combine(_csvFolder, "assenze.csv");
             var assenzePerGiorno = absenceRepo.Load(assenzePath)
@@ -162,25 +197,19 @@ namespace TimeClock.Server
                 .GroupBy(a => a.Data.Day)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // 3. GENERAZIONE RIGHE 
             var righeReport = new List<ReportRow>();
             int daysInMonth = DateTime.DaysInMonth(year, month);
-
-            // Raggruppiamo per giorno
             var gruppiPerGiorno = coppieDelMese
                 .GroupBy(c => c.Ingresso.Day)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // CICLO SUI GIORNI DEL MESE
             for (int day = 1; day <= daysInMonth; day++)
             {
                 DateTime dataCorrente = new DateTime(year, month, day);
 
                 if (!gruppiPerGiorno.ContainsKey(day))
                 {
-                    // Nessuna timbrata: riga vuota
                     var emptyRow = new ReportRow { Giorno = day };
-                    // Passiamo null come coppie
                     CalcolaTotaliRiga(emptyRow, dataCorrente, user, null, null);
 
                     if (assenzePerGiorno.TryGetValue(day, out var assenzeGiorno) && assenzeGiorno.Any())
@@ -189,75 +218,66 @@ namespace TimeClock.Server
                     }
                     else if (!IsGiornoFestivo(dataCorrente))
                     {
-                        // Regola richiesta: giorno feriale senza timbrature => ferie automatiche.
                         emptyRow.OreFerie = CalcolaOreDefaultGiornaliere(user);
                         emptyRow.Note = "Ferie automatiche da mancata timbratura";
                     }
 
                     righeReport.Add(emptyRow);
+                    continue;
                 }
-                else
+
+                var coppieGiorno = gruppiPerGiorno[day].OrderBy(c => c.Ingresso).ToList();
+                var righeGiorno = new List<ReportRow>();
+
+                int index = 0;
+                while (index < coppieGiorno.Count)
                 {
-                    var coppieGiorno = gruppiPerGiorno[day];
-                    coppieGiorno = coppieGiorno.OrderBy(c => c.Ingresso).ToList();
-                    var righeGiorno = new List<ReportRow>();
+                    var row = new ReportRow { Giorno = day };
 
-                    int index = 0;
-                    // CICLO WHILE per gestire più righe nello stesso giorno (> 4 timbrate)
-                    while (index < coppieGiorno.Count)
+                    var c1 = coppieGiorno[index];
+                    row.Entrata1 = c1.Ingresso.ToString("HH:mm");
+                    row.Uscita1 = c1.Uscita.ToString("HH:mm");
+                    index++;
+
+                    if (index < coppieGiorno.Count)
                     {
-                        var row = new ReportRow { Giorno = day };
-
-                        // Coppia 1 (obbligatoria se siamo qui)
-                        var c1 = coppieGiorno[index];
-                        row.Entrata1 = c1.Ingresso.ToString("HH:mm");
-                        row.Uscita1 = c1.Uscita.ToString("HH:mm");
+                        var pair2 = coppieGiorno[index];
+                        row.Entrata2 = pair2.Ingresso.ToString("HH:mm");
+                        row.Uscita2 = pair2.Uscita.ToString("HH:mm");
                         index++;
-
-                        if (index < coppieGiorno.Count)
-                        {
-                            var pair2 = coppieGiorno[index];
-                            row.Entrata2 = pair2.Ingresso.ToString("HH:mm");
-                            row.Uscita2 = pair2.Uscita.ToString("HH:mm");
-                            index++;
-                        }
-
-                        righeGiorno.Add(row);
                     }
 
-                    _reportDayCalculationService.ApplyDailyCalculationToRows(righeGiorno, dataCorrente, user, coppieGiorno, App.ParametriGlobali);
-
-                    if (assenzePerGiorno.TryGetValue(day, out var assenzeGiorno) && assenzeGiorno.Any())
-                    {
-                        const string warning = "ATTENZIONE: presenti assenze registrate e timbrature nello stesso giorno";
-                        double oreDefault = user.OreContrattoSettimanali > 0
-                            ? Math.Round(user.OreContrattoSettimanali / 5.0, 2)
-                            : 8.0;
-                        double oreFerie = assenzeGiorno
-                            .Where(a => a.Tipo == AbsenceType.Ferie)
-                            .Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
-
-                        if (righeGiorno.Count > 0)
-                            righeGiorno[0].OreFerie = Math.Round(oreFerie, 2);
-
-                        foreach (var row in righeGiorno)
-                        {
-                            row.Note = string.IsNullOrWhiteSpace(row.Note)
-                                ? warning
-                                : row.Note + " | " + warning;
-                        }
-                    }
-
-                    righeReport.AddRange(righeGiorno);
+                    righeGiorno.Add(row);
                 }
-            } // FINE CICLO FOR
 
-            // 4. ASSEGNAZIONE ALLA GRIGLIA (SOLO ALLA FINE)
-            // Resettiamo prima per sicurezza
-            ReportGrid.ItemsSource = null;
-            ReportGrid.ItemsSource = righeReport;
+                _reportDayCalculationService.ApplyDailyCalculationToRows(righeGiorno, dataCorrente, user, coppieGiorno, App.ParametriGlobali);
 
-            AggiornaTotali();
+                if (assenzePerGiorno.TryGetValue(day, out var assenzeGiornoConTimbrature) && assenzeGiornoConTimbrature.Any())
+                {
+                    const string warning = "ATTENZIONE: presenti assenze registrate e timbrature nello stesso giorno";
+                    double oreDefault = user.OreContrattoSettimanali > 0
+                        ? Math.Round(user.OreContrattoSettimanali / 5.0, 2)
+                        : 8.0;
+
+                    if (righeGiorno.Count > 0)
+                    {
+                        righeGiorno[0].OreFerie = Math.Round(assenzeGiornoConTimbrature.Where(a => a.Tipo == AbsenceType.Ferie).Sum(a => a.Ore > 0 ? a.Ore : oreDefault), 2);
+                        righeGiorno[0].OrePermesso = Math.Round(assenzeGiornoConTimbrature.Where(a => a.Tipo == AbsenceType.Permesso).Sum(a => a.Ore > 0 ? a.Ore : oreDefault), 2);
+                        righeGiorno[0].OreMalattia = Math.Round(assenzeGiornoConTimbrature.Where(a => a.Tipo == AbsenceType.Malattia).Sum(a => a.Ore > 0 ? a.Ore : oreDefault), 2);
+                    }
+
+                    foreach (var row in righeGiorno)
+                    {
+                        row.Note = string.IsNullOrWhiteSpace(row.Note)
+                            ? warning
+                            : row.Note + " | " + warning;
+                    }
+                }
+
+                righeReport.AddRange(righeGiorno);
+            }
+
+            return righeReport;
         }
 
         // ===========================
@@ -320,11 +340,10 @@ namespace TimeClock.Server
             if (assenzeGiorno.Any())
             {
                 double oreDefault = CalcolaOreDefaultGiornaliere(user);
-                double oreFerie = assenzeGiorno
-                    .Where(a => a.Tipo == AbsenceType.Ferie)
-                    .Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
 
-                righeGiorno[0].OreFerie = Math.Round(oreFerie, 2);
+                righeGiorno[0].OreFerie = Math.Round(assenzeGiorno.Where(a => a.Tipo == AbsenceType.Ferie).Sum(a => a.Ore > 0 ? a.Ore : oreDefault), 2);
+                righeGiorno[0].OrePermesso = Math.Round(assenzeGiorno.Where(a => a.Tipo == AbsenceType.Permesso).Sum(a => a.Ore > 0 ? a.Ore : oreDefault), 2);
+                righeGiorno[0].OreMalattia = Math.Round(assenzeGiorno.Where(a => a.Tipo == AbsenceType.Malattia).Sum(a => a.Ore > 0 ? a.Ore : oreDefault), 2);
             }
             else if (coppieGiorno.Count == 0 && !IsGiornoFestivo(dataBase))
             {
@@ -334,111 +353,273 @@ namespace TimeClock.Server
         }
 
         // ===========================
-        //   ESPORTA TXT
+        //   ESPORTA (PDF/TXT)
         // ===========================
-        private void EsportaTXT_Click(object sender, RoutedEventArgs e)
+        private void Esporta_Click(object sender, RoutedEventArgs e)
         {
-            var righe = ReportGrid.ItemsSource as IEnumerable<ReportRow>;
-            if (righe == null || !righe.Any())
+            if (!TryGetSelectedMonthYear(out int month, out int year))
+                return;
+
+            bool exportAll = ExportAllCheckBox.IsChecked == true;
+            var selectedUser = UserCombo.SelectedItem as UserProfile;
+            if (!exportAll && selectedUser == null)
             {
-                MessageBox.Show("Non ci sono dati da esportare.");
+                MessageBox.Show("Seleziona un utente.");
                 return;
             }
 
             var dlg = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = "File di testo (*.txt)|*.txt",
+                Filter = "File PDF (*.pdf)|*.pdf|File di testo (*.txt)|*.txt",
                 InitialDirectory = Directory.Exists(_csvFolder) ? _csvFolder : string.Empty,
-                FileName = BuildSuggestedExportFileName("txt")
+                AddExtension = true,
+                DefaultExt = ".pdf",
+                FileName = BuildSuggestedExportFileName("pdf", exportAll)
             };
 
             if (dlg.ShowDialog() != true)
                 return;
 
-            var lines = new List<string>
+            string extension = Path.GetExtension(dlg.FileName).ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(extension))
             {
-                "Giorno\tEntrata1\tUscita1\tEntrata2\tUscita2\tOreOrdinarie\tOreStraordinarie\tOreFerie\tFestivo\tNote"
-            };
+                extension = dlg.FilterIndex == 2 ? ".txt" : ".pdf";
+                dlg.FileName += extension;
+            }
 
-            foreach (var r in righe)
+            if (extension == ".txt")
             {
-                lines.Add(string.Join("\t", new[]
+                ExportTxt(dlg.FileName, month, year, exportAll, selectedUser);
+                return;
+            }
+
+            if (extension == ".pdf")
+            {
+                ExportPdf(dlg.FileName, month, year, exportAll, selectedUser);
+                return;
+            }
+
+            MessageBox.Show("Formato non supportato. Seleziona PDF o TXT.");
+        }
+
+        private void ExportTxt(string fileName, int month, int year, bool exportAll, UserProfile? selectedUser)
+        {
+            var lines = new List<string>();
+
+            if (exportAll)
+            {
+                var reports = BuildAllUsersMonthlyReports(month, year);
+                if (!reports.Any())
                 {
-                    r.Giorno.ToString(),
-                    r.Entrata1 ?? "",
-                    r.Uscita1 ?? "",
-                    r.Entrata2 ?? "",
-                    r.Uscita2 ?? "",
-                    r.OreOrdinarie.ToString("F2", CultureInfo.InvariantCulture),
-                    r.OreStraordinarie.ToString("F2", CultureInfo.InvariantCulture),
-                    r.OreFerie.ToString("F2", CultureInfo.InvariantCulture),
-                    r.IsFestivo ? "SI" : "NO",
-                    r.Note ?? ""
-                }));
+                    MessageBox.Show("Non ci sono dati da esportare.");
+                    return;
+                }
+
+                foreach (var report in reports)
+                {
+                    lines.Add($"Utente\t{report.User.Nome} {report.User.Cognome}\t{report.User.Id}");
+                    if (!report.HasPunchFile)
+                    {
+                        lines.Add("Nessun file timbrature disponibile.");
+                        lines.Add(string.Empty);
+                        continue;
+                    }
+
+                    AppendRowsAsTabDelimitedLines(lines, report.Rows);
+                    lines.Add(string.Empty);
+                }
+            }
+            else
+            {
+                var rows = ResolveRowsForSelectedUser(selectedUser!, month, year);
+                if (!rows.Any())
+                {
+                    MessageBox.Show("Non ci sono dati da esportare.");
+                    return;
+                }
+
+                AppendRowsAsTabDelimitedLines(lines, rows);
             }
 
             var footerLines = BuildCompanyFooterLines();
             if (footerLines.Any())
             {
-                lines.Add(string.Empty);
                 lines.Add("---- DATI AZIENDALI ----");
                 lines.AddRange(footerLines);
             }
 
-            SafeFileWriter.WriteAllLinesAtomic(dlg.FileName, lines);
+            SafeFileWriter.WriteAllLinesAtomic(fileName, lines);
             MessageBox.Show("Esportazione TXT completata.");
         }
 
-        // ===========================
-        //   ESPORTA PDF (stub)
-        // ===========================
-        private void EsportaPDF_Click(object sender, RoutedEventArgs e)
+        private void ExportPdf(string fileName, int month, int year, bool exportAll, UserProfile? selectedUser)
         {
-            var righe = ReportGrid.ItemsSource as IEnumerable<ReportRow>;
-            if (righe == null || !righe.Any())
+            List<string> lines;
+            string title;
+
+            if (exportAll)
             {
-                MessageBox.Show("Non ci sono dati da esportare.");
-                return;
+                var reports = BuildAllUsersMonthlyReports(month, year);
+                if (!reports.Any())
+                {
+                    MessageBox.Show("Non ci sono dati da esportare.");
+                    return;
+                }
+
+                lines = new List<string>();
+                foreach (var report in reports)
+                {
+                    lines.Add($"Utente: {report.User.Nome} {report.User.Cognome} ({report.User.Id})");
+                    if (!report.HasPunchFile)
+                    {
+                        lines.Add("Nessun file timbrature disponibile.");
+                        lines.Add(string.Empty);
+                        continue;
+                    }
+
+                    AppendRowsAsTabDelimitedLines(lines, report.Rows);
+                    lines.Add(string.Empty);
+                }
+
+                title = $"Report mese {month:D2}/{year} - Tutti gli utenti";
+            }
+            else
+            {
+                var rows = ResolveRowsForSelectedUser(selectedUser!, month, year);
+                if (!rows.Any())
+                {
+                    MessageBox.Show("Non ci sono dati da esportare.");
+                    return;
+                }
+
+                lines = new List<string>();
+                AppendRowsAsTabDelimitedLines(lines, rows);
+                title = $"Report mese {month:D2}/{year} - {selectedUser!.Nome} {selectedUser.Cognome}";
+            }
+
+            var footerLines = BuildCompanyFooterLines();
+            if (footerLines.Any())
+            {
+                lines.Add("---- DATI AZIENDALI ----");
+                lines.AddRange(footerLines);
             }
 
             try
             {
-                var saveDlg = new Microsoft.Win32.SaveFileDialog
-                {
-                    Filter = "File PDF (*.pdf)|*.pdf",
-                    InitialDirectory = Directory.Exists(_csvFolder) ? _csvFolder : string.Empty,
-                    FileName = BuildSuggestedExportFileName("pdf")
-                };
-
-                if (saveDlg.ShowDialog() != true)
+                var pd = new PrintDialog();
+                if (pd.ShowDialog() != true)
                     return;
 
-                var pd = new PrintDialog();
-                if (pd.ShowDialog() == true)
+                var oldCurrentDir = Environment.CurrentDirectory;
+                try
                 {
-                    var oldCurrentDir = Environment.CurrentDirectory;
-                    try
-                    {
-                        var targetDir = Path.GetDirectoryName(saveDlg.FileName);
-                        if (!string.IsNullOrWhiteSpace(targetDir) && Directory.Exists(targetDir))
-                            Environment.CurrentDirectory = targetDir;
+                    var targetDir = Path.GetDirectoryName(fileName);
+                    if (!string.IsNullOrWhiteSpace(targetDir) && Directory.Exists(targetDir))
+                        Environment.CurrentDirectory = targetDir;
 
-                        string docName = Path.GetFileNameWithoutExtension(saveDlg.FileName);
-                        pd.PrintVisual(BuildPrintableReportWithFooter(), docName);
-                    }
-                    finally
-                    {
-                        Environment.CurrentDirectory = oldCurrentDir;
-                    }
-
-                    MessageBox.Show(
-                        $"Stampa avviata. Nella finestra 'Microsoft Print to PDF' salva in:\n{saveDlg.FileName}");
+                    string docName = Path.GetFileNameWithoutExtension(fileName);
+                    pd.PrintVisual(BuildPrintableTextReport(title, lines), docName);
                 }
+                finally
+                {
+                    Environment.CurrentDirectory = oldCurrentDir;
+                }
+
+                MessageBox.Show(
+                    $"Stampa avviata. Nella finestra 'Microsoft Print to PDF' salva in:\n{fileName}");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Errore durante l'esportazione PDF: {ex.Message}");
             }
+        }
+
+        private List<(UserProfile User, List<ReportRow> Rows, bool HasPunchFile)> BuildAllUsersMonthlyReports(int month, int year)
+        {
+            var reports = new List<(UserProfile User, List<ReportRow> Rows, bool HasPunchFile)>();
+
+            foreach (var user in _users)
+            {
+                var rows = BuildReportRows(user, month, year, out bool hasPunchFile);
+                reports.Add((user, rows, hasPunchFile));
+            }
+
+            return reports;
+        }
+
+        private List<ReportRow> ResolveRowsForSelectedUser(UserProfile selectedUser, int month, int year)
+        {
+            bool sameLoadedSelection = _loadedUserId == selectedUser.Id && _loadedMonth == month && _loadedYear == year;
+            if (sameLoadedSelection)
+            {
+                var currentRows = (ReportGrid.ItemsSource as IEnumerable<ReportRow>)?.ToList();
+                if (currentRows != null && currentRows.Any())
+                    return currentRows;
+            }
+
+            var generatedRows = BuildReportRows(selectedUser, month, year, out bool hasPunchFile);
+            return hasPunchFile ? generatedRows : new List<ReportRow>();
+        }
+
+        private static void AppendRowsAsTabDelimitedLines(List<string> lines, IEnumerable<ReportRow> rows)
+        {
+            lines.Add("Giorno\tEntrata1\tUscita1\tEntrata2\tUscita2\tOreOrdinarie\tOreStraordinarie\tOreFerie\tOrePermesso\tOreMalattia\tFestivo\tNote");
+
+            foreach (var r in rows)
+            {
+                lines.Add(string.Join("\t", new[]
+                {
+                    r.Giorno.ToString(),
+                    r.Entrata1 ?? string.Empty,
+                    r.Uscita1 ?? string.Empty,
+                    r.Entrata2 ?? string.Empty,
+                    r.Uscita2 ?? string.Empty,
+                    r.OreOrdinarie.ToString("F2", CultureInfo.InvariantCulture),
+                    r.OreStraordinarie.ToString("F2", CultureInfo.InvariantCulture),
+                    r.OreFerie.ToString("F2", CultureInfo.InvariantCulture),
+                    r.OrePermesso.ToString("F2", CultureInfo.InvariantCulture),
+                    r.OreMalattia.ToString("F2", CultureInfo.InvariantCulture),
+                    r.IsFestivo ? "SI" : "NO",
+                    r.Note ?? string.Empty
+                }));
+            }
+        }
+
+        private FrameworkElement BuildPrintableTextReport(string title, IEnumerable<string> lines)
+        {
+            var panel = new StackPanel
+            {
+                Background = Brushes.White,
+                Width = 980,
+                Margin = new Thickness(20)
+            };
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = title,
+                Margin = new Thickness(0, 0, 0, 12),
+                Foreground = Brushes.Black,
+                FontSize = 15,
+                FontWeight = FontWeights.Bold
+            });
+
+            foreach (var line in lines)
+            {
+                panel.Children.Add(new TextBlock
+                {
+                    Text = line,
+                    Foreground = Brushes.Black,
+                    FontSize = 11,
+                    FontFamily = new FontFamily("Consolas"),
+                    TextWrapping = TextWrapping.Wrap
+                });
+            }
+
+            panel.Measure(new Size(panel.Width, double.PositiveInfinity));
+            panel.Arrange(new Rect(0, 0, panel.Width, panel.DesiredSize.Height));
+            panel.UpdateLayout();
+
+            return panel;
         }
 
         private FrameworkElement BuildPrintableReportWithFooter()
@@ -516,10 +697,12 @@ namespace TimeClock.Server
             return lines;
         }
 
-        private string BuildSuggestedExportFileName(string extension)
+        private string BuildSuggestedExportFileName(string extension, bool exportAllUsers)
         {
             var user = UserCombo.SelectedItem as UserProfile;
-            string userName = user != null ? $"{user.Nome}_{user.Cognome}" : "Utente";
+            string userName = exportAllUsers
+                ? "Tutti_Utenti"
+                : user != null ? $"{user.Nome}_{user.Cognome}" : "Utente";
             userName = SanitizeFileNamePart(userName);
 
             int month = MonthCombo.SelectedIndex >= 0 ? MonthCombo.SelectedIndex + 1 : DateTime.Now.Month;

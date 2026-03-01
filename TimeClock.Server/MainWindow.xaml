@@ -107,9 +107,13 @@
                                 Style="{StaticResource GlassButton}"
                                 Tag="3"
                                 Click="Menu_Click"/>
-                        <Button Content="Opzioni"
+                        <Button Content="Assenze"
                                 Style="{StaticResource GlassButton}"
                                 Tag="4"
+                                Click="Menu_Click"/>
+                        <Button Content="Opzioni"
+                                Style="{StaticResource GlassButton}"
+                                Tag="5"
                                 Click="Menu_Click"/>
 
                     </StackPanel>
@@ -349,6 +353,91 @@
                                             Width="200"
                                             Click="GenerateReport_Click" HorizontalAlignment="Left"/>
                                 </StackPanel>
+                            </TabItem>
+                            
+                            <!-- ASSENZE -->
+                            <TabItem Header="Assenze">
+                                <Grid Margin="20">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- INSERIMENTO -->
+                                    <Border Grid.Row="0" Background="#40FFFFFF" CornerRadius="15" Padding="15" Margin="0,0,0,15">
+                                        <StackPanel>
+                                            <TextBlock Text="Registra nuova assenza" FontSize="18" Foreground="White" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,5">
+                                                <StackPanel Margin="0,0,15,10">
+                                                    <TextBlock Text="Dipendente" Foreground="White" Margin="0,0,0,5"/>
+                                                    <ComboBox x:Name="AbsenceUserCombo" Width="200" Height="30" DisplayMemberPath="NomeCognome">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <TextBlock>
+                                                                    <Run Text="{Binding Nome}"/> <Run Text="{Binding Cognome}"/>
+                                                                </TextBlock>
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                </StackPanel>
+                                                
+                                                <StackPanel Margin="0,0,15,10">
+                                                    <TextBlock Text="Data" Foreground="White" Margin="0,0,0,5"/>
+                                                    <DatePicker x:Name="AbsenceDatePicker" Width="130" Height="30"/>
+                                                </StackPanel>
+
+                                                <StackPanel Margin="0,0,15,10">
+                                                    <TextBlock Text="Tipo" Foreground="White" Margin="0,0,0,5"/>
+                                                    <ComboBox x:Name="AbsenceTypeCombo" Width="120" Height="30">
+                                                        <ComboBoxItem Content="Ferie" IsSelected="True"/>
+                                                        <ComboBoxItem Content="Permesso"/>
+                                                        <ComboBoxItem Content="Malattia"/>
+                                                    </ComboBox>
+                                                </StackPanel>
+
+                                                <StackPanel Margin="0,0,15,10">
+                                                    <TextBlock Text="Ore" Foreground="White" Margin="0,0,0,5" ToolTip="Lasciare vuoto per l'intera giornata prevista da contratto"/>
+                                                    <TextBox x:Name="AbsenceHoursBox" Width="60" Height="30" VerticalContentAlignment="Center" Background="#10FFFFFF" Foreground="White" BorderBrush="#40FFFFFF"/>
+                                                </StackPanel>
+
+                                                <StackPanel Margin="0,0,15,10">
+                                                    <TextBlock Text="Note" Foreground="White" Margin="0,0,0,5"/>
+                                                    <TextBox x:Name="AbsenceNotesBox" Width="150" Height="30" VerticalContentAlignment="Center" Background="#10FFFFFF" Foreground="White" BorderBrush="#40FFFFFF"/>
+                                                </StackPanel>
+
+                                                <Button Content="Aggiungi" Style="{StaticResource AddButton}" Width="100" Margin="0,15,0,0" Click="AddAbsence_Click"/>
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- STORICO/ELENCO -->
+                                    <DataGrid x:Name="AbsencesGrid"
+                                              Grid.Row="1"
+                                              AutoGenerateColumns="False"
+                                              Background="#15FFFFFF"
+                                              Foreground="Black"
+                                              HeadersVisibility="Column"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              IsReadOnly="True"
+                                              BorderBrush="#40FFFFFF"
+                                              BorderThickness="1"
+                                              RowHeight="32">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Data" Binding="{Binding Data, StringFormat=\{0:dd/MM/yyyy\}}" Width="100"/>
+                                            <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="100"/>
+                                            <DataGridTextColumn Header="Ore" Binding="{Binding Ore}" Width="80"/>
+                                            <DataGridTextColumn Header="Note" Binding="{Binding Note}" Width="*"/>
+                                            <DataGridTemplateColumn Header="Azioni" Width="100">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="Elimina" Background="#40FF4B4B" Foreground="White" Cursor="Hand" Click="DeleteAbsence_Click"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
                             </TabItem>
 
                             <!-- OPZIONI -->

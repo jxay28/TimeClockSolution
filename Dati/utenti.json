@@ -2,8 +2,8 @@
   {
     "Id": "2316491c-9976-4e33-92ea-d7229079538c",
     "SequenceNumber": 0,
-    "Nome": "",
-    "Cognome": "",
+    "Nome": "porco ",
+    "Cognome": "dio",
     "Ruolo": "",
     "DataAssunzione": "2025-12-05T00:00:00",
     "OreContrattoSettimanali": 3,
@@ -12,7 +12,8 @@
     "OrarioIngresso1": null,
     "OrarioUscita1": null,
     "OrarioIngresso2": null,
-    "OrarioUscita2": null
+    "OrarioUscita2": null,
+    "FullName": "000 - porco  dio"
   },
   {
     "Id": "bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957",
@@ -27,7 +28,8 @@
     "OrarioIngresso1": null,
     "OrarioUscita1": null,
     "OrarioIngresso2": null,
-    "OrarioUscita2": null
+    "OrarioUscita2": null,
+    "FullName": "001 -  "
   },
   {
     "Id": "2795d340-0f40-4306-aaa5-0b79d4677f48",
@@ -42,7 +44,8 @@
     "OrarioIngresso1": null,
     "OrarioUscita1": null,
     "OrarioIngresso2": null,
-    "OrarioUscita2": null
+    "OrarioUscita2": null,
+    "FullName": "002 -  dd"
   },
   {
     "Id": "3421c876-cc4a-461f-83c8-ec008f474bc2",
@@ -57,7 +60,8 @@
     "OrarioIngresso1": null,
     "OrarioUscita1": null,
     "OrarioIngresso2": null,
-    "OrarioUscita2": null
+    "OrarioUscita2": null,
+    "FullName": "003 - 1111 222"
   },
   {
     "Id": "547bbded-24bb-4c92-8ff2-82fbb72d27f4",
@@ -72,7 +76,8 @@
     "OrarioIngresso1": null,
     "OrarioUscita1": null,
     "OrarioIngresso2": null,
-    "OrarioUscita2": null
+    "OrarioUscita2": null,
+    "FullName": "004 - qqq qqq"
   },
   {
     "Id": "168b4039-c9ef-48a1-b713-e1ec4d552ebd",
@@ -87,6 +92,7 @@
     "OrarioIngresso1": "07:00",
     "OrarioUscita1": "12:00",
     "OrarioIngresso2": "12:30",
-    "OrarioUscita2": "16:00"
+    "OrarioUscita2": "16:00",
+    "FullName": "005 - ale fed"
   }
 ]

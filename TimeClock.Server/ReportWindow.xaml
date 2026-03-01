@@ -22,115 +22,119 @@
             <DockPanel LastChildFill="True">
 
                 <!-- AREA SUPERIORE (selezioni + pulsanti) -->
-                <StackPanel DockPanel.Dock="Top"
-                            Orientation="Horizontal"
-                            Margin="0 0 0 20"
-                            VerticalAlignment="Center">
+                <Grid DockPanel.Dock="Top"
+                      Margin="0 0 0 20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                    <!-- MESE -->
-                    <StackPanel Orientation="Vertical" Margin="0 0 20 0">
-                        <TextBlock Text="Mese"
-                                   FontSize="16"
-                                   Foreground="White"/>
-                        <ComboBox x:Name="MonthCombo"
-                                  Width="150"
-                                  Margin="0 5">
-                            <ComboBoxItem Content="Gennaio"/>
-                            <ComboBoxItem Content="Febbraio"/>
-                            <ComboBoxItem Content="Marzo"/>
-                            <ComboBoxItem Content="Aprile"/>
-                            <ComboBoxItem Content="Maggio"/>
-                            <ComboBoxItem Content="Giugno"/>
-                            <ComboBoxItem Content="Luglio"/>
-                            <ComboBoxItem Content="Agosto"/>
-                            <ComboBoxItem Content="Settembre"/>
-                            <ComboBoxItem Content="Ottobre"/>
-                            <ComboBoxItem Content="Novembre"/>
-                            <ComboBoxItem Content="Dicembre"/>
-                        </ComboBox>
-                    </StackPanel>
+                    <TextBlock Grid.Row="0" Grid.Column="0"
+                               Text="Mese"
+                               FontSize="16"
+                               Foreground="White"
+                               Margin="0 0 0 4"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1"
+                               Text="Anno"
+                               FontSize="16"
+                               Foreground="White"
+                               Margin="0 0 0 4"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2"
+                               Text="Seleziona utente"
+                               FontSize="16"
+                               Foreground="Beige"
+                               Margin="0 0 0 4"/>
 
-                    <!-- ANNO -->
-                    <StackPanel Orientation="Vertical" Margin="0 0 20 0">
-                        <TextBlock Text="Anno"
-                                   FontSize="16"
-                                   Foreground="White"/>
-                        <ComboBox x:Name="YearCombo"
-                                  Width="110"
-                                  Margin="0 5"/>
-                    </StackPanel>
+                    <ComboBox x:Name="MonthCombo"
+                              Grid.Row="1"
+                              Grid.Column="0"
+                              Width="150"
+                              Height="32"
+                              Margin="0 0 20 0">
+                        <ComboBoxItem Content="Gennaio"/>
+                        <ComboBoxItem Content="Febbraio"/>
+                        <ComboBoxItem Content="Marzo"/>
+                        <ComboBoxItem Content="Aprile"/>
+                        <ComboBoxItem Content="Maggio"/>
+                        <ComboBoxItem Content="Giugno"/>
+                        <ComboBoxItem Content="Luglio"/>
+                        <ComboBoxItem Content="Agosto"/>
+                        <ComboBoxItem Content="Settembre"/>
+                        <ComboBoxItem Content="Ottobre"/>
+                        <ComboBoxItem Content="Novembre"/>
+                        <ComboBoxItem Content="Dicembre"/>
+                    </ComboBox>
 
-                    <!-- UTENTE -->
-                    <StackPanel Orientation="Vertical" Margin="0 0 5 0" Width="200">
-                        <TextBlock Text="Seleziona utente"
-                                   FontSize="16"
-                                   Foreground="Beige"/>
-                        <ComboBox x:Name="UserCombo"
-                                  Width="280"
-                                  
-                                  
-                                  
-                                  Text="."
-                                  DisplayMemberPath="FullName"
-                                  Margin="0 5"/>
-                    </StackPanel>
+                    <ComboBox x:Name="YearCombo"
+                              Grid.Row="1"
+                              Grid.Column="1"
+                              Width="110"
+                              Height="32"
+                              Margin="0 0 20 0"/>
 
-                    <!-- PULSANTI -->
-                    <StackPanel Orientation="Horizontal"
-                                VerticalAlignment="Bottom">
-                        
-                        
+                    <ComboBox x:Name="UserCombo"
+                              Grid.Row="1"
+                              Grid.Column="2"
+                              Width="280"
+                              Height="32"
+                              Text="."
+                              DisplayMemberPath="FullName"
+                              Margin="0 0 10 0"/>
 
-
-                        <Button Content="Carica Report"
-                                Width="100"
-                                
+                    <StackPanel Grid.Row="1"
+                                Grid.Column="3"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Right">
+                        <CheckBox x:Name="ExportAllCheckBox"
+                                  Content="All"
+                                  Margin="6 0"
+                                  VerticalAlignment="Center"
+                                  Style="{StaticResource GlassCheckBox}"/>
+                        <Button Content="⭮ Caria"
+                                Width="84"
+                                Height="32"
                                 Margin="1 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="CaricaReport_Click" RenderTransformOrigin="0.5,0.5" FontSize="12">
-                            <Button.RenderTransform>
-                                <TransformGroup>
-                                    <ScaleTransform/>
-                                   
-                                </TransformGroup>
-                            </Button.RenderTransform>
-                        </Button>
-
-                        
-
-                        <Button Content="Esporta PDF"
-                                Width="100"
+                                Click="CaricaReport_Click"
+                                FontSize="13"/>
+                        <Button Content="⇩ Esporta"
+                                Width="88"
+                                Height="32"
                                 Margin="1 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="EsportaPDF_Click"/>
-
-                        <Button Content="Esporta TXT"
-                                Width="100"
+                                Click="Esporta_Click"
+                                FontSize="13"/>
+                        <Button Content="Agg.Timbratura"
+                                Width="106"
+                                Height="32"
                                 Margin="1 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="EsportaTXT_Click"/>
-                        <Button Content="Salva Modifiche"
-                                Width="100"
-                                Margin="1 0"
+                                Click="AggiungiTimbratura_Click"
+                                FontSize="13"/>
+                        <Button Content="💾 Salva"
+                                Width="76"
+                                Height="32"
+                                Margin="8 0 0 0"
                                 Style="{StaticResource GlassButton}"
-                                Click="SalvaModifiche_Click" FontSize="12"/>
-                        <Button Content="Aggiungi Timbratura"
-                                Width="120"
-                                Margin="1 0"
-                                Style="{StaticResource GlassButton}"
-                                Click="AggiungiTimbratura_Click" FontSize="12"/>
+                                Click="SalvaModifiche_Click"
+                                FontSize="13"/>
                         <Button Content="Chiudi"
-                                Width="90"
-                                Margin="20 0 0 0" 
+                                Width="78"
+                                Height="32"
+                                Margin="1 0 0 0"
                                 Style="{StaticResource GlassButton}"
                                 Background="#40FF4B4B"
-                                Click="Chiudi_Click"/>
-                        
-
-
-
+                                Click="Chiudi_Click"
+                                FontSize="13"/>
                     </StackPanel>
-                </StackPanel>
+                </Grid>
 
                 <!-- TABELLA -->
                 <DataGrid x:Name="ReportGrid"
@@ -197,7 +201,17 @@
 
                         <DataGridTextColumn Header="Ferie"
                         Binding="{Binding OreFerieVisual}"
-                        Width="90"
+                        Width="60"
+                        IsReadOnly="True"/>
+
+                        <DataGridTextColumn Header="Permesso"
+                        Binding="{Binding OrePermessoVisual}"
+                        Width="70"
+                        IsReadOnly="True"/>
+
+                        <DataGridTextColumn Header="Malattia"
+                        Binding="{Binding OreMalattiaVisual}"
+                        Width="70"
                         IsReadOnly="True"/>
 
                         <DataGridTextColumn Header="Note"
@@ -232,6 +246,20 @@
                         <StackPanel>
                             <TextBlock Text="Totale ferie usate:" Foreground="White" FontSize="16"/>
                             <TextBlock x:Name="TotFerieText" Foreground="Beige" FontSize="20" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <Border Background="#30FFFFFF" Padding="1" CornerRadius="10" Margin="10">
+                        <StackPanel>
+                            <TextBlock Text="Tot. permessi:" Foreground="White" FontSize="16"/>
+                            <TextBlock x:Name="TotPermessoText" Foreground="Beige" FontSize="20" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <Border Background="#30FFFFFF" Padding="1" CornerRadius="10" Margin="10">
+                        <StackPanel>
+                            <TextBlock Text="Tot. malattie:" Foreground="White" FontSize="16"/>
+                            <TextBlock x:Name="TotMalattiaText" Foreground="Beige" FontSize="20" FontWeight="Bold"/>
                         </StackPanel>
                     </Border>
 

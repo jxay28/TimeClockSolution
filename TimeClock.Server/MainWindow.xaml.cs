@@ -150,12 +150,19 @@ namespace TimeClock.Server
                 grid.ItemsSource = _users;
             }
 
-            // aggiorna la combo per il report
+            // aggiorna la combo per il report e per le assenze
             var combo = this.FindName("UserSelectorReport") as ComboBox;
             if (combo != null)
             {
                 combo.ItemsSource = null;
                 combo.ItemsSource = _users;
+            }
+
+            var absenceCombo = this.FindName("AbsenceUserCombo") as ComboBox;
+            if (absenceCombo != null)
+            {
+                absenceCombo.ItemsSource = null;
+                absenceCombo.ItemsSource = _users;
             }
 
             RefreshDashboard();
@@ -307,6 +314,12 @@ namespace TimeClock.Server
                     if (tab != null)
                     {
                         tab.SelectedIndex = index;
+
+                        // Se selezioniamo la tab Assenze (indice 4), carichiamo i dati
+                        if (index == 4)
+                        {
+                            LoadAbsences();
+                        }
                     }
                 }
             }
@@ -646,6 +659,167 @@ namespace TimeClock.Server
             MessageBox.Show("Dati aziendali salvati.");
         }
 
+        // ===========================
+        //   GESTIONE ASSENZE
+        // ===========================
+        private void LoadAbsences()
+        {
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+                return;
+
+            string path = Path.Combine(_csvFolder, "assenze.csv");
+            var repo = new AbsenceRepository();
+            var limitDate = DateTime.Now.AddMonths(-3); // Mostriamo solo gli ultimi 3 mesi per non appesantire
+
+            try
+            {
+                var assenze = repo.Load(path)
+                                  .Where(a => a.Data >= limitDate)
+                                  .OrderByDescending(a => a.Data)
+                                  .ToList();
+
+                // Creiamo un wrapper per la visualizzazione nella griglia
+                var viewList = assenze.Select(a =>
+                {
+                    var u = _users.FirstOrDefault(x => x.Id == a.UserId);
+                    string nome = u != null ? $"{u.Nome} {u.Cognome}" : a.UserId;
+                    return new { OriginalRecord = a, Data = a.Data, Tipo = a.Tipo.ToString(), Ore = a.Ore, Note = $"{nome} - {a.Note}" };
+                }).ToList();
+
+                var grid = this.FindName("AbsencesGrid") as DataGrid;
+                if (grid != null)
+                {
+                    grid.ItemsSource = viewList;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore caricamento assenze: {ex.Message}");
+            }
+        }
+
+        private void AddAbsence_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_csvFolder))
+            {
+                MessageBox.Show("Seleziona prima la cartella dati.");
+                return;
+            }
+
+            var combo = this.FindName("AbsenceUserCombo") as ComboBox;
+            var picker = this.FindName("AbsenceDatePicker") as DatePicker;
+            var typeCombo = this.FindName("AbsenceTypeCombo") as ComboBox;
+            var hoursBox = this.FindName("AbsenceHoursBox") as TextBox;
+            var notesBox = this.FindName("AbsenceNotesBox") as TextBox;
+
+            if (combo?.SelectedItem is not UserProfile user)
+            {
+                MessageBox.Show("Seleziona un dipendente.");
+                return;
+            }
+
+            if (picker?.SelectedDate == null)
+            {
+                MessageBox.Show("Seleziona una data.");
+                return;
+            }
+
+            AbsenceType tipo = AbsenceType.Ferie;
+            if (typeCombo?.SelectedItem is ComboBoxItem cbi && cbi.Content != null)
+            {
+                Enum.TryParse(cbi.Content.ToString(), out tipo);
+            }
+
+            double ore = 0;
+            if (hoursBox != null && !string.IsNullOrWhiteSpace(hoursBox.Text))
+            {
+                if (!double.TryParse(hoursBox.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out ore))
+                {
+                    MessageBox.Show("Formato ore non valido.");
+                    return;
+                }
+            }
+
+            var record = new AbsenceRecord
+            {
+                UserId = user.Id,
+                Data = picker.SelectedDate.Value,
+                Tipo = tipo,
+                Ore = ore,
+                Note = notesBox?.Text?.Trim()
+            };
+
+            try
+            {
+                var repo = new AbsenceRepository();
+                string path = Path.Combine(_csvFolder, "assenze.csv");
+                repo.Append(path, record);
+
+                AuditLogger.Log(_csvFolder, "add_absence", $"userId={user.Id}; data={record.Data:yyyy-MM-dd}; tipo={record.Tipo}; ore={record.Ore}");
+
+                // Pulisci form
+                if (hoursBox != null) hoursBox.Text = "";
+                if (notesBox != null) notesBox.Text = "";
+
+                LoadAbsences();
+                MessageBox.Show("Assenza registrata correttamente.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore salvataggio assenza: {ex.Message}");
+            }
+        }
+
+        private void DeleteAbsence_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_csvFolder)) return;
+
+            if (sender is Button btn && btn.DataContext != null)
+            {
+                dynamic ctx = btn.DataContext;
+                AbsenceRecord recordToDelete = ctx.OriginalRecord;
+
+                if (MessageBox.Show($"Sei sicuro di voler eliminare l'assenza del {recordToDelete.Data:dd/MM/yyyy} ({recordToDelete.Tipo})?",
+                                    "Conferma eliminazione",
+                                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        string path = Path.Combine(_csvFolder, "assenze.csv");
+                        var repo = new AbsenceRepository();
+                        var allAbsences = repo.Load(path);
+
+                        // Filtra escludendo l'elemento da rimuovere (match esatto su ID, Data, Tipo, Ore)
+                        var filteredAbsences = allAbsences.Where(a =>
+                            !(a.UserId == recordToDelete.UserId &&
+                              a.Data == recordToDelete.Data &&
+                              a.Tipo == recordToDelete.Tipo &&
+                              Math.Abs(a.Ore - recordToDelete.Ore) < 0.01)
+                        ).ToList();
+
+                        // Riscriviamo l'intero file CSV utilizzando la funzione CsvCodec usata in AbsenceRepository
+                        var lines = filteredAbsences.Select(a => CsvCodec.BuildLine(new[]
+                        {
+                            a.UserId,
+                            a.Data.ToString("yyyy-MM-dd"),
+                            a.Tipo.ToString(),
+                            a.Ore.ToString(CultureInfo.InvariantCulture),
+                            a.Note ?? string.Empty
+                        }));
+
+                        SafeFileWriter.WriteAllLinesAtomic(path, lines);
+
+                        AuditLogger.Log(_csvFolder, "delete_absence", $"userId={recordToDelete.UserId}; data={recordToDelete.Data:yyyy-MM-dd}; tipo={recordToDelete.Tipo}");
+                        LoadAbsences();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Errore durante l'eliminazione: {ex.Message}");
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Genera i report mensili per gli utenti selezionati (o tutti).
         /// </summary>
@@ -669,7 +843,7 @@ namespace TimeClock.Server
             };
 
             wnd.ShowDialog();
-        
+
         }
 
         /// <summary>
