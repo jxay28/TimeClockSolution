@@ -370,7 +370,7 @@
                                             <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,5">
                                                 <StackPanel Margin="0,0,15,10">
                                                     <TextBlock Text="Dipendente" Foreground="White" Margin="0,0,0,5"/>
-                                                    <ComboBox x:Name="AbsenceUserCombo" Width="200" Height="30" DisplayMemberPath="NomeCognome">
+                                                    <ComboBox x:Name="AbsenceUserCombo" Width="200" Height="30">
                                                         <ComboBox.ItemTemplate>
                                                             <DataTemplate>
                                                                 <TextBlock>
