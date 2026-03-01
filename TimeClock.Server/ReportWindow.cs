@@ -1282,10 +1282,18 @@ namespace TimeClock.Server
             double oreFerie = assenze
                 .Where(a => a.Tipo == AbsenceType.Ferie)
                 .Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
+            double orePermesso = assenze
+                .Where(a => a.Tipo == AbsenceType.Permesso)
+                .Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
+            double oreMalattia = assenze
+                .Where(a => a.Tipo == AbsenceType.Malattia)
+                .Sum(a => a.Ore > 0 ? a.Ore : oreDefault);
 
             row.OreOrdinarie = Math.Round(oreTotali, 2);
             row.OreStraordinarie = 0;
             row.OreFerie = Math.Round(oreFerie, 2);
+            row.OrePermesso = Math.Round(orePermesso, 2);
+            row.OreMalattia = Math.Round(oreMalattia, 2);
 
             var tags = assenze
                 .Select(a => $"{a.Tipo} ({(a.Ore > 0 ? a.Ore.ToString("0.##", CultureInfo.InvariantCulture) : oreDefault.ToString("0.##", CultureInfo.InvariantCulture))}h)")
