@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Report Mensile"
         Height="700"
-        Width="1200"
+        Width="1400"
         WindowStartupLocation="CenterOwner"
         Background="#FF0F172A"
         WindowStyle="None"

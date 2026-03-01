@@ -1309,12 +1309,16 @@ namespace TimeClock.Server
             double totOrd = 0;
             double totExtra = 0;
             double totFerie = 0;
+            double totPermesso = 0;
+            double totMalattia = 0;
 
             foreach (var r in righe)
             {
                 totOrd += r.OreOrdinarie;
                 totExtra += r.OreStraordinarie;
                 totFerie += r.OreFerie;
+                totPermesso += r.OrePermesso;
+                totMalattia += r.OreMalattia;
             }
 
             // Funzione locale per convertire in stringa HH:mm
@@ -1328,6 +1332,8 @@ namespace TimeClock.Server
             TotOrdinarieText.Text = $"{FormatHours(totOrd)} h";
             TotStraordinarieText.Text = $"{FormatHours(totExtra)} h";
             TotFerieText.Text = $"{FormatHours(totFerie)} h";
+            TotPermessoText.Text = $"{FormatHours(totPermesso)} h";
+            TotMalattiaText.Text = $"{FormatHours(totMalattia)} h";
         }
         private void Chiudi_Click(object sender, RoutedEventArgs e)
         {

@@ -12,3 +12,24 @@
 2026-02-20T17:55:41Z,punch_in,user=2795d340-0f40-4306-aaa5-0b79d4677f48; at=2026-02-20T18:55:41
 2026-02-20T17:56:13Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=15; month=2; year=2026
 2026-02-20T21:58:20Z,punch_out,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-02-20T22:58:20
+2026-03-01T15:07:05Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-02-25; tipo=Ferie; ore=4
+2026-03-01T15:08:02Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=10; month=3; year=2026
+2026-03-01T15:08:04Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=10; month=3; year=2026
+2026-03-01T15:08:06Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=10; month=3; year=2026
+2026-03-01T15:08:21Z,save_report_edits,user=2316491c-9976-4e33-92ea-d7229079538c; year=2026; month=3; righe=32
+2026-03-01T20:44:58Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-02-03; tipo=Permesso; ore=0
+2026-03-01T20:46:02Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-02-04; tipo=Malattia; ore=0
+2026-03-01T20:46:58Z,save_report_edits,user=2316491c-9976-4e33-92ea-d7229079538c; year=2026; month=3; righe=32
+2026-03-01T20:47:18Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=9; month=3; year=2026
+2026-03-01T20:48:06Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-03-03; tipo=Malattia; ore=0
+2026-03-01T20:48:11Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-03-04; tipo=Permesso; ore=0
+2026-03-01T20:48:17Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-03-05; tipo=Ferie; ore=0
+2026-03-01T20:48:28Z,delete_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-03-05; tipo=Ferie
+2026-03-01T20:48:30Z,delete_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-03-04; tipo=Permesso
+2026-03-01T20:48:31Z,delete_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-03-03; tipo=Malattia
+2026-03-01T20:48:36Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-03-05; tipo=Permesso; ore=8
+2026-03-01T20:48:42Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-03-06; tipo=Ferie; ore=8
+2026-03-01T20:48:50Z,add_absence,userId=2316491c-9976-4e33-92ea-d7229079538c; data=2026-03-04; tipo=Malattia; ore=8
+2026-03-01T20:49:08Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=4; month=3; year=2026
+2026-03-01T20:49:13Z,add_manual_punch,user=2316491c-9976-4e33-92ea-d7229079538c; day=4; month=3; year=2026
+2026-03-01T20:49:20Z,save_report_edits,user=2316491c-9976-4e33-92ea-d7229079538c; year=2026; month=3; righe=31
