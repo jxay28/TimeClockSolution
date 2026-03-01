@@ -222,10 +222,41 @@
                                                MaxHeight="40"/>
                                 </StackPanel>
                             </Border>
+
+                            <!-- Riquadro Riepilogo Ore Mensili (nuova aggiunta) -->
+                            <Border Grid.Row="2"
+                                    Margin="0,15,0,0"
+                                    Background="#20111827"
+                                    CornerRadius="8"
+                                    Padding="15"
+                                    Visibility="{Binding ShowSummary, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="Riepilogo Ore Mese Corrente"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="#DD111827"
+                                               Margin="0,0,0,10"
+                                               HorizontalAlignment="Center"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                            <TextBlock Text="Ordinarie" FontSize="11" Foreground="#AA111827" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding MonthlyOrdinaryHours}" FontSize="16" FontWeight="Bold" Foreground="#10B981" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                            <TextBlock Text="Extra" FontSize="11" Foreground="#AA111827" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding MonthlyExtraHours}" FontSize="16" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
                         </Grid>
                     </Border>
                 </Grid>
-            </Grid>
+            </Border>
         </Border>
     </Grid>
 

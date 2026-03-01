@@ -137,6 +137,7 @@ namespace TimeClock.Client
         {
             EntrataButton.IsEnabled = false;
             UscitaButton.IsEnabled = false;
+            _statusVm.ShowSummary = false;
 
             if (UserComboBox.SelectedItem is UserProfile user && !string.IsNullOrWhiteSpace(_csvFolder))
             {
@@ -164,10 +165,81 @@ namespace TimeClock.Client
                 }
 
                 _statusVm.LastActionText = GetLastActionForUser(userFile);
+                UpdateMonthlySummary(user, userFile);
             }
             else
             {
                 _statusVm.LastActionText = "N/A";
+            }
+        }
+
+        private void UpdateMonthlySummary(UserProfile user, string userFile)
+        {
+            try
+            {
+                if (!File.Exists(userFile))
+                    return;
+
+                DateTime today = DateTime.Today;
+                var currentMonthRecords = _repo.Load(userFile)
+                    .Select(cols => new TimeCardEntry
+                    {
+                        DataOra = DateTime.TryParse(cols.ElementAtOrDefault(0), out var dt) ? dt : DateTime.MinValue,
+                        Tipo = string.Equals(cols.ElementAtOrDefault(1), "Entrata", StringComparison.OrdinalIgnoreCase)
+                            ? PunchType.Entrata : PunchType.Uscita,
+                        UserId = user.Id
+                    })
+                    .Where(e => e.DataOra.Year == today.Year && e.DataOra.Month == today.Month)
+                    .ToList();
+
+                if (!currentMonthRecords.Any())
+                {
+                    _statusVm.MonthlyOrdinaryHours = "00:00";
+                    _statusVm.MonthlyExtraHours = "00:00";
+                    _statusVm.ShowSummary = true;
+                    return;
+                }
+
+                var calculator = new WorkTimeCalculator();
+                var pairs = calculator.BuildPairsCrossDay(currentMonthRecords);
+
+                // Raggruppiamo le coppie per giorno di competenza (usando l'ingresso)
+                var dailyPairs = pairs.GroupBy(p => p.In.Date);
+
+                // Cerchiamo le impostazioni globali aziendali se presenti
+                WorkTimePolicy policy = WorkTimePolicy.Default;
+                string settingsPath = Path.Combine(_csvFolder, "settings.json");
+                if (File.Exists(settingsPath))
+                {
+                    try
+                    {
+                        string json = File.ReadAllText(settingsPath);
+                        var settingsList = System.Text.Json.JsonSerializer.Deserialize<List<ParametriStraordinari>>(json);
+                        if (settingsList != null && settingsList.Count > 0)
+                        {
+                            policy = WorkTimePolicyFactory.FromGlobalParameters(settingsList[0]);
+                        }
+                    }
+                    catch { /* ignoriamo errori di lettura policy, usiamo default */ }
+                }
+
+                int totalOrdMinutes = 0;
+                int totalExtMinutes = 0;
+
+                foreach (var dayGroup in dailyPairs)
+                {
+                    var result = calculator.CalculateDay(user, dayGroup.Key, dayGroup, policy);
+                    totalOrdMinutes += result.OrdinaryMinutes;
+                    totalExtMinutes += result.OvertimeMinutes;
+                }
+
+                _statusVm.MonthlyOrdinaryHours = WorkTimeCalculator.FormatMinutes(totalOrdMinutes);
+                _statusVm.MonthlyExtraHours = WorkTimeCalculator.FormatMinutes(totalExtMinutes);
+                _statusVm.ShowSummary = true;
+            }
+            catch (Exception)
+            {
+                _statusVm.ShowSummary = false;
             }
         }
 

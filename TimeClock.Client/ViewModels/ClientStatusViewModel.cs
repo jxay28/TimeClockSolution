@@ -21,6 +21,27 @@ namespace TimeClock.Client.ViewModels
             set => SetProperty(ref _lastActionText, value);
         }
 
+        private bool _showSummary;
+        public bool ShowSummary
+        {
+            get => _showSummary;
+            set => SetProperty(ref _showSummary, value);
+        }
+
+        private string _monthlyOrdinaryHours = "00:00";
+        public string MonthlyOrdinaryHours
+        {
+            get => _monthlyOrdinaryHours;
+            set => SetProperty(ref _monthlyOrdinaryHours, value);
+        }
+
+        private string _monthlyExtraHours = "00:00";
+        public string MonthlyExtraHours
+        {
+            get => _monthlyExtraHours;
+            set => SetProperty(ref _monthlyExtraHours, value);
+        }
+
         public ICommand RefreshStatusCommand =>
             _refreshStatusCommand ??= new RelayCommand(() =>
             {
