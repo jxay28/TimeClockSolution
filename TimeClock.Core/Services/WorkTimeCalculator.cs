@@ -60,7 +60,7 @@ namespace TimeClock.Core.Services
             {
                 int deficit = Math.Max(0, expectedMinutes - totalWorkedMinutes);
                 recoveryApplied = ApplyRecoveryBlocks(deficit, normalizedPolicy.DeficitRecoveryBlockMinutes);
-                ordinaryMinutes = Math.Max(0, totalWorkedMinutes - recoveryApplied);
+                ordinaryMinutes = totalWorkedMinutes;
                 overtimeMinutes = 0;
 
                 if (recoveryApplied > 0)
