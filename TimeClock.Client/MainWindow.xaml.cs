@@ -8,6 +8,7 @@ using TimeClock.Core.Models;
 using TimeClock.Core.Services;
 using System.Windows.Input;
 using TimeClock.Client.ViewModels;
+using System.Windows.Threading;
 
 namespace TimeClock.Client
 {
@@ -20,11 +21,15 @@ namespace TimeClock.Client
         private string _numericFilter = string.Empty;
 
         private string _csvFolder = string.Empty;   // ? variabile definitiva per la cartella
+        private DispatcherTimer _folderButtonTimer;
 
         public MainWindow()
         {
             InitializeComponent();
             DataContext = _statusVm;
+
+            _folderButtonTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+            _folderButtonTimer.Tick += FolderButtonTimer_Tick;
 
             // ?? Carica la cartella salvata nelle impostazioni
             _csvFolder = Properties.Settings.Default.CsvFolderPath;
@@ -57,6 +62,28 @@ namespace TimeClock.Client
                     SetLastAction($"Cartella aggiornata: {_csvFolder}");
                 }
             }
+        }
+
+        private void FolderButtonTimer_Tick(object? sender, EventArgs e)
+        {
+            _folderButtonTimer.Stop();
+            // Trigger action programmatically
+            SelectCsvFolder_Click(this, new RoutedEventArgs());
+        }
+
+        private void SelectFolder_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            _folderButtonTimer.Start();
+        }
+
+        private void SelectFolder_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            _folderButtonTimer.Stop();
+        }
+
+        private void SelectFolder_MouseLeave(object sender, MouseEventArgs e)
+        {
+            _folderButtonTimer.Stop();
         }
 
 
