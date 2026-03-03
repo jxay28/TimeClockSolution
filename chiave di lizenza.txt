@@ -1,0 +1,37 @@
+Commit chiave di licenza
+
+Implementazione completata: ho aggiunto un sistema di licenza firmata RSA, vincolata alla macchina, con attivazione da UI nel client.
+
+Cosa ho cambiato
+
+Verifica licenza all’avvio + prima delle timbrature in MainWindow.xaml.cs
+Stato licenza visibile in header + pulsante Licenza in MainWindow.xaml
+Nuova finestra di attivazione in LicenseActivationWindow.xaml e LicenseActivationWindow.xaml.cs
+Nuovo modulo licensing (token, firma, machine binding, storage cifrato DPAPI):
+LicenseTokenValidator.cs
+LicenseService.cs
+LicenseStorageService.cs
+MachineFingerprintProvider.cs
+LicensePublicKeyProvider.cs
+Nuova setting LicensePublicKeyPem in:
+Settings.settings
+Settings.Designer.cs
+Tool CLI per generare chiavi e licenze:
+TimeClock.LicensingTool.csproj
+Program.cs
+Guida operativa aggiornata in README.md
+Build/Verifica
+
+dotnet build TimeClockSolution.sln OK
+dotnet build tools\TimeClock.LicensingTool\TimeClock.LicensingTool.csproj OK
+Test tool eseguito: keygen + issue OK
+Come usarlo subito
+
+Genera chiavi:
+dotnet run --project tools/TimeClock.LicensingTool -- keygen --out-dir artifacts/license_demo
+Copia artifacts/license_demo/license_public_key.pem accanto a TimeClock.Client.exe (oppure imposta LicensePublicKeyPem nelle settings utente).
+Avvia client, prendi Machine ID dalla finestra di attivazione.
+Emetti token:
+dotnet run --project tools/TimeClock.LicensingTool -- issue --private-key artifacts/license_demo/license_private_key.pem --machine-id <MACHINE_ID> --customer "Nome Azienda" --days 365
+Incolla il token nel client.
+Se vuoi, nel prossimo step posso aggiungere anche revoca online e controllo periodico verso API server.

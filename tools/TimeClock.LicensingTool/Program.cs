@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 if (args.Length == 0)
 {
@@ -80,7 +81,7 @@ static int RunIssue(IReadOnlyDictionary<string, string> options)
         ExpiresAtUtc = expires
     };
 
-    byte[] payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+    byte[] payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload, GetJsonOptions()));
     byte[] signature;
     using (RSA rsa = RSA.Create())
     {
@@ -167,6 +168,14 @@ static void PrintUsage()
     Console.WriteLine("  issue --private-key <pem> --machine-id <id> --customer <nome> [--days 365] [--expires-utc 2030-12-31T23:59:59Z] [--product TimeClock.Client] [--license-id id]");
 }
 
+static JsonSerializerOptions GetJsonOptions()
+{
+    return new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+}
+
 internal static class Base64Url
 {
     public static string Encode(byte[] bytes)
@@ -180,10 +189,16 @@ internal static class Base64Url
 
 internal sealed class LicensePayload
 {
+    [JsonPropertyName("licenseId")]
     public string LicenseId { get; init; } = string.Empty;
+    [JsonPropertyName("customer")]
     public string Customer { get; init; } = string.Empty;
+    [JsonPropertyName("product")]
     public string Product { get; init; } = string.Empty;
+    [JsonPropertyName("machineId")]
     public string MachineId { get; init; } = string.Empty;
+    [JsonPropertyName("issuedAtUtc")]
     public DateTimeOffset IssuedAtUtc { get; init; }
+    [JsonPropertyName("expiresAtUtc")]
     public DateTimeOffset ExpiresAtUtc { get; init; }
 }
