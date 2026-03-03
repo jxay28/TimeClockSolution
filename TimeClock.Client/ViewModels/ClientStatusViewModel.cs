@@ -8,6 +8,7 @@ namespace TimeClock.Client.ViewModels
     {
         private string _statusText = "Nessun utente selezionato";
         private string _lastActionText = "N/A";
+        private string _licenseText = "Licenza non verificata";
         private ICommand? _refreshStatusCommand;
 
         public ClientStatusViewModel()
@@ -49,6 +50,12 @@ namespace TimeClock.Client.ViewModels
         {
             get => _lastActionText;
             set => SetProperty(ref _lastActionText, value);
+        }
+
+        public string LicenseText
+        {
+            get => _licenseText;
+            set => SetProperty(ref _licenseText, value);
         }
 
         private bool _showSummary;

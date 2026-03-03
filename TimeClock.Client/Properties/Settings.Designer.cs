@@ -34,5 +34,17 @@ namespace TimeClock.Client.Properties {
                 this["CsvFolderPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LicensePublicKeyPem {
+            get {
+                return ((string)(this["LicensePublicKeyPem"]));
+            }
+            set {
+                this["LicensePublicKeyPem"] = value;
+            }
+        }
     }
 }

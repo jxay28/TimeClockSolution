@@ -1,0 +1,71 @@
+<Window x:Class="TimeClock.Client.LicenseActivationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Attivazione Licenza"
+        Height="440"
+        Width="720"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        MinHeight="320"
+        MinWidth="560">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="Inserisci la chiave licenza firmata"
+                   FontSize="20"
+                   FontWeight="Bold"
+                   Margin="0,0,0,8"/>
+
+        <TextBlock Grid.Row="1"
+                   x:Name="StatusTextBlock"
+                   Text="Nessuna licenza attiva."
+                   Foreground="#B91C1C"
+                   Margin="0,0,0,10"
+                   TextWrapping="Wrap"/>
+
+        <Border Grid.Row="2"
+                Background="#F3F4F6"
+                CornerRadius="8"
+                Padding="10"
+                Margin="0,0,0,10">
+            <StackPanel>
+                <TextBlock Text="Machine ID (usa questo valore per emettere la licenza):"
+                           FontWeight="SemiBold"/>
+                <TextBox x:Name="MachineIdTextBox"
+                         Margin="0,6,0,0"
+                         IsReadOnly="True"
+                         FontFamily="Consolas"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <TextBox Grid.Row="3"
+                 x:Name="LicenseTextBox"
+                 VerticalScrollBarVisibility="Auto"
+                 HorizontalScrollBarVisibility="Auto"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 FontFamily="Consolas"/>
+
+        <StackPanel Grid.Row="4"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,12,0,0">
+            <Button Width="100"
+                    Margin="0,0,8,0"
+                    Content="Annulla"
+                    IsCancel="True"/>
+            <Button Width="120"
+                    Content="Attiva"
+                    IsDefault="True"
+                    Click="Activate_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

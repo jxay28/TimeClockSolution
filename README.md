@@ -48,3 +48,22 @@ La logica di calcolo è validata tramite test unitari e script di regressione ch
 - Giornate spezzate.
 - Turni notturni (es. 22:00 - 06:00).
 - Gestione festività nazionali e personalizzate.
+
+## 🔐 Sistema Licenze Client
+
+`TimeClock.Client` ora richiede una licenza firmata digitalmente (RSA) e vincolata alla macchina.
+
+### Come funziona
+- Il client mostra il `Machine ID` nella finestra di attivazione.
+- Una licenza valida contiene: cliente, prodotto, scadenza, machine id.
+- Il token licenza e' firmato con chiave privata e verificato dal client con chiave pubblica.
+- La licenza attivata viene salvata in locale cifrata con DPAPI (`CurrentUser`).
+
+### Setup rapido
+1. Genera coppia chiavi:
+   `dotnet run --project tools/TimeClock.LicensingTool -- keygen --out-dir .\\license_keys`
+2. Copia `license_public_key.pem` accanto all'eseguibile di `TimeClock.Client` (o imposta `LicensePublicKeyPem` nelle Settings utente).
+3. Avvia il client e copia il `Machine ID` mostrato.
+4. Emetti token:
+   `dotnet run --project tools/TimeClock.LicensingTool -- issue --private-key .\\license_keys\\license_private_key.pem --machine-id <MACHINE_ID> --customer "<NOME AZIENDA>" --days 365`
+5. Incolla il token nella finestra "Attivazione Licenza".
