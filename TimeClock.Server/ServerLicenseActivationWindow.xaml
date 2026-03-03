@@ -1,0 +1,63 @@
+<Window x:Class="TimeClock.Server.ServerLicenseActivationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Attivazione Licenza Server"
+        Height="320"
+        Width="760"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="Licenza server mancante"
+                   FontSize="22"
+                   FontWeight="Bold"
+                   Margin="0,0,0,10"/>
+
+        <TextBlock Grid.Row="1"
+                   Text="1) Copia il codice sotto e incollalo nel tool server_license_generator_gui.py&#x0a;2) Genera la key e incollala qui sotto"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,10"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBox x:Name="TokenTextBox"
+                     IsReadOnly="True"
+                     FontFamily="Consolas"
+                     FontSize="13"
+                     VerticalContentAlignment="Center"
+                     MinWidth="560"/>
+            <Button Content="Copia codice"
+                    Width="120"
+                    Margin="10,0,0,0"
+                    Click="CopyToken_Click"/>
+        </StackPanel>
+
+        <TextBox Grid.Row="3"
+                 x:Name="LicenseKeyTextBox"
+                 FontFamily="Consolas"
+                 FontSize="14"
+                 VerticalContentAlignment="Center"
+                 ToolTip="Incolla qui la key generata dal tool Python"/>
+
+        <StackPanel Grid.Row="4"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Content="Annulla"
+                    Width="100"
+                    Margin="0,0,8,0"
+                    IsCancel="True"/>
+            <Button Content="Attiva"
+                    Width="100"
+                    IsDefault="True"
+                    Click="Activate_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

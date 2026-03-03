@@ -89,3 +89,23 @@
 2026-03-01T23:01:21Z,save_overtime_params,soglia=0; nazionaliFisse=0; sabato=True; domenica=True; festiviCustom=0
 2026-03-01T23:01:52Z,save_overtime_params,soglia=30; nazionaliFisse=0; sabato=True; domenica=True; festiviCustom=0
 2026-03-01T23:02:13Z,save_overtime_params,soglia=0; nazionaliFisse=0; sabato=True; domenica=True; festiviCustom=0
+2026-03-03T23:16:33Z,license_keygen,public=W:\VisualStudio\TimeClockSolution\Dati\license_public_key.pem; private=W:\VisualStudio\TimeClockSolution\Dati\license_private_key.pem
+2026-03-03T23:18:14Z,license_keygen,public=W:\VisualStudio\TimeClockSolution\Dati\license_public_key.pem; private=W:\VisualStudio\TimeClockSolution\Dati\license_private_key.pem
+2026-03-03T23:18:15Z,license_keygen,public=W:\VisualStudio\TimeClockSolution\Dati\license_public_key.pem; private=W:\VisualStudio\TimeClockSolution\Dati\license_private_key.pem
+2026-03-03T23:18:15Z,license_keygen,public=W:\VisualStudio\TimeClockSolution\Dati\license_public_key.pem; private=W:\VisualStudio\TimeClockSolution\Dati\license_private_key.pem
+2026-03-03T23:18:16Z,license_keygen,public=W:\VisualStudio\TimeClockSolution\Dati\license_public_key.pem; private=W:\VisualStudio\TimeClockSolution\Dati\license_private_key.pem
+2026-03-03T23:18:16Z,license_keygen,public=W:\VisualStudio\TimeClockSolution\Dati\license_public_key.pem; private=W:\VisualStudio\TimeClockSolution\Dati\license_private_key.pem
+2026-03-03T23:18:16Z,license_keygen,public=W:\VisualStudio\TimeClockSolution\Dati\license_public_key.pem; private=W:\VisualStudio\TimeClockSolution\Dati\license_private_key.pem
+2026-03-03T23:21:42Z,punch_out,user=2795d340-0f40-4306-aaa5-0b79d4677f48; at=2026-03-04T00:21:42
+2026-03-03T23:21:42Z,punch_in,user=2795d340-0f40-4306-aaa5-0b79d4677f48; at=2026-03-04T00:21:42
+2026-03-03T23:21:43Z,punch_out,user=2795d340-0f40-4306-aaa5-0b79d4677f48; at=2026-03-04T00:21:43
+2026-03-03T23:21:52Z,license_keygen,public=W:\VisualStudio\TimeClockSolution\Dati\license_public_key.pem; private=W:\VisualStudio\TimeClockSolution\Dati\license_private_key.pem
+2026-03-03T23:22:28Z,license_keygen,public=W:\VisualStudio\TimeClockSolution\Dati\license_public_key.pem; private=W:\VisualStudio\TimeClockSolution\Dati\license_private_key.pem
+2026-03-03T23:27:20Z,punch_out,user=168b4039-c9ef-48a1-b713-e1ec4d552ebd; at=2026-03-04T00:27:20
+2026-03-03T23:27:25Z,punch_in,user=168b4039-c9ef-48a1-b713-e1ec4d552ebd; at=2026-03-04T00:27:25
+2026-03-03T23:27:41Z,punch_out,user=168b4039-c9ef-48a1-b713-e1ec4d552ebd; at=2026-03-04T00:27:41
+2026-03-03T23:27:45Z,punch_in,user=168b4039-c9ef-48a1-b713-e1ec4d552ebd; at=2026-03-04T00:27:45
+2026-03-03T23:27:48Z,punch_in,user=2316491c-9976-4e33-92ea-d7229079538c; at=2026-03-04T00:27:48
+2026-03-03T23:27:50Z,punch_in,user=bca2fa9b-2a64-4e12-8d47-a0b5e3b7d957; at=2026-03-04T00:27:50
+2026-03-03T23:27:52Z,punch_in,user=2795d340-0f40-4306-aaa5-0b79d4677f48; at=2026-03-04T00:27:52
+2026-03-03T23:27:58Z,punch_out,user=3421c876-cc4a-461f-83c8-ec008f474bc2; at=2026-03-04T00:27:58

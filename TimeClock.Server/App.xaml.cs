@@ -6,6 +6,7 @@ using System.Windows;
 using TimeClock.Core.Models;
 using TimeClock.Core.Services;
 using TimeClock.Server.Models;
+using TimeClock.Server.Licensing;
 using TimeClock.Server.Properties;
 
 namespace TimeClock.Server
@@ -25,8 +26,28 @@ namespace TimeClock.Server
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            var licenseService = new ServerLicenseService();
+            if (!licenseService.EnsureLicenseAtStartup(out var licenseMessage))
+            {
+                MessageBox.Show(licenseMessage, "Licenza Server", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(-1);
+                return;
+            }
+
+            if (!string.Equals(licenseMessage, "Licenza server valida.", StringComparison.Ordinal))
+            {
+                MessageBox.Show(licenseMessage, "Licenza Server", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+
             ConfigureDataFolder(Settings.Default.CsvFolderPath);
             NormalizzaFestivitaNazionaliFisse();
+
+            var mainWindow = new MainWindow();
+            MainWindow = mainWindow;
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+            mainWindow.Show();
         }
 
         public static void SalvaParametriGlobali()

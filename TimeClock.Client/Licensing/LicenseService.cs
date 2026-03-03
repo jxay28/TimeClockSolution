@@ -2,36 +2,20 @@ namespace TimeClock.Client.Licensing
 {
     public sealed class LicenseService
     {
-        private readonly LicenseStorageService _storage = new();
         private readonly LicenseTokenValidator _validator = new();
 
         public string CurrentMachineId => MachineFingerprintProvider.GetMachineId();
 
-        public LicenseValidationResult GetCurrentStatus()
+        public LicenseValidationResult GetCurrentStatus(string? dataFolder)
         {
-            string? token = _storage.LoadToken();
+            string machineId = CurrentMachineId;
+            string? token = LicenseTokenProvider.TryLoadToken(dataFolder, machineId);
             if (string.IsNullOrWhiteSpace(token))
             {
-                return LicenseValidationResult.Invalid("Nessuna licenza attiva.");
+                return LicenseValidationResult.Invalid("Licenza non trovata per questa macchina.");
             }
 
-            return _validator.Validate(token);
-        }
-
-        public LicenseValidationResult TryActivate(string token)
-        {
-            var result = _validator.Validate(token);
-            if (result.IsValid)
-            {
-                _storage.SaveToken(token);
-            }
-
-            return result;
-        }
-
-        public void ClearLicense()
-        {
-            _storage.Clear();
+            return _validator.Validate(token, dataFolder);
         }
     }
 }

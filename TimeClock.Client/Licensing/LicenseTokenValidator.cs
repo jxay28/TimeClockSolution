@@ -9,7 +9,7 @@ namespace TimeClock.Client.Licensing
     {
         private const string ExpectedProduct = "TimeClock.Client";
 
-        public LicenseValidationResult Validate(string token)
+        public LicenseValidationResult Validate(string token, string? dataFolder)
         {
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -39,10 +39,10 @@ namespace TimeClock.Client.Licensing
                 return LicenseValidationResult.Invalid("Licenza incompleta.");
             }
 
-            string? pem = LicensePublicKeyProvider.TryLoadPem();
+            string? pem = LicensePublicKeyProvider.TryLoadPem(dataFolder);
             if (string.IsNullOrWhiteSpace(pem))
             {
-                return LicenseValidationResult.Invalid("Chiave pubblica non configurata. Aggiungi license_public_key.pem nella cartella del client.");
+                return LicenseValidationResult.Invalid("Chiave pubblica non trovata nella cartella dati.");
             }
 
             bool signatureValid;

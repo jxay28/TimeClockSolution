@@ -34,11 +34,6 @@
                         <TextBlock Text="Client di timbratura."
                                    FontSize="11"
                                    Foreground="#CCFFFFFF"/>
-                        <TextBlock Text="{Binding LicenseText}"
-                                   FontSize="11"
-                                   Foreground="#CCFFFFFF"
-                                   TextTrimming="CharacterEllipsis"
-                                   MaxWidth="360"/>
                     </StackPanel>
 
                     <!-- Pulsanti finestra -->
@@ -55,14 +50,6 @@
                                 Foreground="White"
                                 FontWeight="Bold"
                                 MinWidth="26"/>
-                        <Button Content="Licenza"
-                                Height="22"
-                                Margin="3,0"
-                                Click="LicenseButton_Click"
-                                Background="#20FFFFFF"
-                                BorderBrush="#40FFFFFF"
-                                Foreground="White"
-                                MinWidth="68"/>
                         <Button Content="X"
                                 Width="26" Height="22"
                                 Margin="3,0"

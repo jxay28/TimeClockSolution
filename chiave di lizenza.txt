@@ -35,3 +35,22 @@ Emetti token:
 dotnet run --project tools/TimeClock.LicensingTool -- issue --private-key artifacts/license_demo/license_private_key.pem --machine-id <MACHINE_ID> --customer "Nome Azienda" --days 365
 Incolla il token nel client.
 Se vuoi, nel prossimo step posso aggiungere anche revoca online e controllo periodico verso API server.
+
+---------------------------------------------------
+l file è qui (utente Windows corrente):
+
+%LOCALAPPDATA%\TimeClock.Server\server_license.json
+
+Sul tuo PC di solito diventa qualcosa tipo:
+C:\Users\<tuo_utente>\AppData\Local\TimeClock.Server\server_license.json
+
+Contenuto del file:
+
+token (codice challenge usato)
+licenseKey (key valida)
+generatedAtUtc
+Se vuoi forzare una nuova attivazione:
+
+chiudi TimeClock.Server
+cancella server_license.json
+riavvia server -> ti riapre la schermata con codice da incollare nel tool Python.

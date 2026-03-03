@@ -5,8 +5,21 @@ namespace TimeClock.Client.Licensing
 {
     public static class LicensePublicKeyProvider
     {
-        public static string? TryLoadPem()
+        public static string? TryLoadPem(string? dataFolder)
         {
+            if (!string.IsNullOrWhiteSpace(dataFolder))
+            {
+                string sharedPem = Path.Combine(dataFolder, "license_public_key.pem");
+                if (File.Exists(sharedPem))
+                {
+                    string pemInData = File.ReadAllText(sharedPem);
+                    if (!string.IsNullOrWhiteSpace(pemInData))
+                    {
+                        return pemInData;
+                    }
+                }
+            }
+
             string configured = Properties.Settings.Default.LicensePublicKeyPem ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(configured))
             {

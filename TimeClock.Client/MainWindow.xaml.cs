@@ -9,7 +9,6 @@ using TimeClock.Core.Services;
 using System.Windows.Input;
 using TimeClock.Client.ViewModels;
 using System.Windows.Threading;
-using TimeClock.Client.Licensing;
 
 namespace TimeClock.Client
 {
@@ -19,7 +18,6 @@ namespace TimeClock.Client
         private List<UserProfile> _filteredUsers = new();
         private readonly CsvRepository _repo = new();
         private readonly ClientStatusViewModel _statusVm = new();
-        private readonly LicenseService _licenseService = new();
         private string _numericFilter = string.Empty;
 
         private string _csvFolder = string.Empty;   // ? variabile definitiva per la cartella
@@ -36,12 +34,6 @@ namespace TimeClock.Client
             // ?? Carica la cartella salvata nelle impostazioni
             _csvFolder = Properties.Settings.Default.CsvFolderPath;
 
-            if (!EnsureLicenseAtStartup())
-            {
-                Close();
-                return;
-            }
-
             if (!string.IsNullOrWhiteSpace(_csvFolder) && Directory.Exists(_csvFolder))
             {
                 LoadUsers();
@@ -51,71 +43,6 @@ namespace TimeClock.Client
                 _csvFolder = string.Empty;
                 _statusVm.LastActionText = "Seleziona la cartella con l'ingranaggio.";
             }
-        }
-
-        private bool EnsureLicenseAtStartup()
-        {
-            var currentStatus = _licenseService.GetCurrentStatus();
-            if (currentStatus.IsValid)
-            {
-                SetLicenseStatus(currentStatus.Payload!);
-                return true;
-            }
-
-            return ActivateLicenseInteractive(currentStatus.Message);
-        }
-
-        private bool ActivateLicenseInteractive(string statusMessage)
-        {
-            string machineId = _licenseService.CurrentMachineId;
-            string currentMessage = statusMessage;
-
-            while (true)
-            {
-                var dialog = new LicenseActivationWindow(machineId, currentMessage);
-
-                bool? result = dialog.ShowDialog();
-                if (result != true)
-                {
-                    return false;
-                }
-
-                var activation = _licenseService.TryActivate(dialog.LicenseToken);
-                if (activation.IsValid)
-                {
-                    SetLicenseStatus(activation.Payload!);
-                    MessageBox.Show(this, "Licenza attivata con successo.", "Licenza", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return true;
-                }
-
-                currentMessage = activation.Message;
-                MessageBox.Show(this, activation.Message, "Licenza non valida", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private bool EnsureLicenseBeforeAction()
-        {
-            var status = _licenseService.GetCurrentStatus();
-            if (status.IsValid)
-            {
-                SetLicenseStatus(status.Payload!);
-                return true;
-            }
-
-            _statusVm.LicenseText = "Licenza non valida";
-            bool activated = ActivateLicenseInteractive(status.Message);
-            if (!activated)
-            {
-                MessageBox.Show(this, "Operazione annullata: licenza non attiva.", "Licenza", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            return true;
-        }
-
-        private void SetLicenseStatus(LicensePayload payload)
-        {
-            _statusVm.LicenseText = $"Licenza {payload.Customer} - scade {payload.ExpiresAtUtc.LocalDateTime:dd/MM/yyyy}";
         }
 
         private void SelectCsvFolder_Click(object sender, RoutedEventArgs e)
@@ -346,7 +273,6 @@ namespace TimeClock.Client
 
         private void EntrataButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!EnsureLicenseBeforeAction()) return;
             if (UserComboBox.SelectedItem is not UserProfile user) return;
 
             string path = Path.Combine(_csvFolder, user.Id + ".csv");
@@ -372,7 +298,6 @@ namespace TimeClock.Client
 
         private void UscitaButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!EnsureLicenseBeforeAction()) return;
             if (UserComboBox.SelectedItem is not UserProfile user) return;
 
             string path = Path.Combine(_csvFolder, user.Id + ".csv");
@@ -550,29 +475,6 @@ namespace TimeClock.Client
         private void Minimize_Click(object sender, RoutedEventArgs e)
         {
             this.WindowState = WindowState.Minimized;
-        }
-
-        private void LicenseButton_Click(object sender, RoutedEventArgs e)
-        {
-            var currentStatus = _licenseService.GetCurrentStatus();
-            if (currentStatus.IsValid)
-            {
-                SetLicenseStatus(currentStatus.Payload!);
-                var replace = MessageBox.Show(
-                    this,
-                    $"Licenza attiva per {currentStatus.Payload!.Customer} fino al {currentStatus.Payload.ExpiresAtUtc.LocalDateTime:dd/MM/yyyy}.\nVuoi sostituirla?",
-                    "Licenza",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (replace != MessageBoxResult.Yes)
-                {
-                    return;
-                }
-            }
-
-            string message = currentStatus.IsValid ? "Inserisci una nuova licenza." : currentStatus.Message;
-            ActivateLicenseInteractive(message);
         }
     }
 }
