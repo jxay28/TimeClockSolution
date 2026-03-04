@@ -54,6 +54,8 @@
             <Setter Property="Padding" Value="10,6"/>
             <Setter Property="BorderBrush" Value="#FFD1D5DB"/>
             <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style x:Key="DashboardRowStyle" TargetType="DataGridRow">
@@ -71,6 +73,12 @@
                     <Setter Property="Background" Value="#FFE0F2FE"/>
                 </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <Style x:Key="DashboardCellTextCenterStyle" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
         </Style>
     </Window.Resources>
 
@@ -268,35 +276,52 @@
                                         </Border>
                                     </WrapPanel>
 
-                                    <DataGrid x:Name="DashboardGrid"
-                                              Grid.Row="2"
-                                              AutoGenerateColumns="False"
-                                              Background="#15FFFFFF"
-                                              Foreground="Black"
-                                              HeadersVisibility="Column"
-                                              CanUserAddRows="False"
-                                              CanUserDeleteRows="False"
-                                              IsReadOnly="True"
-                                              BorderBrush="#40FFFFFF"
-                                              BorderThickness="1"
-                                              RowHeight="34">
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Matricola" Binding="{Binding Matricola}" Width="100"/>
-                                            <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*"/>
-                                            <DataGridTemplateColumn Header="Stato" Width="120">
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <Ellipse Width="10" Height="10" Fill="{Binding StatoBrush}" Margin="0,0,8,0"/>
-                                                            <TextBlock Text="{Binding Stato}" VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
-                                            <DataGridTextColumn Header="Ultima timbrata" Binding="{Binding UltimaTimbrata}" Width="180"/>
-                                            <DataGridTextColumn Header="Tempo dentro" Binding="{Binding TempoDentro}" Width="130"/>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
+                                    <Border Grid.Row="2"
+                                            Background="#FFF8FAFC"
+                                            CornerRadius="14"
+                                            BorderBrush="#FFD1D5DB"
+                                            BorderThickness="1"
+                                            Padding="0">
+                                        <DataGrid x:Name="DashboardGrid"
+                                                  AutoGenerateColumns="False"
+                                                  Background="#00FFFFFF"
+                                                  Foreground="#111827"
+                                                  HeadersVisibility="Column"
+                                                  CanUserAddRows="False"
+                                                  CanUserDeleteRows="False"
+                                                  IsReadOnly="True"
+                                                  BorderThickness="0"
+                                                  GridLinesVisibility="None"
+                                                  RowHeaderWidth="0"
+                                                  AlternationCount="2"
+                                                  ColumnHeaderStyle="{StaticResource DashboardGridHeaderStyle}"
+                                                  RowStyle="{StaticResource DashboardRowStyle}">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Matricola" Binding="{Binding Matricola}" Width="110" ElementStyle="{StaticResource DashboardCellTextCenterStyle}"/>
+                                                <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*" ElementStyle="{StaticResource DashboardCellTextCenterStyle}"/>
+                                                <DataGridTemplateColumn Header="Stato" Width="140">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="{Binding StatoBrush}"
+                                                                    CornerRadius="8"
+                                                                    Padding="8,3"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Stato}"
+                                                                           Foreground="White"
+                                                                           FontWeight="SemiBold"
+                                                                           FontSize="12"
+                                                                           VerticalAlignment="Center"
+                                                                           TextAlignment="Center"/>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTextColumn Header="Ultima timbrata" Binding="{Binding UltimaTimbrata}" Width="180" ElementStyle="{StaticResource DashboardCellTextCenterStyle}"/>
+                                                <DataGridTextColumn Header="Tempo dentro" Binding="{Binding TempoDentro}" Width="130" ElementStyle="{StaticResource DashboardCellTextCenterStyle}"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Border>
                                 </Grid>
                             </TabItem>
 
