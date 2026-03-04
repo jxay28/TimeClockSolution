@@ -375,7 +375,7 @@ namespace TimeClock.Server
             foreach (var user in _users.OrderBy(u => u.SequenceNumber))
             {
                 string userFile = Path.Combine(_csvFolder, $"{user.Id}.csv");
-                string stato = " Fuori  ";
+                string stato = "Fuori   ";
                 Brush color = Brushes.IndianRed;
                 string ultimaTimbrata = "-";
 

@@ -94,5 +94,53 @@
     "OrarioIngresso2": "12:30",
     "OrarioUscita2": "16:00",
     "FullName": "005 - ale fed"
+  },
+  {
+    "Id": "104c7b1a-f6cc-4a1c-aa80-130d4cf802ad",
+    "SequenceNumber": 6,
+    "Nome": "111",
+    "Cognome": "11111",
+    "Ruolo": "111111",
+    "DataAssunzione": "2026-03-04T00:00:00",
+    "OreContrattoSettimanali": 40,
+    "CompensoOrarioBase": 111,
+    "CompensoOrarioExtra": 22,
+    "OrarioIngresso1": "06:00",
+    "OrarioUscita1": "12:00",
+    "OrarioIngresso2": "12:00",
+    "OrarioUscita2": "16:00",
+    "FullName": "006 - 111 11111"
+  },
+  {
+    "Id": "12a792b9-5fff-45b6-a7c5-1d7dc5f595d2",
+    "SequenceNumber": 7,
+    "Nome": "31213123",
+    "Cognome": "211321",
+    "Ruolo": "2121",
+    "DataAssunzione": "2026-03-04T00:00:00",
+    "OreContrattoSettimanali": 12321,
+    "CompensoOrarioBase": 321,
+    "CompensoOrarioExtra": 3321321,
+    "OrarioIngresso1": "06:00",
+    "OrarioUscita1": "12:00",
+    "OrarioIngresso2": "12:00",
+    "OrarioUscita2": "16:00",
+    "FullName": "007 - 31213123 211321"
+  },
+  {
+    "Id": "321887b0-e329-41a6-abe8-4bb0dbacd6e7",
+    "SequenceNumber": 8,
+    "Nome": "21321",
+    "Cognome": "3233",
+    "Ruolo": "3213",
+    "DataAssunzione": "2026-03-04T00:00:00",
+    "OreContrattoSettimanali": 2132123,
+    "CompensoOrarioBase": 333,
+    "CompensoOrarioExtra": 13123122,
+    "OrarioIngresso1": "06:00",
+    "OrarioUscita1": "12:00",
+    "OrarioIngresso2": "12:00",
+    "OrarioUscita2": "16:00",
+    "FullName": "008 - 21321 3233"
   }
 ]

@@ -278,10 +278,9 @@
 
                                     <Border Grid.Row="2"
                                             Background="#FFF8FAFC"
-                                            CornerRadius="14"
                                             BorderBrush="#FFD1D5DB"
                                             BorderThickness="1"
-                                            Padding="0">
+                                            Padding="2">
                                         <DataGrid x:Name="DashboardGrid"
                                                   AutoGenerateColumns="False"
                                                   Background="#00FFFFFF"
@@ -295,7 +294,7 @@
                                                   RowHeaderWidth="0"
                                                   AlternationCount="2"
                                                   ColumnHeaderStyle="{StaticResource DashboardGridHeaderStyle}"
-                                                  RowStyle="{StaticResource DashboardRowStyle}">
+                                                  RowStyle="{StaticResource DashboardRowStyle}" RenderTransformOrigin="1,0.5" ScrollViewer.CanContentScroll="False" UseLayoutRounding="False">
                                             <DataGrid.Columns>
                                                 <DataGridTextColumn Header="Matricola" Binding="{Binding Matricola}" Width="110" ElementStyle="{StaticResource DashboardCellTextCenterStyle}"/>
                                                 <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*" ElementStyle="{StaticResource DashboardCellTextCenterStyle}"/>
@@ -346,50 +345,68 @@
                                                 Click="SaveUsersGrid_Click"/>
                                     </StackPanel>
 
-                                    <DataGrid x:Name="UsersGrid"
-                                              Grid.Row="1"
-                                              AutoGenerateColumns="False"
-                                              Background="#15FFFFFF"
-                                              Foreground="Black"
-                                              HeadersVisibility="Column"
-                                              CanUserAddRows="False"
-                                              CanUserDeleteRows="False"
-                                              BorderBrush="#40FFFFFF"
-                                              BorderThickness="1"
-                                              RowHeight="32">
+                                    <Border Grid.Row="1"
+                                            Background="#FFF8FAFC"
+                                            BorderBrush="#FFD1D5DB"
+                                            BorderThickness="1"
+                                            Padding="2">
+                                        <DataGrid x:Name="UsersGrid"
+                                                  AutoGenerateColumns="False"
+                                                  Background="#00FFFFFF"
+                                                  Foreground="#111827"
+                                                  HeadersVisibility="Column"
+                                                  CanUserAddRows="False"
+                                                  CanUserDeleteRows="False"
+                                                  BorderThickness="0"
+                                                  GridLinesVisibility="None"
+                                                  RowHeaderWidth="0"
+                                                  AlternationCount="2"
+                                                  ColumnHeaderStyle="{StaticResource DashboardGridHeaderStyle}"
+                                                  RowStyle="{StaticResource DashboardRowStyle}"
+                                                  RowHeight="36">
 
                                         <DataGrid.Columns>
 
                                             <DataGridTextColumn Header="N"
-                                                                Binding="{Binding SequenceNumber}" />
-
-                                            <DataGridTextColumn Header="ID"
-                                                                Binding="{Binding Id}" />
+                                                                Binding="{Binding SequenceNumber}"
+                                                                ElementStyle="{StaticResource DashboardCellTextCenterStyle}" />
 
                                             <DataGridTextColumn Header="Nome"
-                                                                Binding="{Binding Nome}" />
+                                                                Binding="{Binding Nome}"
+                                                                ElementStyle="{StaticResource DashboardCellTextCenterStyle}" />
 
                                             <DataGridTextColumn Header="Cognome"
-                                                                Binding="{Binding Cognome}" />
+                                                                Binding="{Binding Cognome}"
+                                                                ElementStyle="{StaticResource DashboardCellTextCenterStyle}" />
 
                                             <DataGridTextColumn Header="Ruolo"
-                                                                Binding="{Binding Ruolo}" />
+                                                                Binding="{Binding Ruolo}"
+                                                                ElementStyle="{StaticResource DashboardCellTextCenterStyle}" />
 
                                             <DataGridTextColumn Header="Data Assunzione"
-                                                                Binding="{Binding DataAssunzione, StringFormat=\{0:dd/MM/yyyy\}}" />
+                                                                Binding="{Binding DataAssunzione, StringFormat=\{0:dd/MM/yyyy\}}"
+                                                                ElementStyle="{StaticResource DashboardCellTextCenterStyle}" />
 
                                             <DataGridTextColumn Header="Ore Sett."
-                                                                Binding="{Binding OreContrattoSettimanali}" />
+                                                                Binding="{Binding OreContrattoSettimanali}"
+                                                                ElementStyle="{StaticResource DashboardCellTextCenterStyle}" />
 
                                             <DataGridTextColumn Header="Compenso Base"
-                                                                Binding="{Binding CompensoOrarioBase}" />
+                                                                Binding="{Binding CompensoOrarioBase}"
+                                                                ElementStyle="{StaticResource DashboardCellTextCenterStyle}" />
 
                                             <DataGridTextColumn Header="Compenso Extra"
-                                                                Binding="{Binding CompensoOrarioExtra}" />
+                                                                Binding="{Binding CompensoOrarioExtra}"
+                                                                ElementStyle="{StaticResource DashboardCellTextCenterStyle}" />
+
+                                            <DataGridTextColumn Header="ID"
+                                                                Binding="{Binding Id}"
+                                                                ElementStyle="{StaticResource DashboardCellTextCenterStyle}" />
 
                                         </DataGrid.Columns>
 
-                                    </DataGrid>
+                                        </DataGrid>
+                                    </Border>
                                 </Grid>
                             </TabItem>
 
