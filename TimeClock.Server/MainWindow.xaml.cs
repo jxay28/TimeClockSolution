@@ -362,6 +362,10 @@ namespace TimeClock.Server
             if (string.IsNullOrWhiteSpace(_csvFolder))
             {
                 DashboardGrid.ItemsSource = new List<DashboardRow>();
+                DashboardTotalUsersText.Text = "0";
+                DashboardInsideText.Text = "0";
+                DashboardOutsideText.Text = "0";
+                DashboardLastRefreshText.Text = $"Ultimo aggiornamento: {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
                 return;
             }
 
@@ -416,6 +420,13 @@ namespace TimeClock.Server
 
             DashboardGrid.ItemsSource = rows;
             DashboardGrid.Items.Refresh();
+
+            int insideCount = rows.Count(r => string.Equals(r.Stato, "Dentro", StringComparison.OrdinalIgnoreCase));
+            int outsideCount = rows.Count - insideCount;
+            DashboardTotalUsersText.Text = rows.Count.ToString(CultureInfo.InvariantCulture);
+            DashboardInsideText.Text = insideCount.ToString(CultureInfo.InvariantCulture);
+            DashboardOutsideText.Text = outsideCount.ToString(CultureInfo.InvariantCulture);
+            DashboardLastRefreshText.Text = $"Ultimo aggiornamento: {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
             _lastDashboardRefreshUtc = DateTime.UtcNow;
         }
 

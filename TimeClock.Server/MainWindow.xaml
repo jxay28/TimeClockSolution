@@ -28,6 +28,50 @@
         <Style x:Key="AddButton" TargetType="Button" BasedOn="{StaticResource GlassButton}">
             <Setter Property="Background" Value="#4010B981"/>
         </Style>
+
+        <Style x:Key="ModernActionButton" TargetType="Button" BasedOn="{StaticResource GlassButton}">
+            <Setter Property="Background" Value="#FF0891B2"/>
+            <Setter Property="BorderBrush" Value="#FF06B6D4"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Padding" Value="14,0"/>
+        </Style>
+
+        <Style x:Key="MetricCardBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Margin" Value="0,0,10,10"/>
+            <Setter Property="Background" Value="#26FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#30FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style x:Key="DashboardGridHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#FFE2E8F0"/>
+            <Setter Property="Foreground" Value="#FF0F172A"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="BorderBrush" Value="#FFD1D5DB"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        </Style>
+
+        <Style x:Key="DashboardRowStyle" TargetType="DataGridRow">
+            <Setter Property="Background" Value="#FFF8FAFC"/>
+            <Setter Property="Foreground" Value="#FF111827"/>
+            <Setter Property="BorderBrush" Value="#FFE5E7EB"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="36"/>
+            <Style.Triggers>
+                <Trigger Property="AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="#FFF1F5F9"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FFE0F2FE"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid Background="#FF0F172A" SnapsToDevicePixels="True">
@@ -132,6 +176,7 @@
                                 <Grid Margin="20">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
 
@@ -141,12 +186,18 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Grid.Column="0"
-                                                   Text="Stato matricole"
-                                                   FontSize="18"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="White"
-                                                   VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Stato matricole"
+                                                       FontSize="18"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="DashboardLastRefreshText"
+                                                       Text="Ultimo aggiornamento: -"
+                                                       FontSize="11"
+                                                       Foreground="#CCFFFFFF"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
                                         <StackPanel Grid.Column="1"
                                                     Orientation="Horizontal"
                                                     HorizontalAlignment="Right"
@@ -166,8 +217,59 @@
                                         </StackPanel>
                                     </Grid>
 
+                                    <WrapPanel Grid.Row="1"
+                                               Margin="0,0,0,12">
+                                        <Border Background="#30FFFFFF"
+                                                CornerRadius="10"
+                                                Padding="10"
+                                                Margin="0,0,10,0"
+                                                Width="170">
+                                            <StackPanel>
+                                                <TextBlock Text="Totale utenti"
+                                                           FontSize="11"
+                                                           Foreground="#CCFFFFFF"/>
+                                                <TextBlock x:Name="DashboardTotalUsersText"
+                                                           Text="0"
+                                                           FontSize="22"
+                                                           FontWeight="Bold"
+                                                           Foreground="White"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="#3010B981"
+                                                CornerRadius="10"
+                                                Padding="10"
+                                                Margin="0,0,10,0"
+                                                Width="170">
+                                            <StackPanel>
+                                                <TextBlock Text="Dentro ora"
+                                                           FontSize="11"
+                                                           Foreground="#D1FAE5"/>
+                                                <TextBlock x:Name="DashboardInsideText"
+                                                           Text="0"
+                                                           FontSize="22"
+                                                           FontWeight="Bold"
+                                                           Foreground="White"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="#30EF4444"
+                                                CornerRadius="10"
+                                                Padding="10"
+                                                Width="170">
+                                            <StackPanel>
+                                                <TextBlock Text="Fuori ora"
+                                                           FontSize="11"
+                                                           Foreground="#FEE2E2"/>
+                                                <TextBlock x:Name="DashboardOutsideText"
+                                                           Text="0"
+                                                           FontSize="22"
+                                                           FontWeight="Bold"
+                                                           Foreground="White"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </WrapPanel>
+
                                     <DataGrid x:Name="DashboardGrid"
-                                              Grid.Row="1"
+                                              Grid.Row="2"
                                               AutoGenerateColumns="False"
                                               Background="#15FFFFFF"
                                               Foreground="Black"
