@@ -52,6 +52,8 @@ namespace TimeClock.Server
         private List<UserProfile> _users = new List<UserProfile>();
         private readonly UserDataMigrationService _migrationService = new();
         private readonly DispatcherTimer _dashboardTimer = new DispatcherTimer();
+        private bool _dashboardAutoRefreshEnabled = true;
+        private DateTime _lastDashboardRefreshUtc = DateTime.MinValue;
 
         // i parametri globali sono gestiti in App.ParametriGlobali
 
@@ -414,10 +416,17 @@ namespace TimeClock.Server
 
             DashboardGrid.ItemsSource = rows;
             DashboardGrid.Items.Refresh();
+            _lastDashboardRefreshUtc = DateTime.UtcNow;
         }
 
         private void DashboardTimer_Tick(object? sender, EventArgs e)
         {
+            if (_dashboardAutoRefreshEnabled &&
+                (DateTime.UtcNow - _lastDashboardRefreshUtc).TotalSeconds >= 5)
+            {
+                RefreshDashboard();
+            }
+
             if (DashboardGrid.ItemsSource is not IEnumerable<DashboardRow> rows)
                 return;
 
@@ -429,6 +438,15 @@ namespace TimeClock.Server
             }
 
             DashboardGrid.Items.Refresh();
+        }
+
+        private void DashboardAutoRefreshCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            _dashboardAutoRefreshEnabled = DashboardAutoRefreshCheckBox.IsChecked == true;
+            if (_dashboardAutoRefreshEnabled)
+            {
+                _lastDashboardRefreshUtc = DateTime.UtcNow;
+            }
         }
 
         private string FormattaTempoDentro(DateTime? inizioDentro)

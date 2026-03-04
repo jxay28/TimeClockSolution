@@ -135,18 +135,36 @@
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
 
-                                    <DockPanel Margin="0,0,0,12">
-                                        <TextBlock Text="Stato matricole"
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="Stato matricole"
                                                    FontSize="18"
                                                    FontWeight="SemiBold"
                                                    Foreground="White"
-                                                   DockPanel.Dock="Left"/>
-                                        <Button Content="Aggiorna"
-                                                Width="120"
-                                                Style="{StaticResource GlassButton}"
-                                                HorizontalAlignment="Right"
-                                                Click="RefreshDashboard_Click"/>
-                                    </DockPanel>
+                                                   VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1"
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center">
+                                            <CheckBox x:Name="DashboardAutoRefreshCheckBox"
+                                                      Content="Aggiorna automatico ogni 5 secondi"
+                                                      IsChecked="True"
+                                                      Foreground="White"
+                                                      VerticalAlignment="Center"
+                                                      Margin="0,0,10,0"
+                                                      Checked="DashboardAutoRefreshCheckBox_Changed"
+                                                      Unchecked="DashboardAutoRefreshCheckBox_Changed"/>
+                                            <Button Content="Aggiorna"
+                                                    Width="120"
+                                                    Style="{StaticResource GlassButton}"
+                                                    Click="RefreshDashboard_Click"/>
+                                        </StackPanel>
+                                    </Grid>
 
                                     <DataGrid x:Name="DashboardGrid"
                                               Grid.Row="1"
